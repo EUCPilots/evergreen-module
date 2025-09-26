@@ -30,7 +30,7 @@
             }
             $Content = Invoke-EvergreenRestMethod @params
 
-            if ($Null -ne $Content) {
+            if ($null -ne $Content) {
                 # Follow the download link which will return a 301
                 $params = @{
                     Uri       = ($Content -split "\n")[$res.Get.Download.UrlLine]
