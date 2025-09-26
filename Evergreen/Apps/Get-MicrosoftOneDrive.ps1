@@ -35,7 +35,8 @@
 
             # Find the latest version
             foreach ($node in $nodes) {
-                if ([System.Boolean]($node.PSobject.Properties.name -match "amd64binary")) {
+                if ([System.Boolean]($node.PSobject.Properties.name -match "^amd64binary$")) {
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): AMD64 binary for: $($node.currentversion) in: $($ring.Name)."
                     [PSCustomObject] @{
                         Version      = $node.currentversion
                         Ring         = $ring.Name
@@ -47,7 +48,8 @@
                     } | Write-Output
                 }
 
-                if ([System.Boolean]($node.PSobject.Properties.name -match "arm64binary")) {
+                if ([System.Boolean]($node.PSobject.Properties.name -match "^arm64binary$")) {
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): ARM64 binary for: $($node.currentversion) in: $($ring.Name)."
                     [PSCustomObject] @{
                         Version      = $node.currentversion
                         Ring         = $ring.Name
@@ -59,8 +61,9 @@
                     } | Write-Output
                 }
 
-                if ([System.Boolean]($node.PSobject.Properties.name -match "msixbinary")) {
+                if ([System.Boolean]($node.PSobject.Properties.name -match "^msixbinary$")) {
                     # Construct the output for MSIX; Return the custom object to the pipeline
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): MSIX binary for: $($node.currentversion) in: $($ring.Name)."
                     [PSCustomObject] @{
                         Version      = $node.currentversion
                         Ring         = $ring.Name
@@ -73,13 +76,14 @@
                 }
 
                 # Construct the output for EXE; Return the custom object to the pipeline
-                if ([System.Boolean]($node.PSobject.Properties.name -match "binary")) {
+                if ([System.Boolean]($node.PSobject.Properties.name -match "^binary$")) {
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): x86 binary for: $($node.currentversion) in: $($ring.Name)."
                     $PSObject = [PSCustomObject] @{
                         Version      = $node.currentversion
                         Ring         = $ring.Name
                         Throttle     = $node.throttle
                         Sha256       = ConvertFrom-Base64String -Base64String $node.binary.sha256hash
-                        Architecture = Get-Architecture -String $node.binary.url
+                        Architecture = "x86"
                         Type         = Get-FileType -File $node.binary.url
                         URI          = $node.binary.url
                     }
