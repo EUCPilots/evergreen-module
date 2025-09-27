@@ -57,7 +57,7 @@ jobs:
         id: update-changelog
         shell: powershell
         run: |
-            $changeLog = "${{ github.workspace }}\docs\changelog.md"
+            $changeLog = "${{ github.workspace }}\changelog.md"
             $replaceString = "^## VERSION$"
             $content = Get-Content -Path $changeLog
             if ($content -match $replaceString) {
