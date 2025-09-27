@@ -27,16 +27,6 @@ foreach ($Import in @($Public + $Private + $Shared)) {
 # Get module strings
 $script:resourceStrings = Get-ModuleResource
 
-# Register the argument completer for the Get-EvergreenApp and Find-EvergreenApp cmdlets
-$Commands = "Get-EvergreenApp", "Find-EvergreenApp", "Get-EvergreenAppFromApi", "Export-EvergreenManifest", "Get-EvergreenLibraryApp", "Get-EvergreenEndpointFromApi"
-Register-ArgumentCompleter -CommandName $Commands -ParameterName "Name" -ScriptBlock {
-    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-    (Get-ChildItem -Path "$PSScriptRoot\Manifests\$wordToComplete*.json" -ErrorAction "Ignore").BaseName
-}
-
-# Export the public modules and aliases
-Export-ModuleMember -Function $public.Basename -Alias *
-
 # Verifies whether the required 'Apps' and 'Manifests' directories exist in the specified path.
 # If either directory is missing, it warns the user to download the Evergreen app functions.
 # If both directories exist, it checks if the local version file exists and compares its version to the latest release version from GitHub.
@@ -44,7 +34,7 @@ Export-ModuleMember -Function $public.Basename -Alias *
 $script:AppsPath = Get-EvergreenAppsPath
 $script:VersionFile = Join-Path -Path $script:AppsPath -ChildPath ".evergreen_version"
 
-if (-not (Test-Path (Join-Path -Path $script:AppsPath -ChildPath 'Apps')) -or -not (Test-Path (Join-Path -Path $script:AppsPath -ChildPath 'Manifests'))) {
+if (-not (Test-Path -Path (Join-Path -Path $script:AppsPath -ChildPath 'Apps')) -or -not (Test-Path -Path (Join-Path -Path $script:AppsPath -ChildPath 'Manifests'))) {
     # Warn if Apps/Manifests have not been downloaded from GitHub
     Write-Message -Message "Evergreen app functions have not been downloaded. Please run 'Update-Evergreen'."
 }
@@ -81,3 +71,13 @@ else {
     # If the version file does not exist, prompt to run Update-Evergreen
     Write-Message -Message "Cannot determine Evergreen apps local cache version. Please run 'Update-Evergreen'."
 }
+
+# Register the argument completer for the Get-EvergreenApp and Find-EvergreenApp cmdlets
+$Commands = "Get-EvergreenApp", "Find-EvergreenApp", "Get-EvergreenAppFromApi", "Export-EvergreenManifest", "Get-EvergreenLibraryApp", "Get-EvergreenEndpointFromApi"
+Register-ArgumentCompleter -CommandName $Commands -ParameterName "Name" -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+    (Get-ChildItem -Path "$(Join-Path -Path $script:AppsPath -ChildPath 'Manifests')\$wordToComplete*.json" -ErrorAction "Stop").BaseName
+}
+
+# Export the public modules and aliases
+Export-ModuleMember -Function $public.Basename -Alias *

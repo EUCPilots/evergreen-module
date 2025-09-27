@@ -14,6 +14,7 @@ The Evergreen module is published to the PowerShell Gallery and can be found her
 ```powershell
 Install-Module -Name Evergreen
 Import-Module -Name Evergreen
+Update-Evergreen
 ```
 
 ### Updating the Module
@@ -22,6 +23,7 @@ If you have installed a previous version of the module from the gallery, you can
 
 ```powershell
 Update-Module -Name Evergreen -Force
+Update-Evergreen
 ```
 
 ### Advanced Installation
@@ -72,4 +74,5 @@ Once installation is complete, you can validate that the module exists by runnin
 
 ```powershell
 Import-Module Evergreen
+Update-Evergreen
 ```

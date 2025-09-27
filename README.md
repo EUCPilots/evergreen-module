@@ -73,6 +73,7 @@ The module can be installed from the gallery with:
 ```powershell
 Install-Module -Name Evergreen
 Import-Module -Name Evergreen
+Update-Evergreen
 ```
 
 #### Updating the Module
@@ -81,6 +82,7 @@ If you have installed a previous version of the module from the gallery, you can
 
 ```powershell
 Update-Module -Name Evergreen -Force
+Update-Evergreen
 ```
 
 ### Manual Installation from the Repository
@@ -105,6 +107,7 @@ Once installation is complete, you can validate that the module exists by runnin
 
 ```powershell
 Import-Module -Name Evergreen
+Update-Evergreen
 ```
 
 [psgallery-badge]: https://img.shields.io/powershellgallery/dt/Evergreen.svg?style=flat-square
