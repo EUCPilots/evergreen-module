@@ -100,7 +100,7 @@ AliasesToExport = 'sea', 'gea', 'fea', 'tea', 'iea', 'Invoke-EvergreenLibraryUpd
 PrivateData = @{
 
     #RepositorySourceLocation of this module
-    RepositorySourceLocation = 'https://github.com/aaronparker/evergreen/'
+    RepositorySourceLocation = 'https://github.com/EUCPilots/evergreen-module/'
 
     PSData = @{
 
@@ -108,16 +108,16 @@ PrivateData = @{
         Tags = 'Evergreen','Packer','Automation','MDT','ConfigMgr','DevOps','AzureVirtualDesktop','Intune','Windows'
 
         # A URL to the license for this module.
-        LicenseUri = 'https://github.com/aaronparker/evergreen/blob/main/LICENSE'
+        LicenseUri = 'https://github.com/EUCPilots/evergreen-module/blob/main/LICENSE'
 
         # A URL to the main website for this project.
-        ProjectUri = 'https://stealthpuppy.com/evergreen/'
+        ProjectUri = 'https://eucpilots.com/evergreen-docs/'
 
         # A URL to an icon representing this module.
-        IconUri = 'https://raw.githubusercontent.com/aaronparker/evergreen/main/img/evergreenbulb.png'
+        IconUri = 'https://raw.githubusercontent.com/EUCPilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://stealthpuppy.com/evergreen/changelog/'
+        ReleaseNotes = 'https://eucpilots.com/evergreen-docs/changelog'
 
         # Prerelease string of this module
         # Prerelease = ''

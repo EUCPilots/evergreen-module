@@ -6,7 +6,7 @@ env:
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "split-repo" ]
     paths:
       - 'Evergreen/**.ps1'
       - 'Evergreen/**.psm1'
@@ -170,17 +170,17 @@ jobs:
         with:
           nunit_files: "test-results/**/*.xml"
 
-      - name: Download Code Coverage Result Artifacts
-        uses: actions/download-artifact@v4
-        if: always()
-        with:
-          name: codecov-results
-          path: codecov-results
+      # - name: Download Code Coverage Result Artifacts
+      #   uses: actions/download-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: codecov-results
+      #     path: codecov-results
 
-      - name: Upload to Codecov
-        id: codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: "codecov-results/**/*.xml"
-          verbose: true
+      # - name: Upload to Codecov
+      #   id: codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: "codecov-results/**/*.xml"
+      #     verbose: true
