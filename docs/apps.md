@@ -1,6 +1,6 @@
-﻿# 374 Supported applications
+﻿# 375 Supported applications
 
-Evergreen `2508.2431` supports the following applications:
+Evergreen `2509.2489` supports the following applications:
 
 | Name                                 | Application                                                       | Link                                                                                                                                        |
 | ------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -68,6 +68,7 @@ Evergreen `2508.2431` supports the following applications:
 | BitwardenDesktop                     | Bitwarden Desktop                                                 | https://bitwarden.com/                                                                                                                      |
 | BlenderLauncher                      | Blender Launcher                                                  | https://dotbow.github.io/Blender-Launcher/                                                                                                  |
 | BlueJ                                | BlueJ                                                             | https://www.bluej.org/                                                                                                                      |
+| Bruno                                | Bruno                                                             | https://www.usebruno.com/                                                                                                                   |
 | CendioThinLinc                       | Cendio ThinLinc                                                   | https://www.cendio.com/                                                                                                                     |
 | CitrixShareFile                      | Citrix ShareFile for Windows                                      | https://www.citrix.com/downloads/sharefile/clients-and-plug-ins/citrix-files-for-windows.html                                               |
 | CitrixWorkspaceApp                   | Citrix Workspace app                                              | https://www.citrix.com/downloads/workspace-app/                                                                                             |
