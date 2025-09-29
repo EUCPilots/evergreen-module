@@ -28,7 +28,7 @@ jobs:
     name: Run PSScriptAnalyzer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Run PSScriptAnalyzer (other branches)
         uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f
@@ -48,7 +48,7 @@ jobs:
     needs: psscriptanalyzer
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Test with Pester
         shell: powershell
@@ -57,6 +57,7 @@ jobs:
           .\tests\Install-Pester.ps1
           Import-Module -Name "Pester" -Force -ErrorAction "Stop"
           Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
+          Update-Evergreen -Force
 
           $Config = [PesterConfiguration]::Default
           $Config.Run.Path = "$env:GITHUB_WORKSPACE\tests\Main.Tests.ps1"

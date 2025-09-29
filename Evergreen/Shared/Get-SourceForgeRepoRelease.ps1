@@ -23,7 +23,7 @@
     # Retrieve best release json
     $params = @{
         Uri       = $Uri
-        UserAgent = (Get-EvergreenUserAgent)
+        UserAgent = "Evergreen/$((Get-Module -Name "Evergreen").Version)"
     }
     $BestRelease = Invoke-EvergreenRestMethod @params
 
@@ -63,7 +63,7 @@
     # Find the mirror for the download
     $params = @{
         Uri       = $BestRelease.platform_releases.windows.url
-        UserAgent = (Get-EvergreenUserAgent)
+        UserAgent = $null
     }
     $Resolved = Resolve-SystemNetWebRequest @params
     Write-Verbose -Message "$($MyInvocation.MyCommand): Resolve mirror to: $($Resolved.ResponseUri.Host)."
@@ -72,7 +72,6 @@
     $params = @{
         Uri         = "$($Download.Feed)$Folder"
         ContentType = $Download.ContentType
-        UserAgent   = (Get-EvergreenUserAgent)
     }
     $Content = Invoke-EvergreenRestMethod @params
 

@@ -12,7 +12,8 @@ Function Get-FunctionResource {
     )
 
     # Setup path to the manifests folder and the app manifest
-    $Path = Join-Path -Path $MyInvocation.MyCommand.Module.ModuleBase -ChildPath "Manifests"
+    # $Path = Join-Path -Path $MyInvocation.MyCommand.Module.ModuleBase -ChildPath "Manifests"
+    $Path = Join-Path -Path (Get-EvergreenAppsPath) -ChildPath "Manifests"
     $AppManifest = Join-Path -Path $Path -ChildPath "$AppName.json"
 
     # Read the content from the manifest file

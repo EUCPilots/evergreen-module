@@ -21,7 +21,7 @@ jobs:
     name: Run PSScriptAnalyzer
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Run PSScriptAnalyzer (development push)
         uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f
@@ -40,7 +40,7 @@ jobs:
     name: "Run Pester tests on Windows PowerShell (development push)"
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Pester tests
         shell: powershell
@@ -49,6 +49,7 @@ jobs:
           .\tests\Install-Pester.ps1
           Import-Module -Name "Pester" -Force -ErrorAction "Stop"
           Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
+          Update-Evergreen -Force
 
           $Config = [PesterConfiguration]::Default
           $Config.Run.Path = "$env:GITHUB_WORKSPACE\tests"
@@ -83,7 +84,7 @@ jobs:
   #   needs: psscriptanalyzer
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v5
+  #     - uses: actions/checkout@v4
 
   #     - name: Install module DnsClient-PS
   #       shell: pwsh
@@ -150,7 +151,7 @@ jobs:
 
     steps:
       - name: Download Pester Test Result Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           name: test-results
           path: test-results
@@ -161,7 +162,7 @@ jobs:
           nunit_files: "test-results/**/*.xml"
 
       - name: Download Code Coverage Result Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         if: always()
         with:
           name: codecov-results

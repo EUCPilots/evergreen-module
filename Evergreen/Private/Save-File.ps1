@@ -20,7 +20,7 @@
             Uri             = $Uri
             OutFile         = $OutFile
             UseBasicParsing = $True
-            UserAgent       = $script:UserAgent
+            UserAgent       = $script:resourceStrings.UserAgent.Base
         }
         if (Test-PSCore) {
             $params.SslProtocol = "Tls12"

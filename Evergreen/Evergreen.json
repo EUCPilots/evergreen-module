@@ -2,8 +2,15 @@
     "Preferences": {
         "ErrorAction": "Stop"
     },
+    "Repositories": {
+        "Apps": {
+            "Repo": "eucpilots/evergreen-apps",
+            "Branch": "main",
+            "Sha256": "sha256_hashes.csv"
+        }
+    },
     "UserAgent": {
-        "Base": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.3124.85",
+		"Base": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.3124.85",
         "Download": [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.3124.85",
             "Googlebot/2.1 (+http://www.google.com/bot.html)"
@@ -47,26 +54,6 @@
             "zipball_url",
             "tarball_url",
             "node_id"
-        ],
-        "Codeberg": [
-            "archive_download_count",
-            "assets",
-            "author",
-            "body",
-            "created_at",
-            "draft",
-            "hide_archive_links",
-            "html_url",
-            "id",
-            "name",
-            "prerelease",
-            "published_at",
-            "tag_name",
-            "tarball_url",
-            "target_commitish",
-            "upload_url",
-            "url",
-            "zipball_url"
         ]
     },
     "Uri": {

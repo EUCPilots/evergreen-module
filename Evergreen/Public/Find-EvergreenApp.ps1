@@ -19,7 +19,7 @@
     begin {
         #region Get the per-application manifests from the Evergreen/Manifests folder
         $params = @{
-            Path        = Join-Path -Path $MyInvocation.MyCommand.Module.ModuleBase -ChildPath "Manifests"
+            Path        = Join-Path -Path (Get-EvergreenAppsPath) -ChildPath "Manifests"
             Filter      = "*.json"
             ErrorAction = "SilentlyContinue"
         }

@@ -17,7 +17,7 @@ jobs:
     name: Update module version
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
         id: update-changelog
         shell: powershell
         run: |
-            $changeLog = "${{ github.workspace }}\docs\changelog.md"
+            $changeLog = "${{ github.workspace }}\changelog.md"
             $replaceString = "^## VERSION$"
             $content = Get-Content -Path $changeLog
             if ($content -match $replaceString) {

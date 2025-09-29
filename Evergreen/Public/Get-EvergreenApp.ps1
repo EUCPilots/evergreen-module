@@ -51,18 +51,19 @@ function Get-EvergreenApp {
     process {
         # Build a path to the application function
         # This will build a path like: Evergreen/Apps/Get-TeamViewer.ps1
-        $Function = [System.IO.Path]::Combine($MyInvocation.MyCommand.Module.ModuleBase, "Apps", "Get-$Name.ps1")
+        #$Function = [System.IO.Path]::Combine($MyInvocation.MyCommand.Module.ModuleBase, "Apps", "Get-$Name.ps1")
+        $FunctionPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Apps", "Get-$Name.ps1")
         Write-Verbose -Message "Function path: $Function"
 
         #region Test that the function exists and run it to return output
-        if (Test-Path -Path $Function -PathType "Leaf" -ErrorAction "SilentlyContinue") {
+        if (Test-Path -Path $FunctionPath -PathType "Leaf" -ErrorAction "SilentlyContinue") {
             Write-Verbose -Message "Function exists: $Function."
 
             # Dot source the function so that we can use it
             # Import function here rather than at module import to reduce IO and memory footprint as the module grows
             # This also allows us to add an application manifest and function without having to re-load the module
             Write-Verbose -Message "Dot sourcing: $Function."
-            . $Function
+            . $FunctionPath
 
             try {
                 # Run the function to grab the application details; pass the per-app manifest to the app function
@@ -92,6 +93,7 @@ function Get-EvergreenApp {
             }
         }
         else {
+            Write-Warning -Message "Run 'Update-Evergreen' to update the list of supported applications."
             Write-Information -MessageData "`nPlease list supported application names with Find-EvergreenApp." -InformationAction "Continue"
             Write-Information -MessageData "Find out how to contribute a new application to the Evergreen project at: $($script:resourceStrings.Uri.Docs)." -InformationAction "Continue"
             try {
@@ -104,7 +106,7 @@ function Get-EvergreenApp {
             Write-Information -MessageData "`n'$Name' not found. Evergreen supports these similar applications:" -InformationAction "Continue"
             Write-Information -MessageData $AppList -InformationAction "Continue"
             Write-Information -MessageData "" -InformationAction "Continue"
-            $Msg = "Failed to retrieve manifest for application: $Name."
+            $Msg = "Failed to retrieve manifest for application: $Name at '$FunctionPath'."
             throw [System.IO.FileNotFoundException]::New($Msg)
         }
         #endregion

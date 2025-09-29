@@ -12,7 +12,7 @@ Function Invoke-SystemNetRequest {
 
         [Parameter(Position = 1)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = $script:resourceStrings.UserAgent.Base,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
