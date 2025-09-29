@@ -1,5 +1,15 @@
 # Change log
 
+## VERSION
+
+* Creates `Update-Evergreen` to download application functions and manifests from `evergreen-apps` repository
+* Removes application functions and manifests from the module
+* Deletes docs, because this has been moved to a seperate repo
+
+## 2509.2489
+
+* Fixes an issue where `MicrosoftOneDrive` would return `x64` architecture for an `x86` release
+
 ## 2506.2263
 
 * Fixes change to download URL in `MicrosoftAzurePipelinesAgent`

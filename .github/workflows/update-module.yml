@@ -73,9 +73,10 @@ jobs:
         shell: powershell
         run: |
             Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
+            Update-Evergreen
             Import-Module -Name MarkdownPS
 
-            $OutFile = [System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "docs", "apps.md")
+            $OutFile = [System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "apps.md")
             $markdown = New-MDHeader -Text "$((Find-EvergreenApp).Count) Supported applications" -Level 1
             $markdown += "`n"
             $line = "Evergreen " + '`' + ${{steps.update-version.outputs.newversion}} + '`' + " supports the following applications:"
