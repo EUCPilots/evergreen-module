@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2509.2549
 
 * Creates `Update-Evergreen` to download application functions and manifests from `evergreen-apps` repository
 * Removes application functions and manifests from the module
