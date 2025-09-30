@@ -10,7 +10,6 @@ function Write-Message {
         [System.String] $MessageType = "Information"
     )
 
-    # [System.Text.Encoding]::UTF32.GetBytes("✓")
     switch ($MessageType) {
         "Information" {
             $ForegroundColor = "Black"
