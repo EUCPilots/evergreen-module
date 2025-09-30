@@ -12,7 +12,7 @@ function Resolve-SystemNetWebRequest {
         [System.String] $Uri,
 
         [Parameter(Position = 1)]
-        [System.String] $UserAgent = $script:resourceStrings.UserAgent.Base,
+        [System.String] $UserAgent = $script:UserAgent,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]

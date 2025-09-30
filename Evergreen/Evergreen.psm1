@@ -26,6 +26,7 @@ foreach ($Import in @($Public + $Private + $Shared)) {
 
 # Get module strings
 $script:resourceStrings = Get-ModuleResource
+$script:UserAgent = Get-EvergreenUserAgent
 
 # Verifies whether the required 'Apps' and 'Manifests' directories exist in the specified path.
 # If either directory is missing, it warns the user to download the Evergreen app functions.

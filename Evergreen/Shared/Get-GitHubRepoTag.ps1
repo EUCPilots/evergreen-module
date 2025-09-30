@@ -51,7 +51,7 @@ function Get-GitHubRepoTag {
                     MaximumRedirection = 0
                     DisableKeepAlive   = $true
                     UseBasicParsing    = $true
-                    UserAgent          = "github-aaronparker-evergreen"
+                    UserAgent          = (Get-EvergreenUserAgent)
                     Uri                = $Uri
                 }
                 if (Test-ProxyEnv) {

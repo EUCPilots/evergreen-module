@@ -40,7 +40,7 @@ function Save-EvergreenApp {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:resourceStrings.UserAgent.Base,
+        [System.String] $UserAgent = $script:UserAgent,
 
         [Parameter(Mandatory = $false)]
         [System.Management.Automation.SwitchParameter] $Force,
@@ -140,17 +140,17 @@ function Save-EvergreenApp {
             if ($PSBoundParameters.ContainsKey("Force") -or !(Test-Path -Path $DownloadFile -PathType "Leaf")) {
                 #region Download the file
                 # If URL in the catch list, customise the user agent
-                if ($Object.URI -match $script:resourceStrings.UserAgent.CatchList -and -not($PSBoundParameters.ContainsKey("UserAgent"))) {
-                    Write-Verbose -Message "URL matches catch list for custom user agent: $($Object.URI)."
-                    $UserAgent = "Evergreen/$((Get-Module -Name "Evergreen").Version)"
-                }
+                # if ($Object.URI -match $script:resourceStrings.UserAgent.CatchList -and -not($PSBoundParameters.ContainsKey("UserAgent"))) {
+                #     Write-Verbose -Message "URL matches catch list for custom user agent: $($Object.URI)."
+                #     $UserAgent = $script:UserAgent
+                # }
 
                 # Invoke-WebRequest parameters
                 $params = @{
                     Uri             = $Object.URI
                     OutFile         = $DownloadFile
                     UseBasicParsing = $true
-                    UserAgent       = $UserAgent
+                    UserAgent       = $script:UserAgent
                     ErrorAction     = "Continue"
                 }
                 if ($PSBoundParameters.ContainsKey("Proxy")) {

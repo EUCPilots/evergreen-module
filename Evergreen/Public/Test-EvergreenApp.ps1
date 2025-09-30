@@ -23,7 +23,7 @@ function Test-EvergreenApp {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:resourceStrings.UserAgent.Base,
+        [System.String] $UserAgent = $script:UserAgent,
 
         [Parameter(Mandatory = $false)]
         [System.Management.Automation.SwitchParameter] $Force,

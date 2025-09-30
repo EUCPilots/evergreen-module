@@ -30,7 +30,7 @@ function Invoke-EvergreenWebRequest {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:resourceStrings.UserAgent.Base,
+        [System.String] $UserAgent = $script:UserAgent,
 
         [Parameter()]
         [System.Management.Automation.SwitchParameter] $Raw,
