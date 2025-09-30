@@ -151,7 +151,7 @@ jobs:
 
     steps:
       - name: Download Pester Test Result Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: test-results
           path: test-results
@@ -162,7 +162,7 @@ jobs:
           nunit_files: "test-results/**/*.xml"
 
       - name: Download Code Coverage Result Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         if: always()
         with:
           name: codecov-results
