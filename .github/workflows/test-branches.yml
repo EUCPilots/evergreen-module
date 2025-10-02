@@ -35,6 +35,7 @@ jobs:
         with:
           path: "./Evergreen"
           recurse: true
+          settings: "./.rules/PSScriptAnalyzerSettings.psd1"
           output: results.sarif
 
       # Upload the SARIF file generated in the previous step
