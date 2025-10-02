@@ -122,7 +122,8 @@
         "Yubico",
         "Zorgmail"
     ],
-    "powershell.scriptAnalysis.settingsPath": ".vscode/PSScriptAnalyzerSettings.psd1",
+    "powershell.scriptAnalysis.settingsPath": ".rules/PSScriptAnalyzerSettings.psd1",
     "powershell.scriptAnalysis.enable": true,
     "pester.autoRunOnSave": false,
+    "files.eol": "\n"
 }
