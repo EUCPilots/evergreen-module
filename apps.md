@@ -1,6 +1,6 @@
 ﻿# 379 Supported applications
 
-Evergreen `2510.261` supports the following applications:
+Evergreen `` supports the following applications:
 
 | Name                                 | Application                                                       | Link                                                                                                                                        |
 | ------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
