@@ -113,7 +113,7 @@ function Get-GitHubRepoRelease {
                     }
                     $missingProperties = Compare-Object @params
 
-                    # Throw an error for missing properties
+                    # throw an error for missing properties
                     if ($null -ne $missingProperties) {
                         Write-Verbose -Message "$($MyInvocation.MyCommand): Validated successfully."
                     }

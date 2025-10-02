@@ -1,6 +1,6 @@
-Function Get-Platform {
+function Get-Platform {
     [OutputType([System.String])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]

@@ -51,18 +51,18 @@ function Get-EvergreenApp {
     process {
         # Build a path to the application function
         # This will build a path like: Evergreen/Apps/Get-TeamViewer.ps1
-        #$Function = [System.IO.Path]::Combine($MyInvocation.MyCommand.Module.ModuleBase, "Apps", "Get-$Name.ps1")
+        #$function = [System.IO.Path]::Combine($MyInvocation.MyCommand.Module.ModuleBase, "Apps", "Get-$Name.ps1")
         $FunctionPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Apps", "Get-$Name.ps1")
-        Write-Verbose -Message "Function path: $Function"
+        Write-Verbose -Message "function path: $function"
 
         #region Test that the function exists and run it to return output
         if (Test-Path -Path $FunctionPath -PathType "Leaf" -ErrorAction "SilentlyContinue") {
-            Write-Verbose -Message "Function exists: $Function."
+            Write-Verbose -Message "function exists: $function."
 
             # Dot source the function so that we can use it
             # Import function here rather than at module import to reduce IO and memory footprint as the module grows
             # This also allows us to add an application manifest and function without having to re-load the module
-            Write-Verbose -Message "Dot sourcing: $Function."
+            Write-Verbose -Message "Dot sourcing: $function."
             . $FunctionPath
 
             try {
@@ -114,7 +114,7 @@ function Get-EvergreenApp {
 
     end {
         # Remove these variables for next run
-        Remove-Variable -Name "Output", "Function" -ErrorAction "SilentlyContinue"
+        Remove-Variable -Name "Output", "function" -ErrorAction "SilentlyContinue"
         if ($PSBoundParameters.ContainsKey("SkipCertificateCheck")) {
             $script:SkipCertificateCheck = $false
         }

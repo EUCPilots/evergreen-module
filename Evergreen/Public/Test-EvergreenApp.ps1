@@ -14,7 +14,7 @@ function Test-EvergreenApp {
         [ValidateNotNull()]
         [System.Management.Automation.PSObject] $InputObject,
 
-        [Parameter(Mandatory = $False, Position = 1)]
+        [Parameter(Mandatory = $false, Position = 1)]
         [System.String] $Proxy,
 
         [Parameter(Mandatory = $false, Position = 2)]
@@ -61,7 +61,7 @@ function Test-EvergreenApp {
                 $params = @{
                     Uri             = $Object.URI
                     Method          = "HEAD"
-                    UseBasicParsing = $True
+                    UseBasicParsing = $true
                     UserAgent       = $UserAgent
                     ErrorAction     = "SilentlyContinue"
                 }
@@ -71,11 +71,11 @@ function Test-EvergreenApp {
                 if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
                     $params.ProxyCredential = $ProxyCredential
                 }
-                $Result = $True
+                $Result = $true
                 Invoke-WebRequest @params | Out-Null
             }
             catch [System.Exception] {
-                $Result = $False
+                $Result = $false
             }
             $PSObject = [PSCustomObject] @{
                 Result = $Result

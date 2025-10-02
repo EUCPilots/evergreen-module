@@ -1,12 +1,12 @@
-﻿Function Save-File {
+﻿function Save-File {
     <#
         .SYNOPSIS
             Downloads a file with Invoke-WebRequest and returns the downloaded file path.
     #>
     [OutputType([System.Array])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNull()]
         [System.String] $Uri
     )
@@ -19,7 +19,7 @@
         $params = @{
             Uri             = $Uri
             OutFile         = $OutFile
-            UseBasicParsing = $True
+            UseBasicParsing = $true
             UserAgent       = $script:UserAgent
         }
         if (Test-PSCore) {

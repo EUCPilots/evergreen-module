@@ -7,7 +7,7 @@ function Resolve-InvokeWebRequest {
     [OutputType([System.String])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.String] $Uri,
 

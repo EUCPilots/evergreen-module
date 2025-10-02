@@ -14,10 +14,10 @@ function Start-EvergreenLibraryUpdate {
         [ValidateNotNull()]
         [System.IO.FileInfo] $Path,
 
-        [Parameter(Mandatory = $False, Position = 1)]
+        [Parameter(Mandatory = $false, Position = 1)]
         [System.String] $Proxy,
 
-        [Parameter(Mandatory = $False, Position = 2)]
+        [Parameter(Mandatory = $false, Position = 2)]
         [System.Management.Automation.PSCredential]
         $ProxyCredential = [System.Management.Automation.PSCredential]::Empty
     )

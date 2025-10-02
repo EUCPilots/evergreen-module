@@ -1,14 +1,14 @@
-Function Get-ModuleResource {
+function Get-ModuleResource {
     <#
         .SYNOPSIS
             Reads the module strings from the JSON file and returns a hashtable.
     #>
     [OutputType([System.Management.Automation.PSObject])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $False, Position = 0)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [ValidateNotNull()]
-        [ValidateScript( { If (Test-Path -Path $_ -PathType 'Leaf') { $True } Else { Throw "Cannot find file $_" } })]
+        [ValidateScript( { if (Test-Path -Path $_ -PathType 'Leaf') { $true } else { throw "Cannot find file $_" } })]
         [System.String] $Path = (Join-Path -Path $MyInvocation.MyCommand.Module.ModuleBase -ChildPath "Evergreen.json")
     )
 
@@ -16,7 +16,7 @@ Function Get-ModuleResource {
         Write-Verbose -Message "$($MyInvocation.MyCommand): read module resource strings from: $Path"
         $params = @{
             Path        = $Path
-            Raw         = $True
+            Raw         = $true
             ErrorAction = "Stop"
         }
         $content = Get-Content @params

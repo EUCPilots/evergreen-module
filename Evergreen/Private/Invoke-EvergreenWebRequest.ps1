@@ -6,9 +6,9 @@ function Invoke-EvergreenWebRequest {
             Some validation of $Uri is expected before passing to this function
     #>
     [OutputType([Microsoft.PowerShell.Commands.WebResponseObject])]
-    [CmdletBinding(SupportsShouldProcess = $True)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.String] $Uri,
 
@@ -101,7 +101,7 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
     if ($PSBoundParameters.ContainsKey("Raw")) {
         $tempFile = New-TemporaryFile -WhatIf:$WhatIfPreference
         $params.OutFile = $tempFile
-        $params.PassThru = $True
+        $params.PassThru = $true
         Write-Verbose -Message "$($MyInvocation.MyCommand): Using temp file $tempFile."
     }
     if (Test-ProxyEnv) {

@@ -5,9 +5,9 @@ function ConvertFrom-IniFile {
             Source: https://devblogs.microsoft.com/scripting/use-powershell-to-work-with-any-ini-file/
     #>
     [OutputType([System.Collections.Hashtable])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0, ValueFromPipeline)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]
         $InputObject
     )
 

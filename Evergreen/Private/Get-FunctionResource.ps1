@@ -1,12 +1,12 @@
-Function Get-FunctionResource {
+function Get-FunctionResource {
     <#
         .SYNOPSIS
             Reads the function strings from the JSON file and returns a hashtable.
     #>
     [OutputType([System.Management.Automation.PSObject])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNull()]
         [System.String] $AppName
     )

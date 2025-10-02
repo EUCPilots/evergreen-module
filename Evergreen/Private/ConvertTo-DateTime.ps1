@@ -1,13 +1,13 @@
-Function ConvertTo-DateTime {
+function ConvertTo-DateTime {
     <#
         .SYNOPSIS
             Return a date/time string converted to a localised short date string.
             Pass the date pattern that the string is in, and it should return in the localised format
     #>
     [OutputType([System.DateTime])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.String] $DateTime,
 

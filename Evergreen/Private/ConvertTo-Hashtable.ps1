@@ -1,4 +1,4 @@
-Function ConvertTo-Hashtable {
+function ConvertTo-Hashtable {
     <#
         .SYNOPSIS
             Converts a PSCustomObject into a hashtable for Windows PowerShell
@@ -8,7 +8,7 @@ Function ConvertTo-Hashtable {
             Link: https://4sysops.com/archives/convert-json-to-a-powershell-hash-table
     #>
     [OutputType([System.Collections.Hashtable])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Position = 0, ValueFromPipeline)]
         $InputObject

@@ -3,12 +3,12 @@ function Set-ProxyEnv {
         .SYNOPSIS
             Set proxy server and credentials information into environment variables that other functions can use
     #>
-    [CmdletBinding(SupportsShouldProcess = $True)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
-        [Parameter(Mandatory = $False, Position = 0)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [System.String] $Proxy,
 
-        [Parameter(Mandatory = $False, Position = 1)]
+        [Parameter(Mandatory = $false, Position = 1)]
         [System.Management.Automation.PSCredential]
         $ProxyCredential = [System.Management.Automation.PSCredential]::Empty
     )
@@ -22,7 +22,7 @@ function Set-ProxyEnv {
                         Name  = "EvergreenProxy"
                         Value = $Proxy
                         Scope = "Script"
-                        Force = $True
+                        Force = $true
                     }
                     New-Variable @params
                 }
@@ -33,7 +33,7 @@ function Set-ProxyEnv {
                         Name  = "EvergreenProxyCreds"
                         Value = $ProxyCredential
                         Scope = "Script"
-                        Force = $True
+                        Force = $true
                     }
                     New-Variable @params
                 }

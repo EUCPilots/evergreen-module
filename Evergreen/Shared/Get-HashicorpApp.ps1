@@ -1,4 +1,4 @@
-Function Get-HashicorpApp {
+function Get-HashicorpApp {
     <#
         .SYNOPSIS
             Get the current versions and download URLs for Hashicorp apps.

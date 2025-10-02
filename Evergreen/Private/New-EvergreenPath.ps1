@@ -1,4 +1,4 @@
-Function New-EvergreenPath {
+function New-EvergreenPath {
     <#
         .SYNOPSIS
             Build a path from the Evergreen input object properties
@@ -8,7 +8,7 @@ Function New-EvergreenPath {
             Twitter: @stealthpuppy
     #>
     [OutputType([System.String])]
-    [CmdletBinding(SupportsShouldProcess = $True)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter()]
         [System.Management.Automation.PSObject] $InputObject,
@@ -37,7 +37,7 @@ Function New-EvergreenPath {
                             ErrorAction = "Continue"
                         }
                         Write-Verbose -Message "$($MyInvocation.MyCommand): Create path: $OutPath."
-                        New-Item @params > $Null
+                        New-Item @params > $null
                     }
                     catch {
                         Write-Warning -Message "$($MyInvocation.MyCommand): Failed to create target directory. Error failed with: $($_.Exception.Message)."

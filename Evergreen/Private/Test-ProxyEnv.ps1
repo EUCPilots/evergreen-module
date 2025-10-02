@@ -3,9 +3,9 @@ function Test-ProxyEnv {
         .SYNOPSIS
             Return true if the EvergreenProxy variable is set
     #>
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $False)]
+        [Parameter(Mandatory = $false)]
         [System.Management.Automation.SwitchParameter] $Creds
     )
 

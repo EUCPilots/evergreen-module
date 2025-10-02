@@ -1,4 +1,4 @@
-Function Expand-GzipArchive {
+function Expand-GzipArchive {
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]

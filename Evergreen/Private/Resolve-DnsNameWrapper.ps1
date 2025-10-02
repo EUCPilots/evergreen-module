@@ -1,12 +1,12 @@
-Function Resolve-DnsNameWrapper {
+function Resolve-DnsNameWrapper {
     <#
         .SYNOPSIS
             Wrap Resolve-DnsName to filter what's returned
     #>
     #[OutputType([Microsoft.DnsClient.Commands.DnsRecord])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.String] $Name,
 

@@ -1,8 +1,8 @@
 function Get-Architecture {
     [OutputType([System.String])]
-    [CmdletBinding(SupportsShouldProcess = $False)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $True, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.String] $String
     )
 
