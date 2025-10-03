@@ -1,11 +1,6 @@
 function Update-Evergreen {
     <#
-        .SYNOPSIS
-            Download and synchronize Evergreen Apps and Manifests from a separate GitHub repository.
-
-        .DESCRIPTION
-            Enables separation of the core Evergreen module from app-specific code and manifests.
-            Downloads the latest versions of /Apps and /Manifests from a specified GitHub repository to a user-writable location (no admin required).
+        .EXTERNALHELP Evergreen-help.xml     
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -19,7 +14,7 @@ function Update-Evergreen {
 
         try {
             # Get the latest version from the remote repository
-            Write-Message -Message "Checking for latest Evergreen apps release."
+            Write-Message -Message "Checking for latest Evergreen apps release from: $($script:resourceStrings.Repositories.Apps.Repo)"
             $Url = "https://api.github.com/repos/$($script:resourceStrings.Repositories.Apps.Repo)/releases/latest"
             $EvergreenAppsRelease = Get-GitHubRepoRelease -Uri $Url -Filter "\.zip$|\.csv"
             $EvergreenAppsZip = $EvergreenAppsRelease | Where-Object { $_.Type -eq "zip" }
@@ -99,7 +94,7 @@ function Update-Evergreen {
 
         $DoUpdate = $false
         if ($null -eq $EvergreenAppsRelease) {
-            throw "Could not retrieve remote version information. Please check your internet connection or the repository URL."
+            throw "Could not retrieve remote version information. Please check your internet connection, the repository URL, or your access token."
         }
         elseif ($null -eq $LocalVersion) {
             Write-Message -Message "Unable to find Evergreen apps cached version. Downloading latest release."
