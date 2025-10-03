@@ -51,8 +51,8 @@ body:
       label: Have you reviewed the documentation?
       description: "Please confirm that you've reviewed the following links:"
       options:
-        - label: "Troubleshooting at: https://stealthpuppy.com/evergreen/troubleshoot/"
-        - label: "Known issues at: https://stealthpuppy.com/evergreen/issues/"
+        - label: "Troubleshooting at: https://eucpilots.com/evergreen-docs/troubleshoot/"
+        - label: "Known issues at: https://eucpilots.com/evergreen-docs/issues/"
   - type: textarea
     id: verbose
     attributes:

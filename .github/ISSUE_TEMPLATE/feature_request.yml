@@ -28,4 +28,4 @@ body:
       label: Have you reviewed the documentation?
       description: "Please confirm that you've reviewed the documentation before making this feature request."
       options:
-        - label: "Documentation at: https://stealthpuppy.com/evergreen/"
+        - label: "Documentation at: https://eucpilots.com/evergreen-docs/"
