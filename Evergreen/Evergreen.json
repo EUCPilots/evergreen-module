@@ -77,9 +77,9 @@
         ]
     },
     "Uri": {
-        "Project": "https://github.com/aaronparker/evergreen/",
-        "Docs": "https://stealthpuppy.com/evergreen/",
-        "Issues": "https://stealthpuppy.com/evergreen/issues/",
-        "Info": "https://stealthpuppy.com/evergreen/troubleshoot/"
+        "Project": "https://github.com/eucpilots/evergreen-module/",
+        "Docs": "https://eucpilots.com/evergreen-docs/",
+        "Issues": "https://eucpilots.com/evergreen-docs/issues/",
+        "Info": "https://eucpilots.com/evergreen-docs/troubleshoot/"
     }
 }

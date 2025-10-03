@@ -115,7 +115,7 @@ PrivateData = @{
         ProjectUri = 'https://eucpilots.com/evergreen-docs/'
 
         # A URL to an icon representing this module.
-        IconUri = 'https://raw.githubusercontent.com/EUCPilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
+        IconUri = 'https://raw.githubusercontent.com/eucpilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
         ReleaseNotes = 'https://eucpilots.com/evergreen-docs/changelog'
