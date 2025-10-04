@@ -2,24 +2,49 @@ function Update-Evergreen {
     <#
         .EXTERNALHELP Evergreen-help.xml     
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     param(
+        [Parameter()]
+        [System.Management.Automation.SwitchParameter] $Force,
+
         [Parameter(Mandatory = $false)]
-        [System.Management.Automation.SwitchParameter] $Force
+        [ValidateNotNullOrWhiteSpace()]
+        [ValidateScript( {
+                if ($_ -match "^v\d{2}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.(0|[1-9]\d{0,5})$") {
+                    $true
+                }
+                else {
+                    throw "'$_' must be in the format 'v<major>.<minor>.<patch>.<build>'."
+                }
+            })]
+        [System.String] $Release
     )
 
     begin {
         # Sync folders to check for expected structure
         $SyncFolders = @((Join-Path -Path $Script:AppsPath -ChildPath 'Apps'), (Join-Path -Path $Script:AppsPath -ChildPath 'Manifests'))
 
+        # Validate Force parameter requirement when Release is specified
+        if ($PSBoundParameters['Release'] -and -not $PSBoundParameters['Force']) {
+            throw "-Force parameter required when specifying a release version."
+        }
+
         try {
             # Get the latest version from the remote repository
-            Write-Message -Message "Checking for latest Evergreen apps release from: $($script:resourceStrings.Repositories.Apps.Repo)"
-            $Url = "https://api.github.com/repos/$($script:resourceStrings.Repositories.Apps.Repo)/releases/latest"
+            if ($PSBoundParameters['Release']) {
+                Write-Message -Message "Using specified Evergreen apps release version: $Release"
+                $Url = "https://api.github.com/repos/$($script:resourceStrings.Repositories.Apps.Repo)/releases/tags/$Release"
+            }
+            else {
+                Write-Message -Message "Checking for latest Evergreen apps release from: $($script:resourceStrings.Repositories.Apps.Repo)"
+                $Url = "https://api.github.com/repos/$($script:resourceStrings.Repositories.Apps.Repo)/releases/latest"
+            }
+
+            Write-Message -Message "Release URL: $Url"
             $EvergreenAppsRelease = Get-GitHubRepoRelease -Uri $Url -Filter "\.zip$|\.csv"
             $EvergreenAppsZip = $EvergreenAppsRelease | Where-Object { $_.Type -eq "zip" }
             $EvergreenAppsCsv = $EvergreenAppsRelease | Where-Object { $_.Type -eq "csv" }
-            Write-Message -Message "Latest Evergreen apps release: $($EvergreenAppsZip.Version)"
+            Write-Message -Message "Found Evergreen apps release: $($EvergreenAppsZip.Version)"
         }
         catch {
             $EvergreenAppsRelease = $null
@@ -78,6 +103,7 @@ function Update-Evergreen {
         }
         else {
             # Create the AppsPath directory
+            Write-Message -Message "Creating Evergreen apps cache directory: $script:AppsPath."
             New-Item -Path $script:AppsPath -ItemType "Directory" -Force | Out-Null
         }
     }
@@ -96,6 +122,10 @@ function Update-Evergreen {
         if ($null -eq $EvergreenAppsRelease) {
             throw "Could not retrieve remote version information. Please check your internet connection, the repository URL, or your access token."
         }
+        elseif ($Release) {
+            Write-Message -Message "Forcing update to specified Evergreen apps release version: $Release."
+            $DoUpdate = $true
+        }
         elseif ($null -eq $LocalVersion) {
             Write-Message -Message "Unable to find Evergreen apps cached version. Downloading latest release."
             $DoUpdate = $true
@@ -107,7 +137,7 @@ function Update-Evergreen {
         elseif ([System.Version]$EvergreenAppsZip.Version -le [System.Version]$LocalVersion) {
             Write-Message -Message "Local cache matches release version. Evergreen apps are up to date."
             $DoUpdate = $false
-            if ($Force) {
+            if ($PSBoundParameters['Force']) {
                 Write-Message -Message "Forcing update due to -Force parameter."
             }
             else {
@@ -128,7 +158,7 @@ function Update-Evergreen {
         }
 
         # If -Force or no local copy or commit mismatch, do a full download
-        if ($Force -or $DoUpdate) {
+        if ($PSBoundParameters['Force'] -or $DoUpdate) {
             Write-Message -Message "Performing full sync from remote repository."
 
             Write-Message -Message "Downloading Evergreen apps release: $($EvergreenAppsZip.Uri)."
