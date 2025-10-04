@@ -1,4 +1,7 @@
 function Get-EvergreenAppsPath {
+    <#
+        .EXTERNALHELP Evergreen-help.xml
+    #>
     if (Test-Path -Path Env:EVERGREEN_APPS_PATH) {
         if (Test-Path -Path ${Env:EVERGREEN_APPS_PATH} -PathType "Container") {
             return (Resolve-Path -Path ${Env:EVERGREEN_APPS_PATH}).Path

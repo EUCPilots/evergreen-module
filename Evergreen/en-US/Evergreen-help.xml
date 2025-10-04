@@ -984,6 +984,57 @@ Architecture : x64</dev:code>
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Get-EvergreenAppsPath</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenAppsPath</command:noun>
+      <maml:description>
+        <maml:para>Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenAppsPath</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters />
+    <command:inputTypes />
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Author: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppsPath</dev:code>
+        <dev:remarks>
+          <maml:para>Description: Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenAppsPath/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Get-EvergreenEndpointFromApi</command:name>
       <command:verb>Get</command:verb>
       <command:noun>EvergreenEndpointFromApi</command:noun>
@@ -2278,6 +2329,18 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Release</maml:name>
+          <maml:description>
+            <maml:para></maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -2293,17 +2356,20 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-    </command:parameters>
-    <command:inputTypes>
-      <command:inputType>
-        <dev:type>
-          <maml:name>System.Management.Automation.PSObject</maml:name>
-        </dev:type>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Release</maml:name>
         <maml:description>
-          <maml:para>Update-Evergreen accepts the output from Get-EvergreenApp.</maml:para>
+          <maml:para></maml:para>
         </maml:description>
-      </command:inputType>
-    </command:inputTypes>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
@@ -2324,6 +2390,13 @@ c.1password.com</dev:code>
         <dev:code>Update-Evergreen -Force</dev:code>
         <dev:remarks>
           <maml:para>Description: Forces a full download and synchronization of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository, regardless of the state of the local cache.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Update-Evergreen -Release "v25.09.27.16" -Force</dev:code>
+        <dev:remarks>
+          <maml:para>Description: Downloads and synchronizes the v25.09.27.16 release of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>

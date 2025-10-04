@@ -14,7 +14,7 @@ Downloads and synchronizes the Evergreen Apps functions and Manifests from the e
 ## SYNTAX
 
 ```
-Update-Evergreen [-Force] [<CommonParameters>]
+Update-Evergreen [-Force] [-Release <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -41,6 +41,15 @@ Update-Evergreen -Force
 Description:
 Forces a full download and synchronization of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository, regardless of the state of the local cache.
 
+### EXAMPLE 2
+
+```powershell
+Update-Evergreen -Release "v25.09.27.16" -Force
+```
+
+Description:
+Downloads and synchronizes the v25.09.27.16 release of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository.
+
 ## PARAMETERS
 
 ### -Force
@@ -57,15 +66,25 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Release
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
-
-### System.Management.Automation.PSObject
-
-Update-Evergreen accepts the output from Get-EvergreenApp.
 
 ## OUTPUTS
 
