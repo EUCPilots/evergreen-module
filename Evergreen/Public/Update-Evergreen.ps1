@@ -8,7 +8,7 @@ function Update-Evergreen {
         [System.Management.Automation.SwitchParameter] $Force,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrWhiteSpace()]
+        [ValidateNotNullOrEmpty()]
         [ValidateScript( {
                 if ($_ -match "^v\d{2}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.(0|[1-9]\d{0,5})$") {
                     $true
