@@ -215,7 +215,7 @@ function Update-Evergreen {
                     Move-Item -Path (Join-Path -Path $ExtractPath -ChildPath "Manifests") -Destination $script:AppsPath
 
                     if ($EvergreenAppsZip) { Set-Content -Path $script:VersionFile -Value $EvergreenAppsZip.Version -Encoding "UTF8" -Force }
-                    Write-Message -Message "Update complete."
+                    Write-Message -Message "Update complete: $($EvergreenAppsZip.Version)."
                 }
                 else {
                     Write-Warning -Message "Some files did not match expected SHA256 hashes. Evergreen apps and manifests were not updated."
