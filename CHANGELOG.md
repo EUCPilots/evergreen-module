@@ -1,5 +1,12 @@
 # Change log
 
+## VERSION
+
+BREAKING CHANGE:
+
+* Release version that seperates the core module from the Evergreen apps
+* Requires the administrator to run `Update-Evergreen` to download the Evergreen app functions and manifests before using the module
+
 ## 2510.2802.0-beta
 
 * Adds `-Release` to `Update-Evergreen` to enable updating Evergreen apps to a specified version
@@ -33,7 +40,8 @@ This approach should achieve the following:
 * Ensures Evergreen can be identified on calls to target endpoints
 * Avoids the need to update the previous user agent (The default Microsoft Edge on Windows user agent was being used) - some vendor endpoints will block out of date user agents
 
-  This change introduces the following private functions:
+This change introduces the following private functions:
+
 * Get-EvergreenUserAgent
 * Get-ModuleVersion
 * Get-OSName
