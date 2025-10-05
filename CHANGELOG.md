@@ -15,6 +15,46 @@
 
 * Fixes an issue where `MicrosoftOneDrive` would return `x64` architecture for an `x86` release
 
+## 2508.2431
+
+* Update `OmnissaHorizonClient`, `FreedomScientificFusion`, `FreedomScientificJAWS`, `FreedomScientificZoomText` to use the Microsoft Edge user agent instead of the default Evergreen user agent
+
+## 2508.2374
+
+* Fix download URL change in `OBSStudio` and `MicrosoftEdgeDriver`
+* Updates user agent for `OracleJava` apps
+* Reorder properties in `Microsoft.NET` for better standardisation
+* Creates a custom Evergreen user agent in this format: `Evergreen/<version> (https://github.com/eucpilots/evergreen-module; PowerShell <PowerShell version>; <OS platform)`
+
+Example: `Evergreen/2508.9999 (https://github.com/eucpilots/evergreen-module; PowerShell 7.5.2; macOS)`
+
+This approach should achieve the following:
+
+* Ensures Evergreen can be identified on calls to target endpoints
+* Avoids the need to update the previous user agent (The default Microsoft Edge on Windows user agent was being used) - some vendor endpoints will block out of date user agents
+
+  This change introduces the following private functions:
+* Get-EvergreenUserAgent
+* Get-ModuleVersion
+* Get-OSName
+
+The following functions are updated to use the Evergreen user agent:
+
+* Get-EvergreenAppFromApi
+* Save-EvergreenApp
+* Test-EvergreenApp
+* Invoke-EvergreenRestMethod
+* Invoke-EvergreenWebRequest
+* Invoke-SystemNetRequest
+* Save-File
+* Get-SourceForgeRepoRelease
+
+## 2507.2318
+
+* Updates `eduVPN` to support changes in move from GitHub to Codeberg [#832](https://github.com/eucpilots/evergreen-module/issues/832)
+* Updates `GhislerTotalCommander` to fix download URLs [#833](https://github.com/eucpilots/evergreen-module/issues/833)
+* Removes `AzureDataStudio` [#834](https://github.com/eucpilots/evergreen-module/issues/834) (See [What's happening to Azure Data Studio?](https://learn.microsoft.com/en-us/azure-data-studio/whats-happening-azure-data-studio))
+
 ## 2506.2263
 
 * Fixes change to download URL in `MicrosoftAzurePipelinesAgent`
