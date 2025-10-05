@@ -50,20 +50,24 @@ function Get-EvergreenApp {
 
     process {
         # Build a path to the application function
-        # This will build a path like: Evergreen/Apps/Get-TeamViewer.ps1
-        #$function = [System.IO.Path]::Combine($MyInvocation.MyCommand.Module.ModuleBase, "Apps", "Get-$Name.ps1")
+        # This will build a path like: %LocalAppData%\Evergreen\Apps\Get-TeamViewer.ps1
         $FunctionPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Apps", "Get-$Name.ps1")
-        Write-Verbose -Message "function path: $function"
+        Write-Verbose -Message "Function path: $FunctionPath"
 
         #region Test that the function exists and run it to return output
         if (Test-Path -Path $FunctionPath -PathType "Leaf" -ErrorAction "SilentlyContinue") {
-            Write-Verbose -Message "function exists: $function."
+            Write-Verbose -Message "Function exists: $FunctionPath."
 
             # Dot source the function so that we can use it
             # Import function here rather than at module import to reduce IO and memory footprint as the module grows
             # This also allows us to add an application manifest and function without having to re-load the module
-            Write-Verbose -Message "Dot sourcing: $function."
-            . $FunctionPath
+            Write-Verbose -Message "Dot sourcing: $FunctionPath."
+            try {
+                . $FunctionPath
+            }
+            catch {
+                throw $_
+            }
 
             try {
                 # Run the function to grab the application details; pass the per-app manifest to the app function
