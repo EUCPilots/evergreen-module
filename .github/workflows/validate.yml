@@ -1,15 +1,20 @@
-name: 'Validate main branch'
+name: 'Validate module'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main", "split-repo" ]
     paths:
-      - 'Evergreen/**.ps1'
-      - 'Evergreen/**.psm1'
+      - 'Evergreen/**'
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Evergreen/**'
+  workflow_dispatch:
 
 jobs:
   psscriptanalyzer:
