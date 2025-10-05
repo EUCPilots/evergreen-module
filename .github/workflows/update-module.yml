@@ -5,12 +5,6 @@ env:
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [ "main" ]
-  #   paths:
-  #     - 'Evergreen/**.ps1'
-  #     - 'Evergreen/**.psm1'
-  #     - 'Evergreen/**.json'
 
 jobs:
   update-module:
@@ -50,7 +44,7 @@ jobs:
             (Get-Content -Path $ManifestPath) -replace 'NewManifest', $module | Set-Content -Path $ManifestPath
             (Get-Content -Path $ManifestPath) -replace 'FunctionsToExport = ','FunctionsToExport = @(' | Set-Content -Path $ManifestPath -Force
             (Get-Content -Path $ManifestPath) -replace "$($functionList[-1])'", "$($functionList[-1])')" | Set-Content -Path $ManifestPath -Force
-            echo "::set-output name=newversion::$($NewVersion)"
+            echo "newversion=$NewVersion" >> $env:GITHUB_OUTPUT
 
       # Update the change log with the new version number
       - name: Update CHANGELOG.md
@@ -79,7 +73,7 @@ jobs:
             $OutFile = [System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "apps.md")
             $markdown = New-MDHeader -Text "$((Find-EvergreenApp).Count) Supported applications" -Level 1
             $markdown += "`n"
-            $line = "Evergreen " + '`' + ${{steps.update-version.outputs.newversion}} + '`' + " supports the following applications:"
+            $line = "Evergreen supports the following applications:"
             $markdown += $line
             $markdown += "`n`n"
             $markdown += Find-EvergreenApp | New-MDTable
