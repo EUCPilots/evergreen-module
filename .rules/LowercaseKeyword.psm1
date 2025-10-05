@@ -33,7 +33,7 @@ function Measure-LowercaseKeyword {
         $Keywords = @('function', 'foreach', 'if', 'else', 'elseif', 'return', 'switch', 'param', 
                      'begin', 'process', 'end', 'in', 'do', 'while', 'until', 'for', 'trap', 
                      'throw', 'catch', 'try', 'finally', 'data', 'dynamicparam', 'break', 
-                     'continue', 'exit', 'class', 'enum', 'using', 'namespace')
+                     'continue', 'exit', 'class', 'enum', 'using')
         $Constants = @('$true', '$false', '$null')
 
         try {
