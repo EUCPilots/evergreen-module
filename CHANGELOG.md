@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2510.2802.0
 
 * Adds `-Release` to `Update-Evergreen` to enable updating Evergreen apps to a specified version
 * Adds `Expand-CabArchive` to support `Get-MicrosoftPowerAutomateDesktop`
