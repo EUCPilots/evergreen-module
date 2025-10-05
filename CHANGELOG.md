@@ -1,6 +1,11 @@
 # Change log
 
-## 2509.2549
+## VERSION
+
+* Adds `-Release` to `Update-Evergreen` to enable updating Evergreen apps to a specified version
+* Adds `Expand-CabArchive` to support `Get-MicrosoftPowerAutomateDesktop`
+
+## 2509.2549.0-beta
 
 * Creates `Update-Evergreen` to download application functions and manifests from `evergreen-apps` repository
 * Removes application functions and manifests from the module
