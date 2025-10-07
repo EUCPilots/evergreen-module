@@ -77,7 +77,7 @@ function Update-Evergreen {
                     $RemoteFileShas = $Sha256Csv | Get-Content | ConvertFrom-Csv
                 }
                 catch {
-                    Write-Warning -Message "Failed to retrieve or parse SHA256 hash file: $_"
+                    Write-Warning -Message "Failed to retrieve or parse SHA256 hash file: $($_)."
                 }
 
                 # Check if the local files match the expected SHA256 hashes
@@ -177,8 +177,9 @@ function Update-Evergreen {
                 Write-Verbose -Message "Extracting Evergreen apps release from $ZipFile."
                 $ExtractPath = Join-Path -Path $script:AppsPath -ChildPath "_extracted"
                 if (Test-Path -Path $ExtractPath) { Remove-Item -Path $ExtractPath -Recurse -Force -ErrorAction "SilentlyContinue" }
-                $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
+                $global:ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
                 Expand-Archive -Path $ZipFile -DestinationPath $ExtractPath -Force
+                $global:ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
                 Remove-Item -Path $ZipFile -Force -ErrorAction "SilentlyContinue"
 
                 Write-Message -Message "Validating extracted files against SHA256 hashes."
