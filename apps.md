@@ -1,6 +1,6 @@
-﻿# 379 Supported applications
+﻿# 380 Supported applications
 
-Evergreen `` supports the following applications:
+Evergreen supports the following applications:
 
 | Name                                 | Application                                                       | Link                                                                                                                                        |
 | ------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -219,6 +219,7 @@ Evergreen `` supports the following applications:
 | MicrosoftOpenJDK17                   | Microsoft OpenJDK 17                                              | https://www.microsoft.com/openjdk                                                                                                           |
 | MicrosoftOpenJDK21                   | Microsoft OpenJDK 21                                              | https://www.microsoft.com/openjdk                                                                                                           |
 | MicrosoftOutlook                     | Microsoft Outlook                                                 | https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/get-started/deployment-new-outlook                                             |
+| MicrosoftPowerAutomateDesktop        | Microsoft Power Automate Desktop                                  | https://learn.microsoft.com/en-us/power-automate/desktop-flows/install                                                                      |
 | MicrosoftPowerShell                  | Microsoft PowerShell                                              | https://docs.microsoft.com/powershell/                                                                                                      |
 | MicrosoftPowerToys                   | Microsoft PowerToys                                               | https://github.com/microsoft/PowerToys/                                                                                                     |
 | MicrosoftSsms                        | Microsoft SQL Server Management Studio                            | https://go.microsoft.com/fwlink/?LinkId=531355                                                                                              |
