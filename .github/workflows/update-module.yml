@@ -6,6 +6,9 @@ env:
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-module:
     name: Update module version
@@ -42,7 +45,7 @@ jobs:
             Update-ModuleManifest -Path $ManifestPath -ModuleVersion $NewVersion -FunctionsToExport $functionList
             (Get-Content -Path $ManifestPath) -replace 'PSGet_$module', $module | Set-Content -Path $ManifestPath
             (Get-Content -Path $ManifestPath) -replace 'NewManifest', $module | Set-Content -Path $ManifestPath
-            (Get-Content -Path $ManifestPath) -replace 'FunctionsToExport = ','FunctionsToExport = @(' | Set-Content -Path $ManifestPath -Force
+            (Get-Content -Path $ManifestPath) -replace 'FunctionsToExport = ','FunctionsToExport = @(' | Set-Content -Path $ManifestPath
             (Get-Content -Path $ManifestPath) -replace "$($functionList[-1])'", "$($functionList[-1])')" | Set-Content -Path $ManifestPath -Force
             echo "newversion=$NewVersion" >> $env:GITHUB_OUTPUT
 
@@ -109,3 +112,13 @@ jobs:
       - name: "No changes have been detected"
         if: steps.commit.outputs.changes_detected == 'false'
         run: echo "No changes detected."
+
+      - name: Create and Push Tag
+        if: steps.commit.outputs.changes_detected == 'true'
+        shell: pwsh
+        run: |
+          $Module = Test-ModuleManifest -Path "$env:GITHUB_WORKSPACE\Evergreen\Evergreen.psd1"
+          if ($null -ne $Module) {
+              git tag "v$($Module.Version.ToString())"
+              git push origin --tags
+          }

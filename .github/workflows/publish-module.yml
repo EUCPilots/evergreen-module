@@ -2,14 +2,35 @@ name: 'Publish module'
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
     tags:
       - "v*.*"
+    paths-ignore:
+      - '**'
+  workflow_run:
+    workflows: ["update-module.yml"]
+    types:
+      - completed
+    branches:
+      - main
+
+# on:
+#   push:
+#     branches:
+#       - main
+#     tags:
+#       - "v*.*"
+#     paths-ignore:
+#       - '**'
+
+permissions:
+  contents: read
 
 jobs:
   publish-module:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v5
 
