@@ -11,7 +11,7 @@ function Get-GitHubRepoRelease {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript( {
-                if ($_ -match "^(https://api\.github\.com/repos/)([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)(/tags|/releases)") {
+                if ($_ -match "^(https://api\.github\.com/repos/)([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)(/tags|/releases)") {
                     $true
                 }
                 else {
@@ -129,6 +129,9 @@ function Get-GitHubRepoRelease {
             # Build and array of the latest release and download URLs
             Write-Verbose -Message "$($MyInvocation.MyCommand): Found $($release.count) release/s."
             Write-Verbose -Message "$($MyInvocation.MyCommand): Found $($release.assets.count) asset/s."
+            if ($release.assets.count -eq 0) {
+                Write-Warning -Message "$($MyInvocation.MyCommand): No assets found for this release."
+            }
 
             if ($PSBoundParameters.ContainsKey("ReturnVersionOnly")) {
                 if ($Uri -match "^*tags$") {
@@ -206,7 +209,7 @@ function Get-GitHubRepoRelease {
                             }
                         }
                         else {
-                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skip: $($asset.browser_download_url)."
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skip as asset is not for Windows: $($asset.browser_download_url)."
                         }
                     }
                 }
