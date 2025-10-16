@@ -9,7 +9,7 @@ function Get-GitHubRepoTag {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript( {
-                if ($_ -match "^(https://api\.github\.com/repos/)([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)(/tags)") {
+                if ($_ -match "^(https://api\.github\.com/repos/)([a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?)/([a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?)(/tags|/releases)") {
                     $true
                 }
                 else {
