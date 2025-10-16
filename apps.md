@@ -1,4 +1,4 @@
-﻿# 380 Supported applications
+﻿# 378 Supported applications
 
 Evergreen supports the following applications:
 
@@ -272,9 +272,7 @@ Evergreen supports the following applications:
 | OCSInventoryWindowsAgent             | OCS Inventory Windows Agent                                       | https://ocsinventory-ng.org/                                                                                                                |
 | OctopusDeployServer                  | Octopus Deploy Server                                             | https://octopus.com/                                                                                                                        |
 | OctopusTentacle                      | Octopus Tentacle                                                  | https://octopus.com/                                                                                                                        |
-| OmnissaDynamicEnvironmentManager     | Omnissa Dynamic Environment Manager                               | https://www.omnissa.com/products/dynamic-environment-manager/                                                                               |
 | OmnissaHorizonClient                 | Omnissa Horizon Client                                            | https://customerconnect.omnissa.com/downloads/info/slug/desktop_end_user_computing/omnissa_horizon_clients/8                                |
-| OmnissaOSOptimizationTool            | Omnissa OS Optimization Tool                                      | https://customerconnect.omnissa.com/downloads/info/slug/desktop_end_user_computing/os_optimization_tool/2412                                |
 | OnlyOfficeDesktopEditors             | ONLYOFFICE Desktop Editors                                        | https://www.onlyoffice.com/desktop.aspx                                                                                                     |
 | OpenLens                             | OpenLens                                                          | https://github.com/MuhammedKalkan/OpenLens/                                                                                                 |
 | OpenShellMenu                        | Open-Shell-Menu                                                   | https://open-shell.github.io/Open-Shell-Menu/                                                                                               |
@@ -327,6 +325,7 @@ Evergreen supports the following applications:
 | ResponsivelyApp                      | Responsively App                                                  | https://responsively.app/                                                                                                                   |
 | RingCentral                          | RingCentral                                                       | https://www.ringcentral.com                                                                                                                 |
 | RizonesoftNotepad3                   | Rizonesoft Notepad3                                               | https://www.rizonesoft.com/downloads/notepad3                                                                                               |
+| RustDeskClient                       | RustDesk Client                                                   | https://rustdesk.com/docs/en/self-host/client-deployment/                                                                                   |
 | SafeExamBrowser                      | Safe Exam Browser                                                 | https://safeexambrowser.org/                                                                                                                |
 | SafingPortmaster                     | Safing Portmaster                                                 | https://safing.io/                                                                                                                          |
 | SAGAGIS                              | SAGA-GIS                                                          | http://www.saga-gis.org/                                                                                                                    |
@@ -362,7 +361,6 @@ Evergreen supports the following applications:
 | TrackerSoftwarePDFXChangeEditor      | Tracker Software PDF X-Change Editor                              | https://pdf-xchange.eu/pdf-xchange-editor/index.htm                                                                                         |
 | UnityEditor                          | Unity Editor                                                      | https://unity.com/download                                                                                                                  |
 | USBPcap                              | USBPcap                                                           | https://github.com/desowin/usbpcap/                                                                                                         |
-| VastLimitsUberAgent                  | vast limits uberAgent                                             | https://uberagent.com/                                                                                                                      |
 | VeraCrypt                            | VeraCrypt                                                         | https://www.veracrypt.fr/en/Home.html                                                                                                       |
 | VercelHyper                          | Vercel Hyper                                                      | https://hyper.is/                                                                                                                           |
 | VideoLanVlcPlayer                    | VideoLan VLC Player                                               | https://www.videolan.org/vlc/                                                                                                               |

@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2510.2811.0
 
 * Updated regex in `Get-GitHubRepoRelease.ps1` and `Get-GitHubRepoTag.ps1` to allow dots in repo names
 * Added a warning when no assets are found in a release and clarified verbose logging when skipping non-Windows assets.
