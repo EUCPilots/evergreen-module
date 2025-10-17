@@ -40,6 +40,14 @@ if (-not (Test-Path -Path (Join-Path -Path $script:AppsPath -ChildPath 'Apps')) 
     Write-Message -Message "Evergreen app functions have not been downloaded. Please run 'Update-Evergreen'."
 }
 elseif (Test-Path -Path $script:VersionFile -PathType "Leaf") {
+    try {
+        $LocalVersion = (Get-Content -Path $script:VersionFile -ErrorAction "Stop").Trim()
+        Write-Message -Message "Evergreen apps local cache version: $LocalVersion"
+    }
+    catch {
+        $LocalVersion = $null
+    }
+
     # Check if the locally stored version matches the remote version
     try {
         $Url = "https://api.github.com/repos/$($script:resourceStrings.Repositories.Apps.Repo)/releases/latest"
@@ -48,14 +56,6 @@ elseif (Test-Path -Path $script:VersionFile -PathType "Leaf") {
     }
     catch {
         $RemoteVersion = $null
-    }
-
-    try {
-        $LocalVersion = (Get-Content -Path $script:VersionFile -ErrorAction "Stop").Trim()
-        Write-Message -Message "Evergreen apps local cache version: $LocalVersion"
-    }
-    catch {
-        $LocalVersion = $null
     }
 
     if ($null -eq $RemoteVersion) {
