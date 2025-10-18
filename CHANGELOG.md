@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2510.2814.0
 
 * Account for changing the `EVERGREEN_APPS_PATH` variable at runtime
 * Reorganized the Update-Evergreen.ps1 function to remove the begin/process blocks and streamline logic flow
