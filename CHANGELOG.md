@@ -1,5 +1,13 @@
 # Change log
 
+## VERSION
+
+* Account for changing the `EVERGREEN_APPS_PATH` variable at runtime
+* Reorganized the Update-Evergreen.ps1 function to remove the begin/process blocks and streamline logic flow
+* Improved variable initialization, error handling, and messaging for better readability and maintainability
+* Swapped the order of local and remote version retrieval to first read the local version before fetching the remote version. This improves clarity and error handling when checking for version mismatches
+* Adds Pester tests for `Update-Evergreen`
+
 ## 2510.2811.0
 
 * Updated regex in `Get-GitHubRepoRelease.ps1` and `Get-GitHubRepoTag.ps1` to allow dots in repo names
