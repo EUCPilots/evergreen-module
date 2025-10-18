@@ -108,12 +108,12 @@ Describe -Tag "Update" -Name "Update-Evergreen Function Behavior" {
         }
 
         It "Should create version file after successful update" {
-            $VersionFile = Join-Path -Path $script:TestPath -ChildPath "version.txt"
+            $VersionFile = Join-Path -Path $script:TestPath -ChildPath ".evergreen_version"
             Test-Path -Path $VersionFile -PathType "Leaf" | Should -Be $true
         }
 
         It "Version file should contain valid version format" {
-            $VersionFile = Join-Path -Path $script:TestPath -ChildPath "version.txt"
+            $VersionFile = Join-Path -Path $script:TestPath -ChildPath ".evergreen_version"
             if (Test-Path -Path $VersionFile) {
                 $Version = Get-Content -Path $VersionFile -Raw -ErrorAction "SilentlyContinue"
                 $Version = $Version.Trim()
@@ -182,7 +182,7 @@ Describe -Tag "Update" -Name "Update-Evergreen Idempotency" {
         }
 
         It "Version file should still exist after multiple runs" {
-            $VersionFile = Join-Path -Path $script:IdempotencyTestPath -ChildPath "version.txt"
+            $VersionFile = Join-Path -Path $script:IdempotencyTestPath -ChildPath ".evergreen_version"
             Test-Path -Path $VersionFile -PathType "Leaf" | Should -Be $true
         }
     }

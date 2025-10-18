@@ -2,7 +2,7 @@ using namespace System.Management.Automation
 function Write-Message {
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [System.String] $Message,
 
         [Parameter(Mandatory = $false)]

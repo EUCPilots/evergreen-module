@@ -9,6 +9,7 @@ function Get-EvergreenEndpointFromApi {
             Position = 0,
             ValueFromPipeline,
             ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
         [Alias("ApplicationName")]
         [System.String[]] $Name
     )
@@ -41,10 +42,16 @@ function Get-EvergreenEndpointFromApi {
 
         # Filter output if the Name parameter was specified
         if ($PSBoundParameters.ContainsKey("Name")) {
-            $Endpoints | Where-Object { $_.Application -in $Name }
+            $FilteredEndpoints = $Endpoints | Where-Object { $_.Application -in $Name }
+            if ($FilteredEndpoints) {
+                Write-Output -InputObject $FilteredEndpoints
+            }
+            else {
+                throw "No endpoints found for application(s): $($Name -join ', ')."
+            }
         }
         else {
-            $Endpoints
+            Write-Output -InputObject $Endpoints
         }
     }
 }

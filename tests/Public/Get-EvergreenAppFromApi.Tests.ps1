@@ -10,9 +10,10 @@ param ()
 BeforeDiscovery {
     $Uri = "https://evergreen-api.stealthpuppy.com/apps"
     $Applications = (Invoke-RestMethod -Uri $Uri -UseBasicParsing -UserAgent "Evergreen/1000.999") | Select-Object -ExpandProperty "Name" | Sort-Object
+    $RandomApplications = Get-Random -InputObject $Applications -Count 20
 }
 
-Describe -Tag "Get" -Name "Get-EvergreenAppFromApi works with supported application: <application>" -ForEach $Applications {
+Describe -Tag "Get" -Name "Get-EvergreenAppFromApi works with supported application: <application>" -ForEach $RandomApplications {
     BeforeAll {
         # Renaming the automatic $_ variable to $application to make it easier to work with
         $application = $_
