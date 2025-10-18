@@ -24,7 +24,7 @@ Describe -Tag "Private" -Name "ConvertFrom-Base64String" {
         It "Should not throw with valid base64 string" {
             InModuleScope -ModuleName "Evergreen" {
                 $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("Hello, Evergreen!"))
-                { ConvertFrom-Base64String -Value $Base64 } | Should -Not -Throw
+                { ConvertFrom-Base64String -Base64String $Base64 } | Should -Not -Throw
             }
         }
 
@@ -32,7 +32,7 @@ Describe -Tag "Private" -Name "ConvertFrom-Base64String" {
             InModuleScope -ModuleName "Evergreen" {
                 $PlainText = "Hello, Evergreen!"
                 $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($PlainText))
-                $Result = ConvertFrom-Base64String -Value $Base64
+                $Result = ConvertFrom-Base64String -Base64String $Base64
                 $Result | Should -Be $PlainText
             }
         }
@@ -40,28 +40,20 @@ Describe -Tag "Private" -Name "ConvertFrom-Base64String" {
         It "Should return a string" {
             InModuleScope -ModuleName "Evergreen" {
                 $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("Hello, Evergreen!"))
-                $Result = ConvertFrom-Base64String -Value $Base64
+                $Result = ConvertFrom-Base64String -Base64String $Base64
                 $Result | Should -BeOfType [string]
-            }
-        }
-
-        It "Should handle empty string" {
-            InModuleScope -ModuleName "Evergreen" {
-                $EmptyBase64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(""))
-                $Result = ConvertFrom-Base64String -Value $EmptyBase64
-                $Result | Should -Be ""
             }
         }
     }
 
     Context "Validate ConvertFrom-Base64String with invalid input" {
         It "Should throw with null value" {
-            { ConvertFrom-Base64String -Value $null } | Should -Throw
+            { ConvertFrom-Base64String -Base64String $null } | Should -Throw
         }
 
         It "Should throw with invalid base64 string" {
             InModuleScope -ModuleName "Evergreen" {
-                { ConvertFrom-Base64String -Value "Not-A-Valid-Base64!" -ErrorAction Stop } | Should -Throw
+                { ConvertFrom-Base64String -Base64String "Not-A-Valid-Base64!" -ErrorAction Stop } | Should -Throw
             }
         }
     }

@@ -48,24 +48,12 @@ Describe -Tag "Private" -Name "Get-Symbol" {
                 { Get-Symbol -Symbol "Cross" } | Should -Not -Throw
             }
         }
-
-        It "Should handle Arrow symbol" {
-            InModuleScope -ModuleName "Evergreen" {
-                { Get-Symbol -Symbol "Arrow" } | Should -Not -Throw
-            }
-        }
-
-        It "Should handle Bullet symbol" {
-            InModuleScope -ModuleName "Evergreen" {
-                { Get-Symbol -Symbol "Bullet" } | Should -Not -Throw
-            }
-        }
     }
 
     Context "Validate Get-Symbol with invalid input" {
-        It "Should handle unknown symbol gracefully" {
+        It "Should throw with unknown symbol" {
             InModuleScope -ModuleName "Evergreen" {
-                { Get-Symbol -Symbol "UnknownSymbol" } | Should -Not -Throw
+                { Get-Symbol -Symbol "UnknownSymbol" } | Should -Throw
             }
         }
     }

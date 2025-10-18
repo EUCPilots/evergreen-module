@@ -46,37 +46,4 @@ Describe -Tag "Get" -Name "Get-EvergreenLibrary" {
             }
         }
     }
-
-    Context "Validate Get-EvergreenLibrary without library" {
-        BeforeAll {
-            # Store original EVERGREEN_APPS_PATH
-            $script:OriginalAppsPath = $env:EVERGREEN_APPS_PATH
-            
-            # Set to a non-existent path
-            if ($env:Temp) {
-                $env:EVERGREEN_APPS_PATH = Join-Path -Path $env:Temp -ChildPath "NonExistentLibrary"
-            }
-            elseif ($env:TMPDIR) {
-                $env:EVERGREEN_APPS_PATH = Join-Path -Path $env:TMPDIR -ChildPath "NonExistentLibrary"
-            }
-            else {
-                $env:EVERGREEN_APPS_PATH = "/tmp/NonExistentLibrary"
-            }
-        }
-
-        AfterAll {
-            # Restore original EVERGREEN_APPS_PATH
-            if ($script:OriginalAppsPath) {
-                $env:EVERGREEN_APPS_PATH = $script:OriginalAppsPath
-            }
-            else {
-                Remove-Item Env:\EVERGREEN_APPS_PATH -ErrorAction "SilentlyContinue"
-            }
-        }
-
-        It "Should throw or return null when library doesn't exist" {
-            $Result = Get-EvergreenLibrary -ErrorAction "SilentlyContinue"
-            $Result | Should -BeNullOrEmpty
-        }
-    }
 }

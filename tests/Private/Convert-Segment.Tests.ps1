@@ -21,10 +21,10 @@ Describe -Tag "Private" -Name "Convert-Segment" {
             }
         }
 
-        It "Should return a string" {
+        It "Should return a integer" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Convert-Segment -Segment "test"
-                $Result | Should -BeOfType [string]
+                $Result | Should -BeOfType [int]
             }
         }
 

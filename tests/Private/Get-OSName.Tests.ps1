@@ -14,6 +14,9 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Get-OSName" {
+    # Ensure $IsWindows is defined across PowerShell editions (Windows PowerShell and PowerShell Core)
+    $IsWindows = [bool]($env:OS -eq 'Windows_NT')
+
     Context "Validate Get-OSName basic functionality" {
         It "Should not throw" {
             InModuleScope -ModuleName "Evergreen" {

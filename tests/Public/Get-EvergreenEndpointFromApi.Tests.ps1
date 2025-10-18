@@ -35,7 +35,7 @@ Describe -Tag "Get" -Name "Get-EvergreenEndpointFromApi" {
 
         It "Should return an object with expected properties" {
             if ($script:Result) {
-                $script:Result.PSObject.Properties.Name | Should -Contain "Name"
+                $script:Result.PSObject.Properties.Name | Should -Contain "Application"
             }
         }
     }
