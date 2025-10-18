@@ -21,7 +21,7 @@ Describe -Tag "Private" -Name "Convert-Segment" {
             }
         }
 
-        It "Should return a integer" {
+        It "Should return an integer" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Convert-Segment -Segment "test"
                 $Result | Should -BeOfType [int]
