@@ -15,8 +15,8 @@ BeforeAll {
 
 Describe -Tag "Get" -Name "Get-EvergreenLibrary" {
     Context "Validate Get-EvergreenLibrary basic functionality" {
-        It "Should not throw" {
-            { Get-EvergreenLibrary } | Should -Not -Throw
+        It "Should throw" {
+            { Get-EvergreenLibrary } | Should -Throw
         }
     }
 

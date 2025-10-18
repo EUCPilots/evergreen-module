@@ -46,3 +46,36 @@ Describe -Tag "Get" -Name "Get-EvergreenEndpointFromApi" {
         }
     }
 }
+
+Describe -Name "Get-EvergreenEndpointFromApi returns a list of endpoints" {
+    Context "Calling Get-EvergreenEndpointFromApi returns the list of endpoints" {
+        It "Should return a list of endpoints" {
+            $Output = Get-EvergreenEndpointFromApi
+            $Output | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should return an Endpoints property" {
+            $Output = Get-EvergreenEndpointFromApi
+            $Output.Endpoints | Should -BeOfType "String"
+        }
+
+        It "Should return a Ports property" {
+            $Output = Get-EvergreenEndpointFromApi
+            $Output.Ports | Should -BeOfType "String"
+        }
+    }
+}
+
+Describe -Name "Get-EvergreenEndpoint returns a list of endpoints for a single application" {
+    Context "Calling Get-EvergreenEndpoint -Name returns the list of endpoints for a single application" {
+        It "Should return a list of endpoints for Microsoft Edge" {
+            $Output = Get-EvergreenEndpointFromApi -Name "MicrosoftEdge"
+            $Output | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should return a single object for Microsoft Edge" {
+            $Output = Get-EvergreenEndpointFromApi -Name "MicrosoftEdge"
+            $Output.Count | Should -HaveCount 1
+        }
+    }
+}

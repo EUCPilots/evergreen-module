@@ -14,6 +14,9 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Test-IsWindows" {
+    # Ensure $IsWindows is defined across PowerShell editions (Windows PowerShell and PowerShell Core)
+    $IsWindows = [bool]($env:OS -eq 'Windows_NT')
+
     Context "Validate Test-IsWindows basic functionality" {
         It "Should not throw" {
             InModuleScope -ModuleName "Evergreen" {
