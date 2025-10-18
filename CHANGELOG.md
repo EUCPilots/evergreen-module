@@ -1,5 +1,23 @@
 # Change log
 
+## VERSION
+
+* `Write-Message` - Changed the Message parameter in Write-Message.ps1 from mandatory to optional to allow calling the function without specifying a message.
+* `Get-EvergreenEndpointFromApi` - Added [ValidateNotNullOrEmpty()] to the Name parameter to ensure it is not null or empty. Improved output filtering by throwing an error if no endpoints are found for the specified application(s), and standardized output using Write-Output.
+
+### Tests
+
+* Introduces 16 new Pester test files covering both public and private functions, significantly improving test coverage.
+* Also fixes Update-Evergreen.Tests.ps1 to use the correct version file name (.evergreen_version) in assertions. Includes a summary markdown documenting the new and fixed tests, test coverage, and recommendations for future improvements.
+* Updated the test suite to select 20 random applications from the Evergreen API response instead of testing all applications. This change improves test performance and reduces execution time.
+* Wrapped all private function test calls in InModuleScope -ModuleName "Evergreen" to ensure proper access to non-exported module functions. Updated 10 private test files accordingly. 
+* Also updated Get-EvergreenApp.Tests.ps1 to test a random subset of 50 applications instead of all, and added a summary markdown documenting the fixes.
+* Refactored several test files for improved accuracy and clarity: updated type checks and parameter names, removed redundant or obsolete tests, and deleted Invoke-Download test file.
+Adjusted symbol and message type tests for stricter validation and updated property checks in public API tests.
+* Added cross-edition $IsWindows definition in Test-IsWindows.Tests.ps1.
+Removed Get-EvergreenEndpoint.Tests.ps1 and migrated its tests to Get-EvergreenEndpointFromApi.Tests.ps1.
+Updated Get-EvergreenLibrary.Tests.ps1 to expect an exception from Get-EvergreenLibrary.
+
 ## 2510.2814.0
 
 * Account for changing the `EVERGREEN_APPS_PATH` variable at runtime
