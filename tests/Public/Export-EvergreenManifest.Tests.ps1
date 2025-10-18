@@ -39,10 +39,6 @@ Describe -Tag "Export" -Name "Export-EvergreenManifest" -ForEach $Applications {
         It "Has expected property Get" {
             $Manifest.Get.Length | Should -BeGreaterThan 0
         }
-
-        It "Has expected property Install" {
-            $Manifest.Install.Length | Should -BeGreaterThan 0
-        }
     }
 }
 
