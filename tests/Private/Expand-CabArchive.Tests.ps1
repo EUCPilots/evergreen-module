@@ -20,24 +20,28 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
         }
 
         It "Should throw when Path does not exist" {
-            { Expand-CabArchive -Path "/nonexistent/file.cab" -DestinationPath "/tmp" -ErrorAction Stop } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { Expand-CabArchive -Path "/nonexistent/file.cab" -DestinationPath "/tmp" -ErrorAction Stop } | Should -Throw
+            }
         }
 
         It "Should throw when DestinationPath parent does not exist" {
-            # Create a temp file to satisfy Path validation
-            if ($env:Temp) {
-                $TestFile = Join-Path -Path $env:Temp -ChildPath "test.cab"
+            InModuleScope -ModuleName "Evergreen" {
+                # Create a temp file to satisfy Path validation
+                if ($env:Temp) {
+                    $TestFile = Join-Path -Path $env:Temp -ChildPath "test.cab"
+                }
+                elseif ($env:TMPDIR) {
+                    $TestFile = Join-Path -Path $env:TMPDIR -ChildPath "test.cab"
+                }
+                else {
+                    $TestFile = "/tmp/test.cab"
+                }
+                
+                "test" | Out-File -FilePath $TestFile -Force
+                { Expand-CabArchive -Path $TestFile -DestinationPath "/nonexistent/path/file" -ErrorAction Stop } | Should -Throw
+                Remove-Item -Path $TestFile -Force -ErrorAction "SilentlyContinue"
             }
-            elseif ($env:TMPDIR) {
-                $TestFile = Join-Path -Path $env:TMPDIR -ChildPath "test.cab"
-            }
-            else {
-                $TestFile = "/tmp/test.cab"
-            }
-            
-            "test" | Out-File -FilePath $TestFile -Force
-            { Expand-CabArchive -Path $TestFile -DestinationPath "/nonexistent/path/file" -ErrorAction Stop } | Should -Throw
-            Remove-Item -Path $TestFile -Force -ErrorAction "SilentlyContinue"
         }
     }
 
@@ -48,14 +52,18 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
         }
 
         It "Should be available on Windows" -Skip:(-not $IsWindows) {
-            Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
+            }
         }
     }
 
     Context "Validate Expand-CabArchive on non-Windows" -Skip:($IsWindows) {
         It "Should handle non-Windows platforms" -Skip:($IsWindows) {
-            # The function should handle non-Windows platforms gracefully
-            Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
+            InModuleScope -ModuleName "Evergreen" {
+                # The function should handle non-Windows platforms gracefully
+                Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
+            }
         }
     }
 }

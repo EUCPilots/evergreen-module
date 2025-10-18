@@ -16,17 +16,23 @@ BeforeAll {
 Describe -Tag "Private" -Name "Get-ModuleVersion" {
     Context "Validate Get-ModuleVersion basic functionality" {
         It "Should not throw" {
-            { Get-ModuleVersion } | Should -Not -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { Get-ModuleVersion } | Should -Not -Throw
+            }
         }
 
         It "Should return a version object or string" {
-            $Result = Get-ModuleVersion
-            $Result | Should -Not -BeNullOrEmpty
+            InModuleScope -ModuleName "Evergreen" {
+                $Result = Get-ModuleVersion
+                $Result | Should -Not -BeNullOrEmpty
+            }
         }
 
         It "Should return a valid version format" {
-            $Result = Get-ModuleVersion
-            $Result.ToString() | Should -Match "\d+\.\d+\.\d+"
+            InModuleScope -ModuleName "Evergreen" {
+                $Result = Get-ModuleVersion
+                $Result.ToString() | Should -Match "\d+\.\d+\.\d+"
+            }
         }
     }
 }

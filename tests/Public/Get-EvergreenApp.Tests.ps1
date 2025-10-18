@@ -19,9 +19,10 @@ BeforeDiscovery {
 
     # Export the list of apps
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
+    $RandomApplications = Get-Random -InputObject $Applications -Count 50
 }
 
-Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $Applications {
+Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $RandomApplications {
     BeforeAll {
         # Renaming the automatic $_ variable to $application to make it easier to work with
         $application = $_

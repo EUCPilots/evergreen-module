@@ -24,27 +24,29 @@ Describe -Tag "Private" -Name "Invoke-Download" {
         }
 
         It "Should not throw with valid Uri and OutFile parameters" {
-            # Note: This will fail if network is unavailable, so just test parameter binding
-            $TestUri = "https://raw.githubusercontent.com/aaronparker/evergreen/main/README.md"
-            if ($env:Temp) {
-                $TestFile = Join-Path -Path $env:Temp -ChildPath "invoke-download-test.txt"
-            }
-            elseif ($env:TMPDIR) {
-                $TestFile = Join-Path -Path $env:TMPDIR -ChildPath "invoke-download-test.txt"
-            }
-            else {
-                $TestFile = "/tmp/invoke-download-test.txt"
-            }
+            InModuleScope -ModuleName "Evergreen" {
+                # Note: This will fail if network is unavailable, so just test parameter binding
+                $TestUri = "https://raw.githubusercontent.com/aaronparker/evergreen/main/README.md"
+                if ($env:Temp) {
+                    $TestFile = Join-Path -Path $env:Temp -ChildPath "invoke-download-test.txt"
+                }
+                elseif ($env:TMPDIR) {
+                    $TestFile = Join-Path -Path $env:TMPDIR -ChildPath "invoke-download-test.txt"
+                }
+                else {
+                    $TestFile = "/tmp/invoke-download-test.txt"
+                }
 
-            try {
-                { Invoke-Download -Uri $TestUri -OutFile $TestFile -ErrorAction Stop } | Should -Not -Throw
-            }
-            catch {
-                # Network errors are acceptable for this test
-                $_.Exception.Message | Should -Not -Match "parameter"
-            }
-            finally {
-                Remove-Item -Path $TestFile -Force -ErrorAction "SilentlyContinue"
+                try {
+                    { Invoke-Download -Uri $TestUri -OutFile $TestFile -ErrorAction Stop } | Should -Not -Throw
+                }
+                catch {
+                    # Network errors are acceptable for this test
+                    $_.Exception.Message | Should -Not -Match "parameter"
+                }
+                finally {
+                    Remove-Item -Path $TestFile -Force -ErrorAction "SilentlyContinue"
+                }
             }
         }
     }
