@@ -159,6 +159,13 @@ Describe -Tag "Update" -Name "Update-Evergreen Idempotency" {
         if (Test-Path -Path $script:IdempotencyTestPath) {
             Remove-Item -Path $script:IdempotencyTestPath -Recurse -Force -ErrorAction "SilentlyContinue"
         }
+        # Restore original EVERGREEN_APPS_PATH
+        if ($script:OriginalAppsPath) {
+            $env:EVERGREEN_APPS_PATH = $script:OriginalAppsPath
+        }
+        else {
+            Remove-Item Env:\EVERGREEN_APPS_PATH -ErrorAction "SilentlyContinue"
+        }
     }
 
     Context "Validate multiple runs of Update-Evergreen" {

@@ -22,6 +22,7 @@ function Update-Evergreen {
 
     # Account for changing the EVERGREEN_APPS_PATH variable at runtime
     $Script:AppsPath = Get-EvergreenAppsPath
+    $script:VersionFile = Join-Path -Path $script:AppsPath -ChildPath ".evergreen_version"
     Write-Message -Message "Evergreen apps cache path: $($script:AppsPath)."
 
     # Sync folders to check for expected structure

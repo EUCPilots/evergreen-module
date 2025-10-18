@@ -41,7 +41,7 @@ if (-not (Test-Path -Path (Join-Path -Path $script:AppsPath -ChildPath 'Apps')) 
 }
 elseif (Test-Path -Path $script:VersionFile -PathType "Leaf") {
     try {
-        $LocalVersion = (Get-Content -Path $script:VersionFile -ErrorAction "Stop").Trim()
+        $LocalVersion = (Get-Content -Path $script:VersionFile -ErrorAction "Stop" -Raw).Trim()
         Write-Message -Message "Evergreen apps local cache version: $LocalVersion"
     }
     catch {
