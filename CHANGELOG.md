@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2510.2817.0
 
 * Adds private function `ConvertFrom-Jwt` to convert JSON Web Tokens to something usable
 * `Write-Message` - Changed the Message parameter in Write-Message.ps1 from mandatory to optional to allow calling the function without specifying a message.
