@@ -33,6 +33,6 @@ function ConvertFrom-Jwt {
     [PSCustomObject]@{
         Header    = Decode-Part -Part $parts[0]
         Payload   = Decode-Part -Part $parts[1]
-        Signature = $parts[2]
+        Signature = if ($parts.Count -gt 2) { $parts[2] } else { $null }
     } | Write-Output
 }
