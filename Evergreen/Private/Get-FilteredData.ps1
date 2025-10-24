@@ -82,7 +82,7 @@ function Get-FilteredData {
 
     $results = $InputObject | Where-Object {
         $item = $_
-        $matches = @()
+        $matches = [System.Collections.ArrayList]::new()
 
         foreach ($filter in $filterConfig.filters) {
             $match = switch ($filter.operator) {
@@ -97,7 +97,7 @@ function Get-FilteredData {
                 "le" { $item.$($filter.property) -le $filter.value }
                 default { $item.$($filter.property) -eq $filter.value }
             }
-            $matches += $match
+            [void]$matches.Add([bool]$match)
         }
 
         if ($logicalOp -eq "and") {

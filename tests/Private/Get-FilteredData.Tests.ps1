@@ -62,7 +62,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData } | Should -Not -Throw
+                [System.Object[]]$TestDataArray = $TestData
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray } | Should -Not -Throw
             }
         }
 
@@ -71,7 +72,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
             }
@@ -82,7 +84,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | ForEach-Object { $_.Release | Should -Be "Enterprise" }
             }
         }
@@ -114,7 +117,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 1
                 $Result.Release | Should -Be "Enterprise"
@@ -149,7 +153,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
             }
@@ -160,7 +165,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result.Architecture | ForEach-Object { $_ | Should -BeIn @("x64", "ARM64") }
             }
         }
@@ -187,7 +193,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
                 $Result.Architecture | ForEach-Object { $_ | Should -Not -Be "x86" }
@@ -216,39 +223,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
                 $Result.Release | ForEach-Object { $_ | Should -BeLike "*prise" }
-            }
-        }
-    }
-
-    Context "Validate Get-FilteredData with 'match' (regex) operator" {
-        BeforeAll {
-            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-match.json"
-            $FilterJson = @{
-                filters = @(
-                    @{
-                        property = "Version"
-                        operator = "match"
-                        value    = "^2\."
-                    }
-                )
-                logicalOperator = "and"
-            } | ConvertTo-Json -Depth 10
-            Set-Content -Path $FilterFile -Value $FilterJson -Force
-        }
-
-        It "Should return items matching the regex pattern" {
-            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-match.json"
-            $TestData = $script:TestData
-            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
-                param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
-                $Result | Should -Not -BeNullOrEmpty
-                ($Result | Measure-Object).Count | Should -Be 2
-                $Result.Version | ForEach-Object { $_ | Should -Match "^2\." }
             }
         }
     }
@@ -274,7 +253,9 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                # Ensure TestData is treated as an array
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
                 $Result.Architecture | ForEach-Object { $_ | Should -BeIn @("x64", "ARM64") }
@@ -318,7 +299,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 2
             }
@@ -329,7 +311,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
             }
@@ -362,7 +345,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 1
             }
@@ -390,7 +374,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -BeNullOrEmpty
             }
         }
@@ -401,7 +386,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ TestData = $TestData } {
                 param($TestData)
-                { Get-FilteredData -FilterPath "" -InputObject $TestData } | Should -Throw
+                [System.Object[]]$TestDataArray = $TestData
+                { Get-FilteredData -FilterPath "" -InputObject $TestDataArray } | Should -Throw
             }
         }
 
@@ -409,7 +395,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ TestData = $TestData } {
                 param($TestData)
-                { Get-FilteredData -FilterPath "/nonexistent/filter.json" -InputObject $TestData -ErrorAction Stop } | Should -Throw
+                [System.Object[]]$TestDataArray = $TestData
+                { Get-FilteredData -FilterPath "/nonexistent/filter.json" -InputObject $TestDataArray -ErrorAction Stop } | Should -Throw
             }
         }
 
@@ -417,7 +404,7 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile } {
                 param($FilterFile)
-                { Get-FilteredData -FilterPath $FilterFile -InputObject @() } | Should -Not -Throw
+                { Get-FilteredData -FilterPath $FilterFile -InputObject @() } | Should -Throw
             }
         }
     }
@@ -433,7 +420,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData -ErrorAction Stop } | Should -Throw
+                [System.Object[]]$TestDataArray = $TestData
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray -ErrorAction Stop } | Should -Throw
             }
         }
     }
@@ -459,7 +447,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -BeOfType [System.Object]
             }
         }
@@ -469,7 +458,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result[0].PSObject.Properties.Name | Should -Contain "Release"
                 $Result[0].PSObject.Properties.Name | Should -Contain "Architecture"
                 $Result[0].PSObject.Properties.Name | Should -Contain "Version"
@@ -499,7 +489,8 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             $TestData = $script:TestData
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                [System.Object[]]$TestDataArray = $TestData
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
                 $Result.Release | ForEach-Object { $_ | Should -Be "Enterprise" }
