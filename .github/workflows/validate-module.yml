@@ -98,7 +98,7 @@ jobs:
 
     steps:
       - name: Download Pester Test Result Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: test-results
           path: test-results
