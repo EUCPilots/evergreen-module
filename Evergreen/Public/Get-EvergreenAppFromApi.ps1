@@ -24,7 +24,19 @@ function Get-EvergreenAppFromApi {
                 UserAgent   = $script:UserAgent
                 ErrorAction = "Stop"
             }
-            Invoke-EvergreenRestMethod @params
+            $Output = Invoke-EvergreenRestMethod @params
+
+            # Sort the output
+            $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
+            if (Test-Path -Path $FilterPath -PathType "Leaf") {
+                $FilteredOutput = Get-FilteredData -InputObject $Output -FilterPath $FilterPath
+                $FilteredOutput | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+            }
+            else {
+                $Output | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+            }
         }
         catch {
             throw $_

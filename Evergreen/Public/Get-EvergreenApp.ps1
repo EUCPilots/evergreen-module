@@ -79,11 +79,21 @@ function Get-EvergreenApp {
                     Write-Verbose -Message "Adding AppParams."
                     $params += $AppParams
                 }
-                # Run the application function and sort the output
+                # Run the application function and collect the output
                 Write-Verbose -Message "Calling: Get-$Name."
                 $Output = & Get-$Name @params
-                $Output | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
-                Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+
+                # Sort the output
+                $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
+                if (Test-Path -Path $FilterPath -PathType "Leaf") {
+                    $FilteredOutput = Get-FilteredData -InputObject $Output -FilterPath $FilterPath
+                    $FilteredOutput | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
+                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+                }
+                else {
+                    $Output | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
+                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+                }
             }
             catch {
                 $Msg = "Run 'Get-EvergreenApp -Name `"$Name`" -Verbose' to review additional details for troubleshooting."
