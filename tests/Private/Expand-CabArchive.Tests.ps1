@@ -16,7 +16,9 @@ BeforeAll {
 Describe -Tag "Private" -Name "Expand-CabArchive" {
     Context "Validate Expand-CabArchive parameter validation" {
         It "Should throw when Path parameter is null or empty" {
-            { Expand-CabArchive -Path "" -DestinationPath "/tmp" } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { Expand-CabArchive -Path "" -DestinationPath "/tmp" } | Should -Throw
+            }
         }
 
         It "Should throw when Path does not exist" {
