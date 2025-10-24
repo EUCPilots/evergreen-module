@@ -58,25 +58,31 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should not throw with valid filter" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
-                { Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData } | Should -Not -Throw
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData } | Should -Not -Throw
             }
         }
 
         It "Should return matching items" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
             }
         }
 
         It "Should return only items where Release equals Enterprise" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | ForEach-Object { $_.Release | Should -Be "Enterprise" }
             }
         }
@@ -104,9 +110,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return items matching all conditions" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-and.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-and.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 1
                 $Result.Release | Should -Be "Enterprise"
@@ -137,18 +145,22 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return items matching any condition" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-or.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-or.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
             }
         }
 
         It "Should return items with x64 or ARM64 architecture" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-or.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-or.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result.Architecture | ForEach-Object { $_ | Should -BeIn @("x64", "ARM64") }
             }
         }
@@ -171,9 +183,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should exclude items matching the condition" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-ne.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-ne.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
                 $Result.Architecture | ForEach-Object { $_ | Should -Not -Be "x86" }
@@ -198,9 +212,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return items matching the pattern" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-like.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-like.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
                 $Result.Release | ForEach-Object { $_ | Should -BeLike "*prise" }
@@ -225,9 +241,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return items matching the regex pattern" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-match.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-match.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 2
                 $Result.Version | ForEach-Object { $_ | Should -Match "^2\." }
@@ -252,9 +270,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return items where property is in value array" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-in.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-in.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 4
                 $Result.Architecture | ForEach-Object { $_ | Should -BeIn @("x64", "ARM64") }
@@ -294,18 +314,22 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should filter using greater than operator" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-gt.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-gt.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 2
             }
         }
 
         It "Should filter using less than operator" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-lt.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-lt.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
             }
@@ -334,9 +358,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should default to AND logic when logicalOperator is not specified" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-no-logic.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-no-logic.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 1
             }
@@ -360,9 +386,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return empty array when no items match" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-empty.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-empty.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -BeNullOrEmpty
             }
         }
@@ -370,20 +398,25 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
 
     Context "Validate Get-FilteredData parameter validation" {
         It "Should throw when FilterPath parameter is empty" {
-            InModuleScope -ModuleName "Evergreen" {
-                { Get-FilteredData -FilterPath "" -InputObject $script:TestData } | Should -Throw
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestData = $TestData } {
+                param($TestData)
+                { Get-FilteredData -FilterPath "" -InputObject $TestData } | Should -Throw
             }
         }
 
         It "Should throw when FilterPath does not exist" {
-            InModuleScope -ModuleName "Evergreen" {
-                { Get-FilteredData -FilterPath "/nonexistent/filter.json" -InputObject $script:TestData -ErrorAction Stop } | Should -Throw
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestData = $TestData } {
+                param($TestData)
+                { Get-FilteredData -FilterPath "/nonexistent/filter.json" -InputObject $TestData -ErrorAction Stop } | Should -Throw
             }
         }
 
         It "Should throw when InputObject parameter is empty" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile } {
+                param($FilterFile)
                 { Get-FilteredData -FilterPath $FilterFile -InputObject @() } | Should -Not -Throw
             }
         }
@@ -396,9 +429,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should throw with invalid JSON" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-invalid.json"
-                { Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData -ErrorAction Stop } | Should -Throw
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-invalid.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData -ErrorAction Stop } | Should -Throw
             }
         }
     }
@@ -420,17 +455,21 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should return array of objects" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-output.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-output.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -BeOfType [System.Object]
             }
         }
 
         It "Should preserve object properties" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-output.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-output.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result[0].PSObject.Properties.Name | Should -Contain "Release"
                 $Result[0].PSObject.Properties.Name | Should -Contain "Architecture"
                 $Result[0].PSObject.Properties.Name | Should -Contain "Version"
@@ -456,9 +495,11 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
         }
 
         It "Should default to equality operator when operator is not specified" {
-            InModuleScope -ModuleName "Evergreen" {
-                $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-no-operator.json"
-                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $script:TestData
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-no-operator.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
                 $Result.Release | ForEach-Object { $_ | Should -Be "Enterprise" }
