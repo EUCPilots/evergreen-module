@@ -28,16 +28,16 @@ function Get-EvergreenAppFromApi {
 
             # Sort the output
             $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
-            if (Test-Path -Path $FilterPath -PathType "Leaf") {
-                Write-Verbose -Message "Applying output filter from path: $FilterPath"
-                $FilteredOutput = Get-FilteredData -InputObject $Output -FilterPath $FilterPath
-                $FilteredOutput | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
-                Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
-            }
-            else {
-                $Output | Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"
-                Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
-            }
+                if (Test-Path -Path $FilterPath -PathType "Leaf") {
+                    Write-Verbose -Message "Applying output filter from path: $FilterPath"
+                    $Output | ForEach-Object {
+                        Get-FilteredData -InputObject $_ -FilterPath $FilterPath
+                    }
+                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
+                }
+                else {
+                    $Output
+                }
         }
         catch {
             throw $_
