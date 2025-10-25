@@ -78,8 +78,11 @@ function Get-FilteredData {
     )
 
     $filterConfig = Get-Content -Path $FilterPath -Raw | ConvertFrom-Json
-    $logicalOp = if ($filterConfig.logicalOperator) { $filterConfig.logicalOperator } else { "and" }
+    $filterConfig.filters | ForEach-Object { Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($_.property) $($_.operator) $($_.value)" }
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Logical Operator: $($filterConfig.logicalOperator)"
 
+    # Build the filter
+    $logicalOp = if ($filterConfig.logicalOperator) { $filterConfig.logicalOperator } else { "and" }
     $results = $InputObject | Where-Object {
         $item = $_
         $matches = [System.Collections.ArrayList]::new()
@@ -108,5 +111,6 @@ function Get-FilteredData {
         }
     }
 
+    # Return the filtered results
     return $results
 }
