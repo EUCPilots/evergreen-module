@@ -45,6 +45,8 @@ jobs:
     name: "Run Pester tests on Windows PowerShell (main push)"
     needs: psscriptanalyzer
     runs-on: windows-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v5
 
