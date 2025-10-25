@@ -33,7 +33,6 @@ function Get-EvergreenAppFromApi {
                     $Output | ForEach-Object {
                         Get-FilteredData -InputObject $_ -FilterPath $FilterPath
                     }
-                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
                 }
                 else {
                     $Output
