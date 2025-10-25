@@ -77,40 +77,44 @@ function Get-FilteredData {
         [System.Object[]] $InputObject
     )
 
-    $filterConfig = Get-Content -Path $FilterPath -Raw | ConvertFrom-Json
-    $filterConfig.filters | ForEach-Object { Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($_.property) $($_.operator) $($_.value)" }
-    Write-Verbose -Message "$($MyInvocation.MyCommand): Logical Operator: $($filterConfig.logicalOperator)"
-
-    # Build the filter
-    $logicalOp = if ($filterConfig.logicalOperator) { $filterConfig.logicalOperator } else { "and" }
-    $results = $InputObject | Where-Object {
-        $item = $_
-        $matches = [System.Collections.ArrayList]::new()
-
-        foreach ($filter in $filterConfig.filters) {
-            $match = switch ($filter.operator) {
-                "eq" { $item.$($filter.property) -eq $filter.value }
-                "ne" { $item.$($filter.property) -ne $filter.value }
-                "like" { $item.$($filter.property) -like $filter.value }
-                "match" { $item.$($filter.property) -match $filter.value }
-                "in" { $filter.value -contains $item.$($filter.property) }
-                "gt" { $item.$($filter.property) -gt $filter.value }
-                "lt" { $item.$($filter.property) -lt $filter.value }
-                "ge" { $item.$($filter.property) -ge $filter.value }
-                "le" { $item.$($filter.property) -le $filter.value }
-                default { $item.$($filter.property) -eq $filter.value }
-            }
-            [void]$matches.Add([bool]$match)
-        }
-
-        if ($logicalOp -eq "and") {
-            $matches -notcontains $false
-        }
-        else {
-            $matches -contains $true
-        }
+    begin {
+        # Build the filter
+        $filterConfig = Get-Content -Path $FilterPath -Raw | ConvertFrom-Json
+        $filterConfig.filters | ForEach-Object { Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($_.property) $($_.operator) $($_.value)" }
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Logical Operator: $($filterConfig.logicalOperator)"
+        $logicalOp = if ($filterConfig.logicalOperator) { $filterConfig.logicalOperator } else { "and" }
     }
 
-    # Return the filtered results
-    return $results
+    process {
+        $results = $InputObject | Where-Object {
+            $item = $_
+            $matches = [System.Collections.ArrayList]::new()
+
+            foreach ($filter in $filterConfig.filters) {
+                $match = switch ($filter.operator) {
+                    "eq" { $item.$($filter.property) -eq $filter.value }
+                    "ne" { $item.$($filter.property) -ne $filter.value }
+                    "like" { $item.$($filter.property) -like $filter.value }
+                    "match" { $item.$($filter.property) -match $filter.value }
+                    "in" { $filter.value -contains $item.$($filter.property) }
+                    "gt" { $item.$($filter.property) -gt $filter.value }
+                    "lt" { $item.$($filter.property) -lt $filter.value }
+                    "ge" { $item.$($filter.property) -ge $filter.value }
+                    "le" { $item.$($filter.property) -le $filter.value }
+                    default { $item.$($filter.property) -eq $filter.value }
+                }
+                [void]$matches.Add([bool]$match)
+            }
+
+            if ($logicalOp -eq "and") {
+                $matches -notcontains $false
+            }
+            else {
+                $matches -contains $true
+            }
+        }
+
+        # Return the filtered results
+        return $results
+    }
 }
