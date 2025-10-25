@@ -81,7 +81,6 @@ function Get-EvergreenApp {
                 }
                 # Run the application function and collect the output
                 Write-Verbose -Message "Calling: Get-$Name."
-                #$Output = & Get-$Name @params
 
                 # Sort the output
                 $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
