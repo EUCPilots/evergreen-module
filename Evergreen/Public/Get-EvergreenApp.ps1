@@ -89,11 +89,9 @@ function Get-EvergreenApp {
                     & Get-$Name @params | ForEach-Object {
                         Get-FilteredData -InputObject $_ -FilterPath $FilterPath
                     }
-                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
                 }
                 else {
                     & Get-$Name @params
-                    Remove-Variable -Name Output -Force -ErrorAction "SilentlyContinue"
                 }
             }
             catch {
