@@ -119,6 +119,24 @@ jobs:
         run: |
           $Module = Test-ModuleManifest -Path "$env:GITHUB_WORKSPACE\Evergreen\Evergreen.psd1"
           if ($null -ne $Module) {
-              git tag "v$($Module.Version.ToString())"
-              git push origin --tags
+              $tagName = "v$($Module.Version.ToString())"
+              Write-Host "Creating tag: $tagName"
+              
+              # Create annotated tag (no GPG signature needed)
+              git tag -a $tagName -m "Release version $($Module.Version.ToString())"
+              
+              # Push the tag with verbose output
+              git push origin $tagName --verbose
+              
+              if ($LASTEXITCODE -eq 0) {
+                  Write-Host "Tag $tagName created and pushed successfully" -ForegroundColor Green
+              }
+              else {
+                  Write-Host "Failed to push tag. Exit code: $LASTEXITCODE" -ForegroundColor Red
+                  exit $LASTEXITCODE
+              }
+          }
+          else {
+              Write-Host "Failed to read module manifest" -ForegroundColor Red
+              exit 1
           }
