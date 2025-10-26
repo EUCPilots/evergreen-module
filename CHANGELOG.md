@@ -1,5 +1,10 @@
 # Change log
 
+## 2510.2820.0
+
+* A working solution for adding output filters for Get-EvergreenApp. This should simplify returning details for a specific application by not requiring the use of `Where-Object`. The filters can be added to `/Evergreen/Filters`, along side the cached Apps and Manifests. [#871](https://github.com/EUCPilots/evergreen-module/discussions/871)
+* Removes `Sort-Object` from `Get-EvergreenApp` and `Get-EvergreenAppFromApi` to enable returning data to the pipeline as soon as it is available. This change will require the administrator to use `Sort-Object` manually. This removes `Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"` which can instead be used directly with `Get-EvergreenApp` to sort the output.
+
 ## 2510.2817.0
 
 * Adds private function `ConvertFrom-Jwt` to convert JSON Web Tokens to something usable
