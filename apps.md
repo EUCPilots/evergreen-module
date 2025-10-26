@@ -1,4 +1,4 @@
-﻿# 378 Supported applications
+﻿# 379 Supported applications
 
 Evergreen supports the following applications:
 
@@ -359,6 +359,7 @@ Evergreen supports the following applications:
 | Tower                                | Tower                                                             | https://www.git-tower.com/windows/                                                                                                          |
 | TPGiColourContrastAnalyser           | TGPi Colour Contrast Analyser                                     | https://www.tpgi.com/color-contrast-checker/                                                                                                |
 | TrackerSoftwarePDFXChangeEditor      | Tracker Software PDF X-Change Editor                              | https://pdf-xchange.eu/pdf-xchange-editor/index.htm                                                                                         |
+| TrimbleSketchUp                      | Trimble SketchUp                                                  | https://help.sketchup.com/en/sketchup/performing-silent-install-sketchup                                                                    |
 | UnityEditor                          | Unity Editor                                                      | https://unity.com/download                                                                                                                  |
 | USBPcap                              | USBPcap                                                           | https://github.com/desowin/usbpcap/                                                                                                         |
 | VeraCrypt                            | VeraCrypt                                                         | https://www.veracrypt.fr/en/Home.html                                                                                                       |
