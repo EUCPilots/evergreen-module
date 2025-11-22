@@ -2,6 +2,7 @@ function Get-EvergreenLibrary {
     <#
         .EXTERNALHELP Evergreen-help.xml
     #>
+    [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(
