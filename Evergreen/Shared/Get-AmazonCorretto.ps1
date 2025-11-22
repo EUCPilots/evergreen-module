@@ -23,10 +23,22 @@ function Get-AmazonCorretto {
 
         # Construct the output; Return the custom object to the pipeline
         if ($null -ne $Response) {
+
+            $ImageType = if ($Url -match "jre") {
+                "JRE"
+            }
+            elseif ($Url -match "jdk") {
+                "JDK"
+            }
+            else {
+                "Unknown"
+            }
+
             $PSObject = [PSCustomObject] @{
                 Version      = [RegEx]::Match($Response.ResponseUri.LocalPath, $res.Get.Download.MatchVersion).Captures.Groups[1].Value
                 Md5          = (Invoke-EvergreenWebRequest -Uri $ChecksumUrl -Raw -ReturnObject "Content")
                 Architecture = Get-Architecture -String $Response.ResponseUri.AbsoluteUri
+                ImageType    = $ImageType
                 Type         = Get-FileType -File $Response.ResponseUri.AbsoluteUri
                 URI          = $Response.ResponseUri.AbsoluteUri
             }
