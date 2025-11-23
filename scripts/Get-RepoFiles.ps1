@@ -1,1 +1,0 @@
-Invoke-RestMethod -Uri "https://api.github.com/repos/aaronparker/evergreen/contents/Evergreen/Manifests?ref=main"
