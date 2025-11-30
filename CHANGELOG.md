@@ -1,5 +1,9 @@
 # Change log
 
+## VERSION
+
+* Adds `Get-AzulZulu` shared function for using `api.azul.com` for downloads
+
 ## 2510.2820.0
 
 * A working solution for adding output filters for Get-EvergreenApp. This should simplify returning details for a specific application by not requiring the use of `Where-Object`. The filters can be added to `/Evergreen/Filters`, along side the cached Apps and Manifests. [#871](https://github.com/EUCPilots/evergreen-module/discussions/871)
