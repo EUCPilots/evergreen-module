@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2511.2826.0
 
 * Fix `JRE` or `JDK` string match in `Get-AzulZulu`
 

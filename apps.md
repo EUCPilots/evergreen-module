@@ -1,4 +1,4 @@
-﻿# 382 Supported applications
+﻿# 383 Supported applications
 
 Evergreen supports the following applications:
 
@@ -57,6 +57,7 @@ Evergreen supports the following applications:
 | AzulZulu11                           | Azul Zulu 11                                                      | https://www.azul.com/downloads/#zulu                                                                                                        |
 | AzulZulu17                           | Azul Zulu 17                                                      | https://www.azul.com/downloads/#zulu                                                                                                        |
 | AzulZulu21                           | Azul Zulu 21                                                      | https://www.azul.com/downloads/#zulu                                                                                                        |
+| AzulZulu25                           | Azul Zulu 25                                                      | https://www.azul.com/downloads/#zulu                                                                                                        |
 | AzulZulu8                            | Azul Zulu 8                                                       | https://www.azul.com/downloads/#zulu                                                                                                        |
 | BeekeeperStudio                      | Beekeeper Studio                                                  | https://www.beekeeperstudio.io/                                                                                                             |
 | BellSoftLibericaJDK11                | BellSoft Liberica JDK 11 LTS                                      | https://bell-sw.com/libericajdk/                                                                                                            |
@@ -144,7 +145,7 @@ Evergreen supports the following applications:
 | GoToMeeting                          | GoTo Meeting                                                      | https://support.goto.com/meeting/help/install-via-msi-windows                                                                               |
 | GoToOpener                           | GoTo Opener                                                       | https://support.goto.com/meeting/help/what-is-the-multi-user-launcher-opener-msi                                                            |
 | Gpg4win                              | Gpg4win                                                           | https://www.gpg4win.org/                                                                                                                    |
-| GrafanaAgent                         | Grafana Agent                                                     | https://grafana.com/docs/agent/                                                                                                             |
+| GrafanaAlloy                         | Grafana Alloy                                                     | https://grafana.com/docs/alloy/latest/                                                                                                      |
 | Greenshot                            | Greenshot                                                         | https://getgreenshot.org/                                                                                                                   |
 | gretl                                | gretl                                                             | http://gretl.sourceforge.net/                                                                                                               |
 | gsudo                                | gsudo                                                             | https://gerardog.github.io/gsudo                                                                                                            |
@@ -287,6 +288,7 @@ Evergreen supports the following applications:
 | OracleJava21                         | Oracle Java 21                                                    | https://www.oracle.com/java/technologies/downloads/#java21                                                                                  |
 | OracleJava22                         | Oracle Java 22                                                    | https://www.oracle.com/java/technologies/downloads/#java22                                                                                  |
 | OracleJava23                         | Oracle Java 23                                                    | https://www.oracle.com/java/technologies/downloads/#java23                                                                                  |
+| OracleJava25                         | Oracle Java 25                                                    | https://www.oracle.com/java/technologies/downloads/#java25                                                                                  |
 | OracleJava8                          | Oracle Java 8                                                     | https://www.java.com                                                                                                                        |
 | OracleVirtualBox                     | Oracle VirtualBox                                                 | https://www.virtualbox.org/                                                                                                                 |
 | PaintDotNet                          | dotPDN LLC Paint.NET                                              | https://getpaint.net                                                                                                                        |
@@ -368,7 +370,6 @@ Evergreen supports the following applications:
 | VeraCrypt                            | VeraCrypt                                                         | https://www.veracrypt.fr/en/Home.html                                                                                                       |
 | VercelHyper                          | Vercel Hyper                                                      | https://hyper.is/                                                                                                                           |
 | VideoLanVlcPlayer                    | VideoLan VLC Player                                               | https://www.videolan.org/vlc/                                                                                                               |
-| VisualCppRedistAIO                   | VisualCppRedistAIO                                                | https://github.com/abbodi1406/vcredist                                                                                                      |
 | VMPlexWorkstation                    | VMPlex Workstation                                                | https://github.com/0xf005ba11/vmplex-ws                                                                                                     |
 | VMwareTools                          | VMware Tools                                                      | https://docs.vmware.com/en/VMware-Tools/index.html                                                                                          |
 | voidtoolsEverything                  | voidtools Everything                                              | https://www.voidtools.com/                                                                                                                  |
