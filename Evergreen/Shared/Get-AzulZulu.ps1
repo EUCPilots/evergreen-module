@@ -51,8 +51,8 @@ function Get-AzulZulu {
     foreach ($Release in ($Releases | Where-Object { ($_.$DISTRO_VERSION -join ".") -eq ($Version.$DISTRO_VERSION -join ".") })) {
         $PSObject = [PSCustomObject]@{
             Version      = $Release.$DISTRO_VERSION -join "."
-            JavaVersion  = "$($Release.java_version -join ".")+$($Release.openjdk_build_number)"
-            ImageType    = if ($Release.$DOWNLOAD_URL -match "[/\\]jre[/\\-]") { "JRE" } else { "JDK" }
+            JavaVersion  = "$($Release.java_version -join ".")$(if ($null -ne $Release.openjdk_build_number) { "+$($Release.openjdk_build_number)" })"
+            ImageType    = if ($Release.$DOWNLOAD_URL -match "(jre)(?=\d)") { "JRE" } else { "JDK" }
             Architecture = Get-Architecture -String $Release.$DOWNLOAD_URL
             Type         = Get-FileType -File $Release.$DOWNLOAD_URL
             URI          = $Release.$DOWNLOAD_URL
