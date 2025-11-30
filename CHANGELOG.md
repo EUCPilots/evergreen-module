@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2511.2823.0
 
 * Adds `Get-AzulZulu` shared function for using `api.azul.com` for downloads
 

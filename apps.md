@@ -1,4 +1,4 @@
-﻿# 379 Supported applications
+﻿# 382 Supported applications
 
 Evergreen supports the following applications:
 
@@ -72,6 +72,7 @@ Evergreen supports the following applications:
 | BlenderLauncher                      | Blender Launcher                                                  | https://dotbow.github.io/Blender-Launcher/                                                                                                  |
 | BlueJ                                | BlueJ                                                             | https://www.bluej.org/                                                                                                                      |
 | Bruno                                | Bruno                                                             | https://www.usebruno.com/                                                                                                                   |
+| CanvaAffinity                        | Canva Affinity                                                    | https://www.affinity.studio/                                                                                                                |
 | CendioThinLinc                       | Cendio ThinLinc                                                   | https://www.cendio.com/                                                                                                                     |
 | CitrixShareFile                      | Citrix ShareFile for Windows                                      | https://www.citrix.com/downloads/sharefile/clients-and-plug-ins/citrix-files-for-windows.html                                               |
 | CitrixWorkspaceApp                   | Citrix Workspace app                                              | https://www.citrix.com/downloads/workspace-app/                                                                                             |
@@ -218,6 +219,7 @@ Evergreen supports the following applications:
 | MicrosoftOpenJDK11                   | Microsoft OpenJDK 11                                              | https://www.microsoft.com/openjdk                                                                                                           |
 | MicrosoftOpenJDK17                   | Microsoft OpenJDK 17                                              | https://www.microsoft.com/openjdk                                                                                                           |
 | MicrosoftOpenJDK21                   | Microsoft OpenJDK 21                                              | https://www.microsoft.com/openjdk                                                                                                           |
+| MicrosoftOpenJDK25                   | Microsoft OpenJDK 25                                              | https://www.microsoft.com/openjdk                                                                                                           |
 | MicrosoftOutlook                     | Microsoft Outlook                                                 | https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/get-started/deployment-new-outlook                                             |
 | MicrosoftPowerAutomateDesktop        | Microsoft Power Automate Desktop                                  | https://learn.microsoft.com/en-us/power-automate/desktop-flows/install                                                                      |
 | MicrosoftPowerShell                  | Microsoft PowerShell                                              | https://docs.microsoft.com/powershell/                                                                                                      |
@@ -323,6 +325,7 @@ Evergreen supports the following applications:
 | RedHatOpenJDK21                      | Red Hat OpenJDK 21                                                | https://developers.redhat.com/products/openjdk/overview                                                                                     |
 | RedHatOpenJDK8                       | Red Hat OpenJDK 8                                                 | https://developers.redhat.com/products/openjdk/overview                                                                                     |
 | ResponsivelyApp                      | Responsively App                                                  | https://responsively.app/                                                                                                                   |
+| RiegeScopeRuntime                    | Riege Scope Runtime                                               | https://www.riege.com/                                                                                                                      |
 | RingCentral                          | RingCentral                                                       | https://www.ringcentral.com                                                                                                                 |
 | RizonesoftNotepad3                   | Rizonesoft Notepad3                                               | https://www.rizonesoft.com/downloads/notepad3                                                                                               |
 | RustDeskClient                       | RustDesk Client                                                   | https://rustdesk.com/docs/en/self-host/client-deployment/                                                                                   |
