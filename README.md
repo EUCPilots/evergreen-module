@@ -1,5 +1,7 @@
 # About
 
+This is the repository the the Evergreen PowerShell module. For the Evergreen application functions see [eucpilots/evergreen-apps](https://github.com/EUCPilots/evergreen-apps).
+
 [![License][license-badge]][license]
 [![PowerShell Gallery Version][psgallery-version-badge]][psgallery]
 [![PowerShell Gallery][psgallery-badge]][psgallery]
