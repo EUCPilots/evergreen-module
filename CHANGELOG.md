@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2603.2829.0
 
 * Update `Shared/Get-AzulZulu.ps1` - Refactor image type detection by extracting URL-matching logic into a dedicated variable. Add explicit handling for fx-jre -> JREFX and fx-jdk -> JDKFX, retain jre -> JRE and jdk -> JDK, and default to Unknown when no pattern matches. This expands supported image type distinctions. [https://github.com/EUCPilots/evergreen-apps/issues/87](https://github.com/EUCPilots/evergreen-apps/issues/87)
 
