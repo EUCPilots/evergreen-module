@@ -31,6 +31,7 @@ function Get-AzulZulu {
     }
     $Releases = Invoke-EvergreenRestMethod @params
 
+    # Check if releases were found
     if ($null -eq $Releases -or $Releases.Count -eq 0) {
         Write-Warning -Message "$($MyInvocation.MyCommand): No releases found."
         return
@@ -39,7 +40,7 @@ function Get-AzulZulu {
         Write-Verbose -Message "$($MyInvocation.MyCommand): found $($Releases.count) releases."
     }
 
-    # Find the latest version
+    # Find the latest version by sorting the releases based on the distro_version property
     $Version = $Releases | `
         Where-Object { $null -ne $_.$DISTRO_VERSION } | `
         Sort-Object { [System.Version]($_.$DISTRO_VERSION -join ".") } -Descending | `
@@ -47,8 +48,9 @@ function Get-AzulZulu {
     $LatestVersion = $Version.$DISTRO_VERSION -join "."
     Write-Verbose -Message "$($MyInvocation.MyCommand): found latest version: $LatestVersion"
 
+    # Filter the releases for the latest version and exclude any gzipped files
     Write-Verbose -Message "$($MyInvocation.MyCommand): Filter for latest releases."
-    foreach ($Release in ($Releases | Where-Object { ($_.$DISTRO_VERSION -join ".") -eq ($Version.$DISTRO_VERSION -join ".") })) {
+    foreach ($Release in ($Releases | Where-Object { ($_.$DISTRO_VERSION -join ".") -eq ($Version.$DISTRO_VERSION -join ".") -and $_.$DOWNLOAD_URL -notmatch ".*gz?" })) {
 
         # Match the download URL to determine the image type
         $ImageType = if ($Release.$DOWNLOAD_URL -match "(fx-jre)(?=\d)") {
@@ -63,6 +65,7 @@ function Get-AzulZulu {
             "Unknown"
         }
 
+        # Output a custom object with release info
         $PSObject = [PSCustomObject]@{
             Version      = $Release.$DISTRO_VERSION -join "."
             JavaVersion  = "$($Release.java_version -join ".")$(if ($null -ne $Release.openjdk_build_number) { "+$($Release.openjdk_build_number)" })"
