@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2603.2832.0
 
 * Update `Shared/Get-AzulZulu.ps1` - Refine the selection to exclude gzipped downloads when filtering latest releases.
 
