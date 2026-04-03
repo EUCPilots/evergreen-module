@@ -1,7 +1,7 @@
 ---
 external help file: Evergreen-help.xml
 Module Name: Evergreen
-online version: https://eucpilots.com/evergreen-docs/help/en-US/Export-EvergreenManifest/
+online version: https://eucpilots.com/evergreen/help/en-US/Export-EvergreenManifest/
 schema: 2.0.0
 ---
 
@@ -64,10 +64,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 
-Site: https://eucpilots.com/evergreen-docs
+Site: https://eucpilots.com/evergreen
 
 Author: Aaron Parker
 
 ## RELATED LINKS
 
-[Getting started with Evergreen](https://eucpilots.com/evergreen-docs/)
+[Getting started with Evergreen](https://eucpilots.com/evergreen/)

@@ -78,8 +78,8 @@
     },
     "Uri": {
         "Project": "https://github.com/eucpilots/evergreen-module/",
-        "Docs": "https://eucpilots.com/evergreen-docs/",
-        "Issues": "https://eucpilots.com/evergreen-docs/issues/",
-        "Info": "https://eucpilots.com/evergreen-docs/troubleshoot/"
+        "Docs": "https://eucpilots.com/evergreen/",
+        "Issues": "https://eucpilots.com/evergreen/issues/",
+        "Info": "https://eucpilots.com/evergreen/troubleshoot/"
     }
 }
