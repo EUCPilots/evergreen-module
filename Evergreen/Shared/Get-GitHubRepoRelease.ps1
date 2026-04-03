@@ -195,7 +195,7 @@ function Get-GitHubRepoRelease {
                             # Build the output object
                             if ((Get-Platform -String $asset.browser_download_url) -eq "Windows") {
 
-                                $PSObject = [PSCustomObject] @{
+                                $Object = [PSCustomObject] @{
                                     Version       = $Version
                                     Date          = ConvertTo-DateTime -DateTime $item.created_at -Pattern "MM/dd/yyyy HH:mm:ss"
                                     Size          = $asset.size
@@ -205,7 +205,13 @@ function Get-GitHubRepoRelease {
                                     Type          = [System.IO.Path]::GetExtension($asset.browser_download_url).Split(".")[-1]
                                     URI           = $asset.browser_download_url
                                 }
-                                Write-Output -InputObject $PSObject
+
+                                # If the asset doesn't have a digest property, remove the Sha256 property from the output object
+                                if ($null -eq $asset.digest) {
+                                    $Object.PSObject.Properties.Remove('Sha256')
+                                }
+
+                                Write-Output -InputObject $Object
                             }
                         }
                         else {
