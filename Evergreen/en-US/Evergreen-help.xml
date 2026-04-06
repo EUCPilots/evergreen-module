@@ -48,7 +48,7 @@
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -81,7 +81,7 @@
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Export application version information</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/convertversion/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/convertversion/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -211,7 +211,7 @@
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -229,11 +229,11 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Export-EvergreenApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Export-EvergreenApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Export application version information</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/export/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/export/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -302,7 +302,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -318,11 +318,11 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Export-EvergreenManifest/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Export-EvergreenManifest/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Getting started with Evergreen</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -391,7 +391,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -421,11 +421,11 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Find-EvergreenApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Find-EvergreenApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Find supported applications</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/find/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/find/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -643,7 +643,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -718,11 +718,11 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Use Evergreen</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/use/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/use/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -791,7 +791,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -823,11 +823,11 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenAppFromApi/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppFromApi/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
-        <maml:linkText>https://eucpilots.com/evergreen-docs/invoke/</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/invoke/</maml:uri>
+        <maml:linkText>https://eucpilots.com/evergreen/invoke/</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/invoke/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -920,7 +920,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -974,11 +974,11 @@ Architecture : x64</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenLibraryApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibraryApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Create an Evergreen library:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/getlibrary.html</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/getlibrary.html</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -1013,7 +1013,7 @@ Architecture : x64</dev:code>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -1029,7 +1029,7 @@ Architecture : x64</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenAppsPath/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppsPath/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -1099,7 +1099,7 @@ Architecture : x64</dev:code>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -1148,11 +1148,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenEndpointFromApi/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenEndpointFromApi/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Retrieve endpoints used by Evergreen</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/endpoints/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/endpoints/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -1248,7 +1248,7 @@ c.1password.com</dev:code>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -1271,11 +1271,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenLibrary/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibrary/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Create an Evergreen library</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/getlibrary.html</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/getlibrary.html</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -1405,7 +1405,7 @@ c.1password.com</dev:code>
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs Author: Aaron Parker</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -1427,11 +1427,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/New-EvergreenLibrary/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/New-EvergreenLibrary/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Create an Evergreen library:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/newlibrary/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/newlibrary/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -1828,7 +1828,7 @@ c.1password.com</dev:code>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -1851,11 +1851,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Save-EvergreenApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Save-EvergreenApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Download application installers:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/save</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/save</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -2014,7 +2014,7 @@ c.1password.com</dev:code>
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -2030,11 +2030,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Start-EvergreenLibraryUpdate/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Start-EvergreenLibraryUpdate/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Update an Evergreen library</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/updatelibrary/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/updatelibrary/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -2279,7 +2279,7 @@ c.1password.com</dev:code>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -2295,11 +2295,11 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Save-EvergreenApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Save-EvergreenApp/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Test installers</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/test/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/test/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -2373,7 +2373,7 @@ c.1password.com</dev:code>
     <command:returnValues />
     <maml:alertSet>
       <maml:alert>
-        <maml:para>Site: https://eucpilots.com/evergreen-docs</maml:para>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
         <maml:para>Author: Aaron Parker</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -2403,7 +2403,7 @@ c.1password.com</dev:code>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen-docs/help/en-US/Update-Evergreen/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Update-Evergreen/</maml:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>

@@ -13,7 +13,7 @@ Evergreen is a simple PowerShell module to return the latest version and downloa
 * [Image creation with Hashicorp Packer](https://github.com/aaronparker/packer) - images can be created with the latest version of a set of applications
 * Import applications into Configuration Manager or [Microsoft Intune](https://github.com/aaronparker/packagefactory) and keep applications up to date with the latest versions
 * Validating or auditing a desktop image to ensure the current version of an application is installed
-* Create a [library of application installers](https://eucpilots.com/evergreen-docs/newlibrary/) - by regularly running Evergreen functions, you can retrieve and download the current version of an application and store it in an application directory structure for later use
+* Create a [library of application installers](https://eucpilots.com/evergreen/newlibrary/) - by regularly running Evergreen functions, you can retrieve and download the current version of an application and store it in an application directory structure for later use
 * [Track application updates](https://stealthpuppy.com/apptracker) to stay on top of new releases
 * Submitting manifests to `Winget` or `Chocolatey` or similar - Evergreen can return an object with a version number and download URL that can be used to construct manifests for the most recent versions
 
@@ -51,11 +51,11 @@ Evergreen's focus is on integration for PowerShell scripts to provide product ve
 
 ## Documentation
 
-Documentation for Evergreen, including usage examples, is located here: [https://eucpilots.com/evergreen-docs/](https://eucpilots.com/evergreen-docs/).
+Documentation for Evergreen, including usage examples, is located here: [https://eucpilots.com/evergreen/](https://eucpilots.com/evergreen/).
 
 ## Versioning
 
-The module uses a version notation that follows: YearMonth.Build. It is expected that the module will have changes on a regular basis, so the version numbering is intended to make it as simple as possible to understand when the last update was made. See the [CHANGELOG](https://eucpilots.com/evergreen-docs/changelog/) for details on changes introduced in each version.
+The module uses a version notation that follows: YearMonth.Build. It is expected that the module will have changes on a regular basis, so the version numbering is intended to make it as simple as possible to understand when the last update was made. See the [CHANGELOG](https://eucpilots.com/evergreen/changelog/) for details on changes introduced in each version.
 
 ## Installing the Module
 

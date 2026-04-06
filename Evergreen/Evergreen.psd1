@@ -112,13 +112,13 @@ PrivateData = @{
         LicenseUri = 'https://github.com/EUCPilots/evergreen-module/blob/main/LICENSE'
 
         # A URL to the main website for this project.
-        ProjectUri = 'https://eucpilots.com/evergreen-docs/'
+        ProjectUri = 'https://eucpilots.com/evergreen/'
 
         # A URL to an icon representing this module.
         IconUri = 'https://raw.githubusercontent.com/eucpilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://eucpilots.com/evergreen-docs/changelog'
+        ReleaseNotes = 'https://eucpilots.com/evergreen/changelog'
 
         # Prerelease string of this module
         # Prerelease = ''
