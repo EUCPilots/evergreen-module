@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2604.2835.0
 
 * `Get-GitHubRepoRelease` - Add logic to remove the Sha256 property when the asset has no digest. This prevents emitting an empty Sha256 field for Windows assets and ensures the output object only contains the digest when present
 * `Get-InstallerType ` - Add more output strings to provide more values to `InstallerType` property. Address [#124](https://github.com/EUCPilots/evergreen-apps/issues/124)
