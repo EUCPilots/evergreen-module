@@ -10,6 +10,7 @@ function Get-InstallerType {
         "airgap" { $Type = "Airgap"; break }
         "debug" { $Type = "Debug"; break }
         "grouppolicy" { $Type = "GroupPolicy"; break }
+        "legacy" { $Type = "Legacy"; break }
         "minimalist" { $Type = "Minimal"; break }
         "ndm" { $Type = "NonDarkMode"; break }
         "no-installer" { $Type = "Portable"; break }
