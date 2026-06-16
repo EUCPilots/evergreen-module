@@ -1,5 +1,10 @@
 # Change log
 
+## 2606.2838.0
+
+* Replace returning the checksum link with an actual `SHA256` value by invoking `Invoke-EvergreenRestMethod` on the `downloads.windows.checksumLink`, splitting the response to extract the checksum, and assigning it to `Sha256`. Add **try/catch** to emit a warning and set `Sha256` to the checksum file URL on failure, preserving existing metadata (Version, Build, Edition, Date, Size, Type). Improves robustness when checksum retrieval fails
+* Recognize the 'legacy' installer option in `Get-InstallerType.ps1` by mapping it to the "Legacy" type. This ensures callers passing 'legacy' are correctly identified. (`Evergreen/Private/Get-InstallerType.ps1`). Address [https://github.com/EUCPilots/evergreen-apps/issues/905](https://github.com/EUCPilots/evergreen-apps/issues/905)
+
 ## 2604.2835.0
 
 * `Get-GitHubRepoRelease` - Add logic to remove the Sha256 property when the asset has no digest. This prevents emitting an empty Sha256 field for Windows assets and ensures the output object only contains the digest when present
