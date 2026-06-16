@@ -30,7 +30,7 @@ function Get-JetBrainsApp {
             }
             catch {
                 Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum from '$($UpdateFeed.$($Edition.Value).downloads.windows.checksumLink)'. Error: $_"
-                $Sha256 = $null
+                $Sha256 = $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
             }
 
             # Construct the output; Return the custom object to the pipeline
