@@ -23,12 +23,22 @@ function Get-JetBrainsApp {
             Write-Warning -Message "$($MyInvocation.MyCommand): 'downloads.windows.link' property is null; from '$uri'."
         }
         else {
+
+            try {
+                $Sha256 = Invoke-EvergreenRestMethod -Uri $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
+                $Sha256 = ($Sha256 -split '\s+')[0]
+            }
+            catch {
+                Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum from '$($UpdateFeed.$($Edition.Value).downloads.windows.checksumLink)'. Error: $_"
+                $Sha256 = $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
+            }
+
             # Construct the output; Return the custom object to the pipeline
             $PSObject = [PSCustomObject] @{
                 Version = $UpdateFeed.$($Edition.Value).version
                 Build   = $UpdateFeed.$($Edition.Value).build
                 Edition = $Edition.Key
-                Sha256  = $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
+                Sha256  = $Sha256
                 Date    = ConvertTo-DateTime -DateTime $UpdateFeed.$($Edition.Value).date -Pattern $res.Get.Update.DatePattern
                 Size    = $UpdateFeed.$($Edition.Value).downloads.windows.size
                 Type    = Get-FileType -File $UpdateFeed.$($Edition.Value).downloads.windows.link
