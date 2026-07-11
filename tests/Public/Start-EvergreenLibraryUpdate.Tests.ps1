@@ -15,6 +15,14 @@ BeforeAll {
 
 Describe -Tag "Start" -Name "Start-EvergreenLibraryUpdate" {
     Context "Validate Start-EvergreenLibraryUpdate parameter validation" {
+        It "Should throw if ProxyCredential is provided without Proxy" {
+            $Creds = [System.Management.Automation.PSCredential]::new(
+                "proxy-user",
+                (ConvertTo-SecureString -String "proxy-pass" -AsPlainText -Force)
+            )
+            { Start-EvergreenLibraryUpdate -Path "/tmp" -ProxyCredential $Creds } | Should -Throw
+        }
+
         It "Should throw when Path parameter is null or empty" {
             { Start-EvergreenLibraryUpdate -Path "" -AppName "MicrosoftEdge" } | Should -Throw
         }
