@@ -15,11 +15,6 @@ function Get-Architecture {
         "arm" { $architecture = "ARM"; break }
         "nt64" { $architecture = "x64"; break }
         "nt32" { $architecture = "x86"; break }
-        "win64" { $architecture = "x64"; break }
-        "win32" { $architecture = "x86"; break }
-        "win-arm64" { $architecture = "ARM64"; break }
-        "win-x64" { $architecture = "x64"; break }
-        "win-x86" { $architecture = "x86"; break }
         "x86_64" { $architecture = "x64"; break }
         "x64" { $architecture = "x64"; break }
         "w64" { $architecture = "x64"; break }
@@ -35,6 +30,11 @@ function Get-Architecture {
         "x86" { $architecture = "x86"; break }
         "e64\." { $architecture = "x64"; break }
         "64\." { $architecture = "x64"; break }
+        "win64" { $architecture = "x64"; break }
+        "win32" { $architecture = "x86"; break }
+        "win-arm64" { $architecture = "ARM64"; break }
+        "win-x64" { $architecture = "x64"; break }
+        "win-x86" { $architecture = "x86"; break }
         default {
             Write-Verbose -Message "$($MyInvocation.MyCommand): Architecture not found in $String, defaulting to x86."
             $architecture = "x86"
