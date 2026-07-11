@@ -23,6 +23,10 @@ function Start-EvergreenLibraryUpdate {
     )
 
     begin {
+        if ($PSBoundParameters.ContainsKey("ProxyCredential") -and -not($PSBoundParameters.ContainsKey("Proxy"))) {
+            throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
+        }
+
         $params = @{}
         if ($PSBoundParameters.ContainsKey("Proxy")) {
             $params.Proxy = $Proxy

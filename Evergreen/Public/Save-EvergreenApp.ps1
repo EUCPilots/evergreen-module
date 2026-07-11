@@ -50,6 +50,10 @@ function Save-EvergreenApp {
     )
 
     begin {
+        if ($PSBoundParameters.ContainsKey("ProxyCredential") -and -not($PSBoundParameters.ContainsKey("Proxy"))) {
+            throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
+        }
+
         # Disable the Invoke-WebRequest progress bar for faster downloads
         if ($PSBoundParameters.ContainsKey("Verbose") -and !($PSBoundParameters.ContainsKey("NoProgress"))) {
             $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
