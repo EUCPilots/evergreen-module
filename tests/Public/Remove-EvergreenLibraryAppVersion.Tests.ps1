@@ -84,12 +84,12 @@ BeforeAll {
 
 Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
     Context "Validate pruning keeps latest versions" {
-        BeforeAll {
+        BeforeEach {
             $script:LibPath = Join-Path -Path (Get-TestTempPath) -ChildPath "RemoveEvergreenLibraryAppVersionTest-$([System.Guid]::NewGuid().ToString())"
             New-TestLibrary -Path $script:LibPath
         }
 
-        AfterAll {
+        AfterEach {
             Remove-Item -Path $script:LibPath -Recurse -Force -ErrorAction "SilentlyContinue"
         }
 
