@@ -73,7 +73,7 @@ FunctionsToExport = @('ConvertTo-DotNetVersionClass', 'Export-EvergreenApp',
                'Export-EvergreenManifest', 'Find-EvergreenApp', 'Get-EvergreenApp', 
                'Get-EvergreenAppFromApi', 'Get-EvergreenAppFromLibrary', 
                'Get-EvergreenAppsPath', 'Get-EvergreenEndpointFromApi', 
-               'Get-EvergreenLibrary', 'New-EvergreenLibrary', 'Save-EvergreenApp', 
+               'Get-EvergreenLibrary', 'New-EvergreenLibrary', 'Remove-EvergreenLibraryAppVersion', 'Save-EvergreenApp', 
                'Start-EvergreenLibraryUpdate', 'Test-EvergreenApp', 
                'Update-Evergreen')
 
