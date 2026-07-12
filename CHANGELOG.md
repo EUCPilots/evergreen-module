@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2607.2841.0
 
 * Add `Remove-EvergreenLibraryAppVersion` cmdlet to remove app versions from an Evergreen library, and add cmdlet help documentation [#807](https://github.com/EUCPilots/evergreen-apps/issues/807)
 * Update `Start-EvergreenLibraryUpdate.ps1` to support updated library maintenance flow [#523](https://github.com/EUCPilots/evergreen-apps/issues/423)
