@@ -24,7 +24,22 @@ function Expand-CabArchive {
             return $Items
         }
         catch {
-            throw "Failed to expand CAB file. $_"
+            Write-Verbose -Message "$($MyInvocation.MyCommand): $($_.Exception.Message)"
+
+            # Let's try to expand the CAB file with expand.exe
+            $ExpandExe = Join-Path -Path $Env:SystemRoot -ChildPath "System32\expand.exe"
+            $DestinationPath = Join-Path -Path $DestinationPath -ChildPath (New-Guid)
+            New-Item -Path $DestinationPath -ItemType "Directory" -Force | Out-Null
+            if (Test-Path -Path $ExpandExe) {
+                & $ExpandExe $Path -I $DestinationPath
+                $Items = Get-ChildItem -Path $DestinationPath -File -Recurse | Select-Object -ExpandProperty "FullName"
+                if ($null -ne $Items) {
+                    return $Items
+                }
+                else {
+                    throw "Failed to expand CAB file '$Path' to '$DestinationPath'."
+                }
+            }
         }
     }
     else {

@@ -12,12 +12,14 @@ function Resolve-SystemNetWebRequest {
         [System.String] $Uri,
 
         [Parameter(Position = 1)]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [System.Int32] $MaximumRedirection = 3
     )
+
+    $webResponse = $null
 
     try {
         $httpWebRequest = [System.Net.WebRequest]::Create($Uri)
@@ -41,7 +43,6 @@ function Resolve-SystemNetWebRequest {
                 $ProxyObj.Credentials = $script:EvergreenProxyCreds
                 $httpWebRequest.UseDefaultCredentials = $false
                 $httpWebRequest.Proxy = $ProxyObj
-                $httpWebRequest.Credentials = $script:EvergreenProxyCreds
             }
         }
         else {
@@ -68,6 +69,8 @@ function Resolve-SystemNetWebRequest {
         throw $_
     }
     finally {
-        $webResponse.Dispose()
+        if ($null -ne $webResponse) {
+            $webResponse.Dispose()
+        }
     }
 }

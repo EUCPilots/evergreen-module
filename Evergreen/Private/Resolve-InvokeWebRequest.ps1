@@ -12,7 +12,7 @@ function Resolve-InvokeWebRequest {
         [System.String] $Uri,
 
         [Parameter(Position = 1)]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter(Position = 2)]
         [ValidateNotNullOrEmpty()]

@@ -1,9 +1,20 @@
 # Change log
 
+## VERSION
+
+* Add `Remove-EvergreenLibraryAppVersion` cmdlet to remove app versions from an Evergreen library, and add cmdlet help documentation [#807](https://github.com/EUCPilots/evergreen-apps/issues/807)
+* Update `Start-EvergreenLibraryUpdate.ps1` to support updated library maintenance flow [#523](https://github.com/EUCPilots/evergreen-apps/issues/423)
+* Update `Expand-CabArchive.ps1` implementation to fall back to `expand.exe` [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
+* Add GitLab release helper support and associated tests for release retrieval scenarios
+* Harden proxy handling and response cleanup, and add proxy credential validation tests
+* Refactor OS detection and user agent handling, including use of `Get-EvergreenUserAgent` instead of script-scoped user agent variables
+* Reorder architecture switch cases to improve architecture normalization behavior
+* Remove obsolete Omnissa shared helper functions
+
 ## 2606.2838.0
 
 * Replace returning the checksum link with an actual `SHA256` value by invoking `Invoke-EvergreenRestMethod` on the `downloads.windows.checksumLink`, splitting the response to extract the checksum, and assigning it to `Sha256`. Add **try/catch** to emit a warning and set `Sha256` to the checksum file URL on failure, preserving existing metadata (Version, Build, Edition, Date, Size, Type). Improves robustness when checksum retrieval fails
-* Recognize the 'legacy' installer option in `Get-InstallerType.ps1` by mapping it to the "Legacy" type. This ensures callers passing 'legacy' are correctly identified. (`Evergreen/Private/Get-InstallerType.ps1`). Address [https://github.com/EUCPilots/evergreen-apps/issues/905](https://github.com/EUCPilots/evergreen-apps/issues/905)
+* Recognize the 'legacy' installer option in `Get-InstallerType.ps1` by mapping it to the "Legacy" type. This ensures callers passing 'legacy' are correctly identified. (`Evergreen/Private/Get-InstallerType.ps1`). Address [#905](https://github.com/EUCPilots/evergreen-apps/issues/905)
 
 ## 2604.2835.0
 

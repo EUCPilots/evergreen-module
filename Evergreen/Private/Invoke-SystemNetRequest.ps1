@@ -12,12 +12,14 @@ function Invoke-SystemNetRequest {
 
         [Parameter(Position = 1)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [System.Int32] $MaximumRedirection = 3
     )
+
+    $webResponse = $null
 
     try {
         $httpWebRequest = [System.Net.WebRequest]::Create($Uri)
@@ -37,7 +39,6 @@ function Invoke-SystemNetRequest {
 
                 $httpWebRequest.UseDefaultCredentials = $false
                 $httpWebRequest.Proxy = $ProxyObj
-                $httpWebRequest.Credentials = $script:EvergreenProxyCreds
             }
         }
         else {
@@ -58,6 +59,8 @@ function Invoke-SystemNetRequest {
         throw $_
     }
     finally {
-        $webResponse.Dispose()
+        if ($null -ne $webResponse) {
+            $webResponse.Dispose()
+        }
     }
 }

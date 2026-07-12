@@ -23,7 +23,7 @@ function Test-EvergreenApp {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter(Mandatory = $false)]
         [System.Management.Automation.SwitchParameter] $Force,
@@ -33,6 +33,10 @@ function Test-EvergreenApp {
     )
 
     begin {
+        if ($PSBoundParameters.ContainsKey("ProxyCredential") -and -not($PSBoundParameters.ContainsKey("Proxy"))) {
+            throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
+        }
+
         # Disable the Invoke-WebRequest progress bar for faster downloads
         if ($PSBoundParameters.ContainsKey("Verbose") -and !($PSBoundParameters.ContainsKey("NoProgress"))) {
             $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue

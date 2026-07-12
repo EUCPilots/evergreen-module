@@ -1,3 +1,5 @@
 function Get-EvergreenUserAgent {
-    return "Evergreen/$(Get-ModuleVersion) (https://github.com/aaronparker/evergreen; PowerShell $($PSVersionTable.PSVersion); $(Get-OSName))"
+    [OutputType([System.String])]
+    $Version = Get-ModuleVersion
+    return "Evergreen/$Version (https://github.com/EUCPilots/evergreen-module; PowerShell $($PSVersionTable.PSVersion); $($script:OSName))"
 }

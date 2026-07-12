@@ -72,7 +72,7 @@ InModuleScope -ModuleName "Evergreen" {
 
             It "Returns an ImageType property" {
                 $result[0].ImageType | Should -Not -BeNullOrEmpty
-                $result[0].ImageType | Should -BeIn @("JRE", "JDK")
+                $result[0].ImageType | Should -BeIn @("JRE", "JDK", "JREFX")
             }
 
             It "Returns an Architecture property" {
