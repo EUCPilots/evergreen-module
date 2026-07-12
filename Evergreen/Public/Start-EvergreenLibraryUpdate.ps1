@@ -60,10 +60,15 @@ function Start-EvergreenLibraryUpdate {
                         $App = Get-EvergreenApp -Name $Application.EvergreenApp @params
                     }
                     else {
-                        Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($Application.Filter)."
-                        $WhereBlock = [ScriptBlock]::Create($Application.Filter)
-                        [System.Array]$App = @()
-                        $App = Get-EvergreenApp -Name $Application.EvergreenApp @params | Where-Object $WhereBlock
+                        try {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($Application.Filter)."
+                            $WhereBlock = [ScriptBlock]::Create($Application.Filter)
+                            [System.Array]$App = @()
+                            $App = Get-EvergreenApp -Name $Application.EvergreenApp @params | Where-Object $WhereBlock
+                        }
+                        catch {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): Failed applying filter for $($Application.Name) with: $($_.Exception.Message)"
+                        }
                     }
 
                     # If something returned, add to the library
@@ -101,7 +106,7 @@ function Start-EvergreenLibraryUpdate {
                     Write-Warning -Message "$($MyInvocation.MyCommand): No media found in Evergreen Library"
                 }
                 elseif ($null -ne $LibContentBefore) {
-                        (Compare-Object $LibContentBefore $LibContentAfter -Property FullName -IncludeEqual | ForEach-Object {
+                    (Compare-Object $LibContentBefore $LibContentAfter -Property FullName -IncludeEqual | ForEach-Object {
                         [PSCustomObject]@{
                             Installer = $_.FullName
                             Status    = $_.SideIndicator -replace "=>", "NEW" -replace "==", "UNCHANGED" -replace "<=", "DELETED"
