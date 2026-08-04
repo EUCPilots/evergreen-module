@@ -31,7 +31,7 @@ function Expand-CabArchive {
             $DestinationPath = Join-Path -Path $DestinationPath -ChildPath (New-Guid)
             New-Item -Path $DestinationPath -ItemType "Directory" -Force | Out-Null
             if (Test-Path -Path $ExpandExe) {
-                & $ExpandExe $Path -I $DestinationPath
+                & $ExpandExe $Path -I $DestinationPath | Out-Null
                 $Items = Get-ChildItem -Path $DestinationPath -File -Recurse | Select-Object -ExpandProperty "FullName"
                 if ($null -ne $Items) {
                     return $Items
