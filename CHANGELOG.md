@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2608.2847.0
 
 * Prevents error from being thrown in Get-Content, as detailed in issue [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
 * Adds support additional installer type keywords in `Get-InstallerType`
