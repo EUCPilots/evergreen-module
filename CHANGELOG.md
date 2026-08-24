@@ -1,5 +1,11 @@
 # Change log
 
+## VERSION
+
+* Prevents error from being thrown in Get-Content, as detailed in issue [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
+* Adds support additional installer type keywords in `Get-InstallerType`
+* Refreshes module manifest metadata by updating the copyright year to 2026 and tightening the description wording.
+
 ## 2607.2841.0
 
 * Add `Remove-EvergreenLibraryAppVersion` cmdlet to remove app versions from an Evergreen library, and add cmdlet help documentation [#807](https://github.com/EUCPilots/evergreen-apps/issues/807)
