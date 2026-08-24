@@ -9,7 +9,7 @@ on:
     paths-ignore:
       - '**'
   workflow_run:
-    workflows: ["update-module.yml"]
+    workflows: ["Update module version"]
     types:
       - completed
     branches:
@@ -31,9 +31,15 @@ permissions:
 jobs:
   publish-module:
     runs-on: ubuntu-latest
-    #if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v7
+        if: github.event_name != 'workflow_run'
+
+      - uses: actions/checkout@v7
+        if: github.event_name == 'workflow_run'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install and cache PowerShell modules
         id: psmodulecache
