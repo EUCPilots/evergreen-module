@@ -1,4 +1,4 @@
-name: 'Update module version'
+name: 'Update and publish module'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -13,8 +13,12 @@ jobs:
   update-module:
     name: Update module version
     runs-on: windows-latest
+    outputs:
+      changes_detected: ${{ steps.commit.outputs.changes_detected }}
+      new_version: ${{ steps.update-version.outputs.newversion }}
     steps:
       - uses: actions/checkout@v7
+        id: checkout
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -114,6 +118,7 @@ jobs:
         run: echo "No changes detected."
 
       - name: Create and Push Tag
+        id: create-tag
         if: steps.commit.outputs.changes_detected == 'true'
         shell: pwsh
         run: |
@@ -140,3 +145,120 @@ jobs:
               Write-Host "Failed to read module manifest" -ForegroundColor Red
               exit 1
           }
+
+      - name: Summarize update job
+        if: always()
+        shell: pwsh
+        env:
+          JOB_STATUS: ${{ job.status }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          CACHE_OUTCOME: ${{ steps.psmodulecache.outcome }}
+          VERSION_OUTCOME: ${{ steps.update-version.outcome }}
+          CHANGELOG_OUTCOME: ${{ steps.update-changelog.outcome }}
+          APPS_OUTCOME: ${{ steps.update-apps.outcome }}
+          GPG_OUTCOME: ${{ steps.import_gpg.outcome }}
+          COMMIT_OUTCOME: ${{ steps.commit.outcome }}
+          TAG_OUTCOME: ${{ steps.create-tag.outcome }}
+          CHANGES_DETECTED: ${{ steps.commit.outputs.changes_detected }}
+          NEW_VERSION: ${{ steps.update-version.outputs.newversion }}
+        run: |
+          function Get-StatusIcon {
+              param([string]$Outcome)
+              switch ($Outcome) {
+                  "success" { return "✅" }
+                  "failure" { return "❌" }
+                  "cancelled" { return "⚪" }
+                  "skipped" { return "⏭️" }
+                  default { return "❔" }
+              }
+          }
+
+          $overallIcon = if ($env:JOB_STATUS -eq "success") { "✅" } elseif ($env:JOB_STATUS -eq "failure") { "❌" } else { "⚪" }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Update module job summary"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Overall status: $overallIcon $($env:JOB_STATUS)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "New version: $($env:NEW_VERSION)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Changes detected: $($env:CHANGES_DETECTED)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Step outcomes"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CHECKOUT_OUTCOME) Checkout: $($env:CHECKOUT_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CACHE_OUTCOME) Install/cache modules: $($env:CACHE_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:VERSION_OUTCOME) Update module version: $($env:VERSION_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CHANGELOG_OUTCOME) Update CHANGELOG.md: $($env:CHANGELOG_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:APPS_OUTCOME) Update apps.md: $($env:APPS_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:GPG_OUTCOME) Import GPG key: $($env:GPG_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:COMMIT_OUTCOME) Commit changes: $($env:COMMIT_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:TAG_OUTCOME) Create and push tag: $($env:TAG_OUTCOME)"
+
+  publish-module:
+    name: Publish module
+    runs-on: ubuntu-latest
+    needs: update-module
+    steps:
+      - uses: actions/checkout@v7
+        id: checkout
+        with:
+          ref: refs/tags/v${{ needs.update-module.outputs.new_version }}
+        if: needs.update-module.outputs.changes_detected == 'true'
+
+      - name: Install and cache PowerShell modules
+        id: psmodulecache
+        uses: potatoqualitee/psmodulecache@v6.3
+        if: needs.update-module.outputs.changes_detected == 'true'
+        with:
+          modules-to-cache: PowerShellGet
+          shell: pwsh
+
+      # Push the updated module to the PowerShell Gallery
+      - name: Push module to PowerShell Gallery
+        id: publish
+        shell: pwsh
+        if: needs.update-module.outputs.changes_detected == 'true'
+        run: |
+          $params = @{
+              Path        = "${{ github.workspace }}/Evergreen"
+              NuGetApiKey = "${{ secrets.NUGETAPIKEY }}"
+              ErrorAction = "Stop"
+          }
+          Publish-Module @params
+
+      - name: Summarize publish job
+        if: always()
+        shell: pwsh
+        env:
+          JOB_STATUS: ${{ job.status }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          CACHE_OUTCOME: ${{ steps.psmodulecache.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          CHANGES_DETECTED: ${{ needs.update-module.outputs.changes_detected }}
+          NEW_VERSION: ${{ needs.update-module.outputs.new_version }}
+        run: |
+          function Get-StatusIcon {
+              param([string]$Outcome)
+              switch ($Outcome) {
+                  "success" { return "✅" }
+                  "failure" { return "❌" }
+                  "cancelled" { return "⚪" }
+                  "skipped" { return "⏭️" }
+                  default { return "❔" }
+              }
+          }
+
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Publish module job summary"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Changes detected in update job: $($env:CHANGES_DETECTED)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Target version: $($env:NEW_VERSION)"
+
+          if ($env:CHANGES_DETECTED -ne "true") {
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Overall status: ⏭️ skipped"
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Publish steps were skipped because no changes were committed in the update job."
+              exit 0
+          }
+
+          $overallIcon = if ($env:JOB_STATUS -eq "success") { "✅" } elseif ($env:JOB_STATUS -eq "failure") { "❌" } else { "⚪" }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Overall status: $overallIcon $($env:JOB_STATUS)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Step outcomes"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CHECKOUT_OUTCOME) Checkout release tag: $($env:CHECKOUT_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CACHE_OUTCOME) Install/cache modules: $($env:CACHE_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:PUBLISH_OUTCOME) Publish to PowerShell Gallery: $($env:PUBLISH_OUTCOME)"
