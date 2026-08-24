@@ -27,10 +27,10 @@ Author = 'Aaron Parker'
 CompanyName = 'stealthpuppy'
 
 # Copyright statement for this module
-Copyright = '(c) 2025 stealthpuppy, EUC Pilots. All rights reserved.'
+Copyright = '(c) 2026 stealthpuppy, EUC Pilots. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Create evergreen Windows image builds with the latest versions of applications. Evergreen is a simple PowerShell module that retrieves the latest version numbers and download URLs for various software products directly from the vendor source.'
+Description = 'Create evergreen Windows image builds with the latest versions of applications. Evergreen is a PowerShell module that retrieves the latest version numbers and download URLs for various software products directly from the vendor source.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '4.0'
