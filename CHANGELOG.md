@@ -1,5 +1,10 @@
 # Change log
 
+## VERSION
+
+* Improve `Expand-CabArchive` so it treats null/empty `Shell.Application` item lists as a failure and falls back to `expand.exe` instead of returning an empty success. Added focused tests covering fallback behavior when Shell returns null/empty or throws, ensuring no fallback when Shell succeeds, and confirming an error is raised when both extraction methods produce no files.
+* Add detailed verbose output to `Remove-EvergreenLibraryAppVersion` so pruning decisions, skipped removals, and `ShouldProcess` behavior is easier to troubleshoot without changing returned objects. Update help with the new `-Verbose` guidance and add tests covering verbose output for pruning, no-op cases, skipped files, missing app matches, and `-WhatIf` behavior. Ref: [#928](https://github.com/EUCPilots/evergreen-apps/issues/928)
+
 ## 2608.2847.0
 
 * Prevents error from being thrown in Get-Content, as detailed in issue [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
