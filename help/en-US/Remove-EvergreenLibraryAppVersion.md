@@ -26,6 +26,8 @@ The cmdlet validates that `-Path` points to an Evergreen library by checking for
 
 By default, all applications in the library are processed and the latest 3 versions are retained.
 
+Use `-Verbose` to troubleshoot library validation, application selection, manifest reads, version sorting, retained and pruned entries, skipped installer files, and manifest updates. Messages distinguish planned pruning from files actually removed and report actions skipped by `-WhatIf` or declined confirmation. Verbose messages do not change the returned objects.
+
 ## EXAMPLES
 
 ### EXAMPLE 1
@@ -54,6 +56,15 @@ Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Keep 5 -Wha
 
 Description:
 Shows what files and manifests would be changed while keeping the latest 5 versions, without making any changes.
+
+### EXAMPLE 4
+
+```powershell
+Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Name "MicrosoftEdge" -Keep 3 -WhatIf -Verbose
+```
+
+Description:
+Shows detailed troubleshooting messages and planned changes for MicrosoftEdge without deleting installers or updating its manifest.
 
 ## PARAMETERS
 

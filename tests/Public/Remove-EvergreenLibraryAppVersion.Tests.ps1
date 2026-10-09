@@ -113,6 +113,60 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-1.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-2.0.0.exe") | Should -Be $true
         }
+
+        It "Should report pruning details on the verbose stream without changing result objects" {
+            $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false -Verbose 4>&1)
+            $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+            $results = @($records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] })
+
+            $results.Count | Should -Be 1
+            $results[0].ApplicationName | Should -Be "ContosoApp"
+            $results[0].RemovedFiles.Count | Should -Be 1
+            $results[0].KeptCount | Should -Be 3
+            $messages | Should -Match "Selected 1 of 2 applications"
+            $messages | Should -Match "Found 4 version entries"
+            $messages | Should -Match "Retaining version '4.0.0'"
+            $messages | Should -Match "Pruning version '1.0.0'"
+            $messages | Should -Match "Removed installer"
+            $messages | Should -Match "Updated app manifest"
+            $messages | Should -Match "1 installer files removed"
+        }
+
+        It "Should explain why pruning is unnecessary" {
+            $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "FabrikamApp" -Confirm:$false -Verbose 4>&1)
+            $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+            $result = $records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] }
+
+            $messages | Should -Match "No pruning required for 'FabrikamApp'"
+            $result.RemovedCount | Should -Be 0
+            $result.KeptCount | Should -Be 2
+        }
+
+        It "Should explain skipped installer removals" {
+            $manifestPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json"
+            $versions = @(Get-Content -Path $manifestPath | ConvertFrom-Json)
+            $versions[0].Path = ""
+            Remove-Item -Path $versions[1].Path -Force
+            $versions | ConvertTo-Json | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 2 -Name "ContosoApp" -Confirm:$false -Verbose 4>&1)
+            $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+            $result = $records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] }
+
+            $messages | Should -Match "no installer path is recorded"
+            $messages | Should -Match "does not exist or is not a file"
+            $result.RemovedFiles.Count | Should -Be 0
+            $result.RemovedCount | Should -Be 2
+        }
+
+        It "Should report when no applications match the requested name" {
+            $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name "UnknownApp" -Verbose 4>&1)
+            $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+            $results = @($records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] })
+
+            $messages | Should -Match "Selected 0 of 2 applications"
+            $results.Count | Should -Be 0
+        }
     }
 
     Context "Validate WhatIf does not delete installers or change manifest" {
@@ -128,7 +182,14 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
         }
 
         It "Should only report actions when using WhatIf" {
-            $null = Remove-EvergreenLibraryAppVersion -Path $script:WhatIfLibPath -Keep 3 -Name "ContosoApp" -WhatIf
+            $records = @(Remove-EvergreenLibraryAppVersion -Path $script:WhatIfLibPath -Keep 3 -Name "ContosoApp" -WhatIf -Verbose 4>&1)
+            $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+
+            $messages | Should -Match "Installer removal not approved by ShouldProcess"
+            $messages | Should -Match "Manifest update not approved by ShouldProcess"
+            $messages | Should -Match "0 installer files removed"
+            $messages | Should -Not -Match ": Removed installer "
+            $messages | Should -Not -Match ": Updated app manifest "
 
             Test-Path -Path (Join-Path -Path $script:WhatIfLibPath -ChildPath "ContosoApp/Contoso-1.0.0.exe") | Should -Be $true
             $postManifest = Get-Content -Path (Join-Path -Path $script:WhatIfLibPath -ChildPath "ContosoApp/ContosoApp.json") -Raw
