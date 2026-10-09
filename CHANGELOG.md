@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2610.2853.0
 
 * Improve `Expand-CabArchive` reliability by validating extracted files with `Test-Path` after `Shell.Application.CopyHere`, adding verbose logs for CAB contents, expanded items, and fallback behavior, and standardizing thrown error messages with the function name context. This makes extraction failures clearer and ensures fallback to `expand.exe` is better surfaced.
 
