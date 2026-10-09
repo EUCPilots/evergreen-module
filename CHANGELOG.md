@@ -1,5 +1,9 @@
 # Change log
 
+## VERSION
+
+* Improve `Expand-CabArchive` reliability by validating extracted files with `Test-Path` after `Shell.Application.CopyHere`, adding verbose logs for CAB contents, expanded items, and fallback behavior, and standardizing thrown error messages with the function name context. This makes extraction failures clearer and ensures fallback to `expand.exe` is better surfaced.
+
 ## 2610.2850.0
 
 * Improve `Expand-CabArchive` so it treats null/empty `Shell.Application` item lists as a failure and falls back to `expand.exe` instead of returning an empty success. Added focused tests covering fallback behavior when Shell returns null/empty or throws, ensuring no fallback when Shell succeeds, and confirming an error is raised when both extraction methods produce no files.
