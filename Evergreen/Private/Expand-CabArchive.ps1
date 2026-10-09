@@ -16,12 +16,18 @@ function Expand-CabArchive {
         try {
             $Shell = New-Object -ComObject "Shell.Application"
             $SourceCab = $Shell.NameSpace($Path)
-            $Items = $SourceCab.Items() | ForEach-Object { Join-Path -Path $DestinationPath -ChildPath $_.Name }
+            $Items = $SourceCab.Items()
+            $Items = $Items | ForEach-Object { Join-Path -Path $DestinationPath -ChildPath $_.Name }
             Remove-Item -Path $Items -ErrorAction "SilentlyContinue" -Force
             $DestinationFolder = $Shell.NameSpace($DestinationPath)
             Write-Verbose -Message "$($MyInvocation.MyCommand): Expanding CAB file '$Path' to '$DestinationPath'."
             $DestinationFolder.CopyHere($SourceCab.Items(), 0x1014)
-            return $Items
+            if ($null -eq $Items -or @($Items).Count -eq 0) {
+                throw "Shell.Application returned no items from CAB file '$Path'."
+            }
+            else {
+                return $Items
+            }
         }
         catch {
             Write-Verbose -Message "$($MyInvocation.MyCommand): $($_.Exception.Message)"
