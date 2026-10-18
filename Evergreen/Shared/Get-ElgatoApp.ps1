@@ -14,21 +14,27 @@ function Get-ElgatoApp {
         [System.Management.Automation.PSObject] $res
     )
 
-    # Get the update API
+    # Get details of the updates metadata
     $params = @{
         Uri         = $res.Get.Update.Uri
         ContentType = "application/json"
     }
     $Releases = Invoke-EvergreenRestMethod @params
+    if ($null -ne $Releases) {
+        foreach ($Item in $res.Get.Update.Property) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Processing item: $Item"
 
-    # Build the output object for each returned release
-    foreach ($Release in $Releases.$($res.Get.Update.Property)) {
-        $PSObject = [PSCustomObject]@{
-            Version      = $Release.version
-            Architecture = Get-Architecture -String $Release.minimumOS
-            Type         = Get-FileType -File $Release.downloadUrl
-            URI          = $Release.downloadUrl
+            # Build the output object for each returned release
+            foreach ($Release in $Releases.$Item) {
+                $PSObject = [PSCustomObject]@{
+                    Version      = $Release.version
+                    Release      = if ($Item -match "beta") { "Beta" } else { "Stable" }
+                    Architecture = Get-Architecture -String $Release.minimumOS
+                    Type         = Get-FileType -File $Release.downloadUrl
+                    URI          = $Release.downloadUrl
+                }
+                Write-Output -InputObject $PSObject
+            }
         }
-        Write-Output -InputObject $PSObject
     }
 }
