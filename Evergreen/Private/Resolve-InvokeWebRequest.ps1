@@ -1,8 +1,15 @@
 function Resolve-InvokeWebRequest {
     <#
         .SYNOPSIS
-            Resolve a URL that returns a 301/302 response and returns the redirected URL
-            Uses Invoke-WebRequest to find 301/302 headers and return the ResponseUri
+            Resolve a URL without reading the response body.
+
+        .DESCRIPTION
+            Returns the next redirect URL when MaximumRedirection is exhausted, or
+            the final response URL when no redirects remain. The default of zero
+            returns the first redirect target without requesting it.
+            Retries HTTP 405 responses with GET using headers-only completion.
+            Some body bytes may arrive in network buffers, but the body is not read.
+            Verbose output includes request settings, response status and elapsed time.
     #>
     [OutputType([System.String])]
     [CmdletBinding(SupportsShouldProcess = $false)]
@@ -23,29 +30,30 @@ function Resolve-InvokeWebRequest {
         [System.Collections.Hashtable] $Headers
     )
 
-    # Disable the Invoke-WebRequest progress bar for faster downloads
+    # Keep progress output local to this function.
     if ($PSBoundParameters.ContainsKey("Verbose")) {
-        $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
+        $ProgressPreference = "Continue"
     }
     else {
         $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
     }
 
-    # Build the Invoke-WebRequest parameters; Use ErrorAction:SilentlyContinue to enable the try/catch to work
     $params = @{
         MaximumRedirection = $MaximumRedirection
         Uri                = $Uri
+        Method             = "Head"
         UseBasicParsing    = $true
-        ErrorAction        = "SilentlyContinue"
+        ErrorAction        = "Stop"
+        Verbose            = $false
     }
     if ([System.String]::IsNullOrEmpty($UserAgent)) {}
     else {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding UserAgent."
         $params.UserAgent = $UserAgent
     }
+    $HeaderCount = 0
     if ($PSBoundParameters.ContainsKey("Headers")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Headers."
         $params.Headers = $Headers
+        $HeaderCount = $Headers.Count
     }
 
     if (Test-ProxyEnv) {
@@ -54,43 +62,130 @@ function Resolve-InvokeWebRequest {
     if (Test-ProxyEnv -Creds) {
         $params.ProxyCredential = $script:EvergreenProxyCreds
     }
-    Write-Verbose -Message "$($MyInvocation.MyCommand): Resolving URI: [$Uri]."
-
-    # Output the parameters when using -Verbose
-    foreach ($item in $params.GetEnumerator()) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-WebRequest parameter: $($item.name): $($item.value)."
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Request: HEAD [$Uri]; response body will not be downloaded."
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Maximum automatic redirects: [$MaximumRedirection]; returns the next Location when the limit is reached."
+    Write-Verbose -Message "$($MyInvocation.MyCommand): User agent supplied: [$($params.ContainsKey('UserAgent'))]; custom headers: [$HeaderCount]; proxy configured: [$($params.ContainsKey('Proxy'))]; proxy credentials supplied: [$($params.ContainsKey('ProxyCredential'))]."
+    if ($MaximumRedirection -eq 0) {
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Redirect targets will not be requested."
     }
 
-    if (Test-PSCore) {
+    $response = $null
+    $Client = $null
+    $Handler = $null
+    $GetRequest = $null
+    $Timer = [System.Diagnostics.Stopwatch]::StartNew()
+    try {
         try {
-            # If running PowerShell Core, request URL and catch the response
-            Invoke-WebRequest @params | Out-Null
+            $result = Invoke-WebRequest @params
+            $response = $result.BaseResponse
         }
-        catch [System.Exception] {
-            if ($null -ne $_.Exception.Response.Headers.Location.AbsoluteUri) {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Response: [$($_.Exception.Response.StatusCode) - $($_.Exception.Response.ReasonPhrase)]."
-                Write-Output -InputObject $_.Exception.Response.Headers.Location.AbsoluteUri
-            }
-            else {
-                # We can't throw here because apps that use loops that call this function will fail
-                Write-Warning -Message "$($MyInvocation.MyCommand): Response: '$($_.Exception.Response.StatusCode) - $($_.Exception.Response.ReasonPhrase)'."
-                Write-Warning -Message "$($MyInvocation.MyCommand): For troubleshooting steps see: $($script:resourceStrings.Uri.Info)."
-                Write-Error -Message "$($MyInvocation.MyCommand): $($_.Exception.Message)."
+        catch {
+            $response = $_.Exception.Response
+            if ($null -eq $response -or [int]$response.StatusCode -notin @(301, 302, 303, 307, 308, 405)) {
+                throw
             }
         }
+
+        $GetFallback = [int]$response.StatusCode -eq 405
+        if ($GetFallback) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): HEAD rejected with HTTP [405]; retrying with GET using headers-only completion."
+            $response.Dispose()
+            $response = $null
+            Add-Type -AssemblyName "System.Net.Http"
+            $Handler = [System.Net.Http.HttpClientHandler]::new()
+            $Handler.AllowAutoRedirect = $false
+            if ($params.ContainsKey("Proxy")) {
+                $Proxy = [System.Net.WebProxy]::new($params.Proxy)
+                if ($params.ContainsKey("ProxyCredential")) {
+                    $Proxy.Credentials = $params.ProxyCredential.GetNetworkCredential()
+                }
+                $Handler.Proxy = $Proxy
+            }
+            $Client = [System.Net.Http.HttpClient]::new($Handler)
+            $GetUri = [System.Uri]$Uri
+            $RedirectCount = 0
+            $IncludeAuthorization = $true
+            do {
+                $GetRequest = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, $GetUri)
+                if ($params.ContainsKey("UserAgent")) {
+                    $null = $GetRequest.Headers.TryAddWithoutValidation("User-Agent", $UserAgent)
+                }
+                if ($params.ContainsKey("Headers")) {
+                    foreach ($Header in $Headers.GetEnumerator() | Where-Object { $IncludeAuthorization -or $_.Key -ne "Authorization" }) {
+                        if (-not $GetRequest.Headers.TryAddWithoutValidation($Header.Key, [System.String[]]$Header.Value)) {
+                            throw "Cannot add request header '$($Header.Key)' to the GET fallback."
+                        }
+                    }
+                }
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Request: GET [$($GetUri.AbsoluteUri)]; response body will not be read."
+                $response = $Client.SendAsync($GetRequest, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
+                if ([int]$response.StatusCode -notin @(301, 302, 303, 307, 308) -or $RedirectCount -ge $MaximumRedirection) {
+                    break
+                }
+                if ($null -eq $response.Headers.Location) {
+                    throw "Redirect response from '$GetUri' did not include a Location header."
+                }
+                $NextUri = [System.Uri]::new($GetUri, [System.String]$response.Headers.Location)
+                if ($NextUri.Authority -ne $GetUri.Authority -or $NextUri.Scheme -ne $GetUri.Scheme) {
+                    $IncludeAuthorization = $false
+                }
+                $GetUri = $NextUri
+                $RedirectCount++
+                $response.Dispose()
+                $response = $null
+                $GetRequest.Dispose()
+                $GetRequest = $null
+            } while ($true)
+            if ([int]$response.StatusCode -notin @(301, 302, 303, 307, 308)) {
+                $null = $response.EnsureSuccessStatusCode()
+            }
+        }
+
+        if ($GetFallback -or (Test-PSCore)) {
+            $ResponseUri = $response.RequestMessage.RequestUri
+            $Location = [System.String]$response.Headers.Location
+        }
+        else {
+            $ResponseUri = $response.ResponseUri
+            $Location = $response.Headers["Location"]
+        }
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Response: HTTP [$([int]$response.StatusCode)] from [$($ResponseUri.AbsoluteUri)]."
+
+        if ([int]$response.StatusCode -in @(301, 302, 303, 307, 308)) {
+            if ([System.String]::IsNullOrWhiteSpace($Location)) {
+                throw "Redirect response from '$ResponseUri' did not include a Location header."
+            }
+            $ResponseUri = [System.Uri]::new($ResponseUri, $Location)
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Returning redirect target without requesting it: [$($ResponseUri.AbsoluteUri)]."
+        }
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Resolved to: [$($ResponseUri.AbsoluteUri)]."
+        Write-Output -InputObject $ResponseUri.AbsoluteUri
     }
-    else {
-        try {
-            # If running Windows PowerShell, request the URL and return the response
-            $response = Invoke-WebRequest @params
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Response: [$($response.StatusCode) - $($response.StatusDescription)]."
-            Write-Output -InputObject $response.Headers.Location
+    catch {
+        if ($null -ne $response) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Resolution failed: HTTP [$([int]$response.StatusCode)]."
         }
-        catch [System.Exception] {
-            # We can't throw here because apps that use loops that call this function will fail
-            Write-Warning -Message "$($MyInvocation.MyCommand): Response: '$($_.Exception.Response.StatusCode) - $($_.Exception.Response.ReasonPhrase)'."
-            Write-Warning -Message "$($MyInvocation.MyCommand): For troubleshooting steps see: $($script:resourceStrings.Uri.Info)."
-            Write-Error -Message "$($MyInvocation.MyCommand): $($_.Exception.Message)."
+        else {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Resolution failed before an HTTP response was received."
+        }
+        Write-Warning -Message "$($MyInvocation.MyCommand): Failed to resolve: '$Uri'."
+        Write-Warning -Message "$($MyInvocation.MyCommand): For troubleshooting steps see: $($script:resourceStrings.Uri.Info)."
+        Write-Error -ErrorRecord $_
+    }
+    finally {
+        $Timer.Stop()
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Resolution finished in [$($Timer.ElapsedMilliseconds)] ms."
+        if ($null -ne $response) {
+            $response.Dispose()
+        }
+        if ($null -ne $GetRequest) {
+            $GetRequest.Dispose()
+        }
+        if ($null -ne $Client) {
+            $Client.Dispose()
+        }
+        elseif ($null -ne $Handler) {
+            $Handler.Dispose()
         }
     }
 }
