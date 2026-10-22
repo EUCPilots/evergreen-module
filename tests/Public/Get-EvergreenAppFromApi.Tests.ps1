@@ -8,19 +8,25 @@
 param ()
 
 BeforeDiscovery {
-    $Uri = "https://evergreen-api.stealthpuppy.com/apps"
-    $Applications = (Invoke-RestMethod -Uri $Uri -UseBasicParsing -UserAgent "Evergreen/1000.999") | Select-Object -ExpandProperty "Name" | Sort-Object
-    $RandomApplications = Get-Random -InputObject $Applications -Count 20
+    $Applications = @("MicrosoftEdge", "MicrosoftTeams")
 }
 
-Describe -Tag "Get" -Name "Get-EvergreenAppFromApi works with supported application: <application>" -ForEach $RandomApplications {
+Describe -Tag "Get" -Name "Get-EvergreenAppFromApi works with supported application: <application>" -ForEach $Applications {
     BeforeAll {
+        Mock Invoke-EvergreenRestMethod -ModuleName "Evergreen" {
+            [PSCustomObject]@{
+                Version = "1.2.3"
+                URI     = "https://example.test/installer.exe"
+            }
+        }
+        Mock Get-FilteredData -ModuleName "Evergreen" {
+            $InputObject
+        }
+
         # Renaming the automatic $_ variable to $application to make it easier to work with
         $application = $_
         $Output = Get-EvergreenAppFromApi -Name $application
 
-        # RegEx
-        $MatchUrl = "(\s*\[+?\s*(\!?)\s*([a-z]*)\s*\|?\s*([a-z0-9\.\-_]*)\s*\]+?)?\s*([^\s]+)\s*"
         $MatchVersions = "(\d+(\.\d+){1,4}).*|(\d+)|^[0-9]{4}$|insider|Latest|Unknown|Preview|Any|jdk*|RateLimited"
     }
 
@@ -63,6 +69,9 @@ Describe -Tag "Get" -Name "Get-EvergreenAppFromApi works with supported applicat
 Describe -Tag "Get" -Name "Get-EvergreenAppFromApi fail tests" {
     Context "Validate 'Get-EvergreenAppFromApi fails gracefully" {
         It "Should Throw with invalid app" {
+            Mock Invoke-EvergreenRestMethod -ModuleName "Evergreen" {
+                throw "Application not found."
+            }
             { Get-EvergreenAppFromApi -Name "NonExistentApplication" } | Should -Throw
         }
     }

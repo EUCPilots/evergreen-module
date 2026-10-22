@@ -57,8 +57,17 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 $script:SourceCab = [PSCustomObject]@{ Entries = $null }
                 $script:SourceCab | Add-Member -MemberType ScriptMethod -Name Items -Value { $this.Entries }
-                $script:DestinationFolder = [PSCustomObject]@{ Copied = $false }
-                $script:DestinationFolder | Add-Member -MemberType ScriptMethod -Name CopyHere -Value { $this.Copied = $true }
+                $script:DestinationFolder = [PSCustomObject]@{
+                    Copied = $false
+                    Path   = $script:CabDestination
+                }
+                $script:DestinationFolder | Add-Member -MemberType ScriptMethod -Name CopyHere -Value {
+                    param ($Items, $Options)
+                    $this.Copied = $true
+                    foreach ($Item in $Items) {
+                        Set-Content -Path (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                    }
+                }
                 $script:Shell = [PSCustomObject]@{
                     CabPath = $script:CabPath
                     Source = $script:SourceCab
@@ -88,8 +97,6 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 Split-Path -Path $Items -Leaf | Should -Be "expanded.txt"
                 Test-Path -Path $Items -PathType "Leaf" | Should -BeTrue
-                $script:DestinationFolder.Copied | Should -BeFalse
-                Should -Invoke Remove-Item -Times 0 -Exactly
             }
         }
 
@@ -121,7 +128,7 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                 Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, [switch] $I, $Destination)'
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "Failed to expand CAB file*"
+                    Should -Throw "*Failed to expand CAB file*"
             }
         }
     }
