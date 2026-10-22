@@ -207,7 +207,7 @@ function Get-GitLabRepoRelease {
                     Version       = $Version
                     Date          = ConvertTo-DateTime -DateTime $dateValue -Pattern "MM/dd/yyyy HH:mm:ss"
                     Architecture  = Get-Architecture -String $leafName
-                    InstallerType = Get-InstallerType -String $downloadUri
+                    InstallerType = Get-InstallerType -String $leafName
                     Type          = $typeValue
                     URI           = $downloadUri
                 } | Write-Output

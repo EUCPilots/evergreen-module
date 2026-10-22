@@ -201,7 +201,7 @@ function Get-GitHubRepoRelease {
                                     Size          = $asset.size
                                     Sha256        = if ($null -eq $asset.digest) { $null } else { ($asset.digest -split ":")[-1] }
                                     Architecture  = Get-Architecture -String $(Split-Path -Path $asset.browser_download_url -Leaf)
-                                    InstallerType = Get-InstallerType -String $asset.browser_download_url
+                                    InstallerType = Get-InstallerType -String $(Split-Path -Path $asset.browser_download_url -Leaf)
                                     Type          = [System.IO.Path]::GetExtension($asset.browser_download_url).Split(".")[-1]
                                     URI           = $asset.browser_download_url
                                 }
