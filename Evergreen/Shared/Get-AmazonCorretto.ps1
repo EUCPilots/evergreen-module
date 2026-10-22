@@ -6,10 +6,9 @@ function Get-AmazonCorretto {
     [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $false, Position = 0)]
-        [ValidateNotNull()]
-        [System.Management.Automation.PSObject]
-        $res = (Get-FunctionResource -AppName ("$($MyInvocation.MyCommand)".Split("-"))[1])
+        [Parameter(Mandatory = $true, Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject] $res
     )
 
     # Get the latest download
