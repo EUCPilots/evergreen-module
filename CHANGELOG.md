@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2610.2859.0
 
 * Unify redirect resolution with `HttpClient` without reading response bodies. Support relative redirect locations, fall back to `GET` when `HEAD` is unsupported, enforce redirect limits, and forward authorization only across same-origin redirects.
 * Detect installer types from release asset filenames in the Codeberg, GitHub, and GitLab helpers. Address [#936](https://github.com/EUCPilots/evergreen-apps/issues/936)
