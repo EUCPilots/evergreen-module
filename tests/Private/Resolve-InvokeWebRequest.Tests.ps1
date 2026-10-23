@@ -15,21 +15,36 @@ BeforeAll {
     $Port = $PortListener.LocalEndpoint.Port
     $PortListener.Stop()
     $BaseUri = "http://127.0.0.1:$Port"
+    $OtherPortListener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $OtherPortListener.Start()
+    $OtherPort = $OtherPortListener.LocalEndpoint.Port
+    $OtherPortListener.Stop()
+    $OtherBaseUri = "http://127.0.0.1:$OtherPort"
     $Listener = [System.Net.HttpListener]::new()
     $Listener.Prefixes.Add("$BaseUri/")
     $Listener.Start()
+    $OtherListener = [System.Net.HttpListener]::new()
+    $OtherListener.Prefixes.Add("$OtherBaseUri/")
+    $OtherListener.Start()
     $Requests = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
+    $RequestMetadata = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
+    $OtherRequests = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
     $ReleaseBody = [System.Threading.ManualResetEvent]::new($false)
     $Server = [PowerShell]::Create()
     $null = $Server.AddScript({
-        param ($Listener, $Requests, $ReleaseBody)
+        param ($Listener, $Requests, $RequestMetadata, $ReleaseBody, $OtherBaseUri)
 
         while ($Listener.IsListening) {
             $Context = $Listener.GetContext()
             $Path = $Context.Request.Url.AbsolutePath
             $Requests.Enqueue("$($Context.Request.HttpMethod) $Path")
+            $RequestMetadata.Enqueue("$($Context.Request.UserAgent)|$($Context.Request.Headers['X-Test'])|$($Context.Request.Headers['Authorization'])")
             $Response = $Context.Response
-            if ($Path -eq "/no-head" -or ($Context.Request.HttpMethod -eq "HEAD" -and $Path -like "/get-*")) {
+            if ($Path -eq "/cross-origin") {
+                $Response.StatusCode = 302
+                $Response.RedirectLocation = "$OtherBaseUri/auth-target"
+            }
+            elseif ($Path -eq "/no-head" -or ($Context.Request.HttpMethod -eq "HEAD" -and $Path -like "/get-*")) {
                 $Response.StatusCode = 405
             }
             elseif ($Path -eq "/get-redirect") {
@@ -64,23 +79,40 @@ BeforeAll {
             }
             $Response.Close()
         }
-    }).AddArgument($Listener).AddArgument($Requests).AddArgument($ReleaseBody)
+    }).AddArgument($Listener).AddArgument($Requests).AddArgument($RequestMetadata).AddArgument($ReleaseBody).AddArgument($OtherBaseUri)
     $null = $Server.BeginInvoke()
+    $OtherServer = [PowerShell]::Create()
+    $null = $OtherServer.AddScript({
+        param ($Listener, $Requests)
+
+        while ($Listener.IsListening) {
+            $Context = $Listener.GetContext()
+            $Requests.Enqueue("$($Context.Request.HttpMethod) $($Context.Request.Url.AbsolutePath)|$($Context.Request.Headers['Authorization'])")
+            $Context.Response.StatusCode = 200
+            $Context.Response.Close()
+        }
+    }).AddArgument($OtherListener).AddArgument($OtherRequests)
+    $null = $OtherServer.BeginInvoke()
 }
 
 AfterAll {
     $null = $ReleaseBody.Set()
     $Listener.Stop()
     $Listener.Close()
+    $OtherListener.Stop()
+    $OtherListener.Close()
     $Server.Stop()
     $Server.Dispose()
+    $OtherServer.Stop()
+    $OtherServer.Dispose()
     $ReleaseBody.Dispose()
 }
 
 Describe -Name "Resolve-InvokeWebRequest" {
     It "Explains HEAD resolution and redirect behavior without logging header values" {
-        InModuleScope -ModuleName "Evergreen" -Parameters @{ BaseUri = $BaseUri } {
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ BaseUri = $BaseUri; RequestMetadata = $RequestMetadata } {
             Mock Test-ProxyEnv { $false }
+            $Before = $RequestMetadata.Count
             $Records = @(Resolve-InvokeWebRequest -Uri "$BaseUri/redirect" -UserAgent "" -Headers @{ Authorization = "secret-value" } -Verbose 4>&1)
             $Output = @($Records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] })
             $Output.Count | Should -Be 1
@@ -92,6 +124,7 @@ Describe -Name "Resolve-InvokeWebRequest" {
             $Messages | Should -Match "Returning redirect target without requesting it"
             $Messages | Should -Match "Resolution finished in \[\d+\] ms"
             $Messages | Should -Not -Match "secret-value"
+            @($RequestMetadata.ToArray() | Select-Object -Skip $Before) | Should -Be @("||secret-value")
         }
     }
 
@@ -191,73 +224,53 @@ Describe -Name "Resolve-InvokeWebRequest" {
         }
     }
 
-    It "Passes HEAD, user agent, headers and proxy credentials to Invoke-WebRequest" {
-        InModuleScope -ModuleName "Evergreen" {
-            Mock Test-ProxyEnv { $true }
-            Mock Test-PSCore { $true }
-            $OriginalProxy = $script:EvergreenProxy
-            $OriginalCreds = $script:EvergreenProxyCreds
-            $script:EvergreenProxy = [System.Uri]"http://proxy.example:8080"
-            $script:EvergreenProxyCreds = [PSCredential]::new("test", (ConvertTo-SecureString "test" -AsPlainText -Force))
-            try {
-                Mock Invoke-WebRequest {
-                    $Message = [System.Net.Http.HttpResponseMessage]::new([System.Net.HttpStatusCode]::OK)
-                    $Message.RequestMessage = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Head, "https://example.com/file")
-                    [PSCustomObject]@{ BaseResponse = $Message }
-                }
-                Resolve-InvokeWebRequest -Uri "https://example.com/file" -UserAgent "ResolverTest" -Headers @{ "X-Test" = "value" } |
-                    Should -Be "https://example.com/file"
-                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
-                    $Method -eq "Head" -and $UserAgent -eq "ResolverTest" -and
-                    $Headers["X-Test"] -eq "value" -and $Proxy -eq $script:EvergreenProxy -and
-                    $ProxyCredential -eq $script:EvergreenProxyCreds
-                }
-            }
-            finally {
-                $script:EvergreenProxy = $OriginalProxy
-                $script:EvergreenProxyCreds = $OriginalCreds
-            }
+    It "Passes the user agent and custom headers" {
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            BaseUri = $BaseUri; Requests = $Requests; RequestMetadata = $RequestMetadata
+        } {
+            Mock Test-ProxyEnv { $false }
+            $Before = $Requests.Count
+            Resolve-InvokeWebRequest -Uri "$BaseUri/file" -UserAgent "ResolverTest" -Headers @{ "X-Test" = "value" } |
+                Should -Be "$BaseUri/file"
+            $Recorded = @($Requests.ToArray() | Select-Object -Skip $Before)
+            $Recorded | Should -Be @("HEAD /file")
+            $Metadata = @($RequestMetadata.ToArray())[-1]
+            $Metadata | Should -Be "ResolverTest|value|"
         }
     }
 
-    It "Handles a <Status> response using the PowerShell Core=<Core> response format" -TestCases @(
-        @{ Core = $true; Status = 200 }
-        @{ Core = $true; Status = 302 }
-        @{ Core = $false; Status = 200 }
-        @{ Core = $false; Status = 302 }
-    ) {
-        param ($Core, $Status)
-
-        InModuleScope -ModuleName "Evergreen" -Parameters @{ Core = $Core; Status = $Status } {
+    It "Forwards Authorization on same-origin redirects and strips it on cross-origin redirects" {
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            BaseUri = $BaseUri; OtherBaseUri = $OtherBaseUri; Requests = $Requests
+            RequestMetadata = $RequestMetadata; OtherRequests = $OtherRequests
+        } {
             Mock Test-ProxyEnv { $false }
-            Mock Test-PSCore { $Core }
-            $BaseResponse = [PSCustomObject]@{
-                StatusCode     = $Status
-                ResponseUri    = [System.Uri]"https://example.com/nested/source"
-                RequestMessage = [PSCustomObject]@{ RequestUri = [System.Uri]"https://example.com/nested/source" }
-                Headers        = @{ Location = "../target" }
-                Disposed       = $false
-            }
-            $BaseResponse | Add-Member -MemberType ScriptMethod -Name Dispose -Value { $this.Disposed = $true }
-            Mock Invoke-WebRequest { [PSCustomObject]@{ BaseResponse = $BaseResponse } }
+            $BeforeRequests = $Requests.Count
+            $BeforeMetadata = $RequestMetadata.Count
+            Resolve-InvokeWebRequest -Uri "$BaseUri/redirect" -UserAgent "" -Headers @{ Authorization = "Bearer test-token" } -MaximumRedirection 1 |
+                Should -Be "$BaseUri/file"
+            @($RequestMetadata.ToArray() | Select-Object -Skip $BeforeMetadata) |
+                Should -Be @("||Bearer test-token", "||Bearer test-token")
+            @($Requests.ToArray() | Select-Object -Skip $BeforeRequests) |
+                Should -Be @("HEAD /redirect", "HEAD /nested/redirect")
 
-            $Expected = if ($Status -eq 302) { "https://example.com/target" } else { "https://example.com/nested/source" }
-            Resolve-InvokeWebRequest -Uri "https://example.com/nested/source" -UserAgent "" -ErrorAction Stop |
-                Should -Be $Expected
-            $BaseResponse.Disposed | Should -BeTrue
+            $BeforeOtherRequests = $OtherRequests.Count
+            Resolve-InvokeWebRequest -Uri "$BaseUri/cross-origin" -UserAgent "" -Headers @{ Authorization = "Bearer test-token" } -MaximumRedirection 1 |
+                Should -Be "$OtherBaseUri/auth-target"
+            @($OtherRequests.ToArray() | Select-Object -Skip $BeforeOtherRequests) |
+                Should -Be @("HEAD /auth-target|")
         }
     }
 
     It "Reports connection failures as non-terminating errors by default" {
         InModuleScope -ModuleName "Evergreen" {
             Mock Test-ProxyEnv { $false }
-            Mock Invoke-WebRequest { throw [System.Net.WebException]::new("Connection timed out") }
             $RequestErrors = @()
-            $Result = @(Resolve-InvokeWebRequest -Uri "https://example.com" -UserAgent "" -WarningAction SilentlyContinue -ErrorAction SilentlyContinue -ErrorVariable RequestErrors)
+            $Result = @(Resolve-InvokeWebRequest -Uri "http://127.0.0.1:1" -UserAgent "" -WarningAction SilentlyContinue -ErrorAction SilentlyContinue -ErrorVariable RequestErrors)
             $Result.Count | Should -Be 0
             $RequestErrors.Count | Should -BeGreaterThan 0
-            $RequestErrors[-1].Exception.Message | Should -Match "Connection timed out"
-            $Records = @(Resolve-InvokeWebRequest -Uri "https://example.com" -UserAgent "" -Verbose -WarningAction SilentlyContinue -ErrorAction SilentlyContinue 4>&1)
+            $RequestErrors[-1].Exception.Message | Should -Not -BeNullOrEmpty
+            $Records = @(Resolve-InvokeWebRequest -Uri "http://127.0.0.1:1" -UserAgent "" -Verbose -WarningAction SilentlyContinue -ErrorAction SilentlyContinue 4>&1)
             $Messages = ($Records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
             $Messages | Should -Match "Resolution failed before an HTTP response was received"
             $Messages | Should -Match "Resolution finished in \[\d+\] ms"
