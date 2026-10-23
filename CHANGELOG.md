@@ -2,6 +2,78 @@
 
 ## VERSION
 
+* Unify redirect resolution with `HttpClient` without reading response bodies. Support relative redirect locations, fall back to `GET` when `HEAD` is unsupported, enforce redirect limits, and forward authorization only across same-origin redirects.
+* Detect installer types from release asset filenames in the Codeberg, GitHub, and GitLab helpers. Address [#936](https://github.com/EUCPilots/evergreen-apps/issues/936)
+* Require explicit resource objects in shared application helpers, removing implicit resource lookups for consistent behavior.
+* Fix `Remove-EvergreenLibraryAppVersion` retention across PowerShell versions, including preserving a JSON array when a single version remains. Address [#928](https://github.com/EUCPilots/evergreen-apps/issues/928)
+* Stage CAB extraction before moving files into the destination, preserving existing files when extraction fails and improving fallback handling.
+* Improve test reliability with mocked responses and add regression coverage for redirect resolution, CAB extraction, API behavior, and library retention.
+
+## 2610.2856.0
+
+* Updates the `Get-ElgatoApp` to improve how update metadata and release information are processed. Update is on handling multiple file URLs per release and distinguishing between beta and stable releases.
+
+## 2610.2853.0
+
+* Improve `Expand-CabArchive` reliability by validating extracted files with `Test-Path` after `Shell.Application.CopyHere`, adding verbose logs for CAB contents, expanded items, and fallback behavior, and standardizing thrown error messages with the function name context. This makes extraction failures clearer and ensures fallback to `expand.exe` is better surfaced.
+
+## 2610.2850.0
+
+* Improve `Expand-CabArchive` so it treats null/empty `Shell.Application` item lists as a failure and falls back to `expand.exe` instead of returning an empty success. Added focused tests covering fallback behavior when Shell returns null/empty or throws, ensuring no fallback when Shell succeeds, and confirming an error is raised when both extraction methods produce no files.
+* Add detailed verbose output to `Remove-EvergreenLibraryAppVersion` so pruning decisions, skipped removals, and `ShouldProcess` behavior is easier to troubleshoot without changing returned objects. Update help with the new `-Verbose` guidance and add tests covering verbose output for pruning, no-op cases, skipped files, missing app matches, and `-WhatIf` behavior. Ref: [#928](https://github.com/EUCPilots/evergreen-apps/issues/928)
+
+## 2608.2847.0
+
+* Prevents error from being thrown in Get-Content, as detailed in issue [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
+* Adds support additional installer type keywords in `Get-InstallerType`
+* Refreshes module manifest metadata by updating the copyright year to 2026 and tightening the description wording.
+
+## 2607.2841.0
+
+* Add `Remove-EvergreenLibraryAppVersion` cmdlet to remove app versions from an Evergreen library, and add cmdlet help documentation [#807](https://github.com/EUCPilots/evergreen-apps/issues/807)
+* Update `Start-EvergreenLibraryUpdate.ps1` to support updated library maintenance flow [#523](https://github.com/EUCPilots/evergreen-apps/issues/423)
+* Update `Expand-CabArchive.ps1` implementation to fall back to `expand.exe` [#898](https://github.com/EUCPilots/evergreen-apps/issues/898)
+* Add GitLab release helper support and associated tests for release retrieval scenarios
+* Harden proxy handling and response cleanup, and add proxy credential validation tests
+* Refactor OS detection and user agent handling, including use of `Get-EvergreenUserAgent` instead of script-scoped user agent variables
+* Reorder architecture switch cases to improve architecture normalization behavior
+* Remove obsolete Omnissa shared helper functions
+
+## 2606.2838.0
+
+* Replace returning the checksum link with an actual `SHA256` value by invoking `Invoke-EvergreenRestMethod` on the `downloads.windows.checksumLink`, splitting the response to extract the checksum, and assigning it to `Sha256`. Add **try/catch** to emit a warning and set `Sha256` to the checksum file URL on failure, preserving existing metadata (Version, Build, Edition, Date, Size, Type). Improves robustness when checksum retrieval fails
+* Recognize the 'legacy' installer option in `Get-InstallerType.ps1` by mapping it to the "Legacy" type. This ensures callers passing 'legacy' are correctly identified. (`Evergreen/Private/Get-InstallerType.ps1`). Address [#905](https://github.com/EUCPilots/evergreen-apps/issues/905)
+
+## 2604.2835.0
+
+* `Get-GitHubRepoRelease` - Add logic to remove the Sha256 property when the asset has no digest. This prevents emitting an empty Sha256 field for Windows assets and ensures the output object only contains the digest when present
+* `Get-InstallerType ` - Add more output strings to provide more values to `InstallerType` property. Address [#124](https://github.com/EUCPilots/evergreen-apps/issues/124)
+* Normalise "anycpu" to "any", and "aarch64" to "ARM64" in `Get-Architecture`
+
+## 2603.2832.0
+
+* Update `Shared/Get-AzulZulu.ps1` - Refine the selection to exclude gzipped downloads when filtering latest releases.
+
+## 2603.2829.0
+
+* Update `Shared/Get-AzulZulu.ps1` - Refactor image type detection by extracting URL-matching logic into a dedicated variable. Add explicit handling for fx-jre -> JREFX and fx-jdk -> JDKFX, retain jre -> JRE and jdk -> JDK, and default to Unknown when no pattern matches. This expands supported image type distinctions. [https://github.com/EUCPilots/evergreen-apps/issues/87](https://github.com/EUCPilots/evergreen-apps/issues/87)
+
+## 2511.2826.0
+
+* Fix `JRE` or `JDK` string match in `Get-AzulZulu`
+
+## 2511.2823.0
+
+* Adds `Get-AzulZulu` shared function for using `api.azul.com` for downloads
+
+## 2510.2820.0
+
+* A working solution for adding output filters for Get-EvergreenApp. This should simplify returning details for a specific application by not requiring the use of `Where-Object`. The filters can be added to `/Evergreen/Filters`, along side the cached Apps and Manifests. [#871](https://github.com/EUCPilots/evergreen-module/discussions/871)
+* Removes `Sort-Object` from `Get-EvergreenApp` and `Get-EvergreenAppFromApi` to enable returning data to the pipeline as soon as it is available. This change will require the administrator to use `Sort-Object` manually. This removes `Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true }, "Ring", "Channel", "Track" -ErrorAction "SilentlyContinue"` which can instead be used directly with `Get-EvergreenApp` to sort the output.
+
+## 2510.2817.0
+
+* Adds private function `ConvertFrom-Jwt` to convert JSON Web Tokens to something usable
 * `Write-Message` - Changed the Message parameter in Write-Message.ps1 from mandatory to optional to allow calling the function without specifying a message.
 * `Get-EvergreenEndpointFromApi` - Added [ValidateNotNullOrEmpty()] to the Name parameter to ensure it is not null or empty. Improved output filtering by throwing an error if no endpoints are found for the specified application(s), and standardized output using Write-Output.
 
@@ -923,7 +995,7 @@ BREAKING CHANGES
 * Update `VMwareHorizonClient` with additional filtering to select the latest version correctly to address [#161](https://github.com/aaronparker/evergreen/issues/161)
 * Add internal function `Save-File` to download a URL with `Invoke-WebRequest` and return the downloaded file path
 * Update internal application functions for consistent use of `Resolve-SystemNetWebRequest` to address [#174](https://github.com/aaronparker/evergreen/issues/174) - `Get-FoxitReader`, `Get-LogMeInGoToOpener`, `Get-MicrosoftSsms`, `Get-MicrosoftVisualStudio`, `Get-RingCentral`, `Get-Slack`
-* Update references to documentation site `https://eucpilots.com/evergreen-docs` to `https://eucpilots.com/evergreen-docs`
+* Update references to documentation site `https://eucpilots.com/evergreen` to `https://eucpilots.com/evergreen`
 
 ## 2105.383
 
@@ -962,7 +1034,7 @@ BREAKING CHANGES
 
 * Changes `FoxitReader` to return MSI installers instead of EXEs. Removes Elex, Portuguese (Portugal), and Turkish language support from this application because the installers returned are out of date.
 * Adds the following languages to `AdobeAcrobatReaderDC`: Swedish, Basque, Catalan, Croatian, Czech, Hungarian, Polish, Romanian, Russian, Slovakian, Slovenian, Turkish, Ukrainian
-* Adds a known issues list to the documentation: [https://eucpilots.com/evergreen-docs/knownissues.html](https://eucpilots.com/evergreen-docs/knownissues.html)
+* Adds a known issues list to the documentation: [https://eucpilots.com/evergreen/knownissues.html](https://eucpilots.com/evergreen/knownissues.html)
 
 ## 2104.348
 
@@ -976,7 +1048,7 @@ BREAKING CHANGES
 
 ## 2104.337
 
-* **BREAKING CHANGE**: This version removes the `Get-` function for each application and introduces `Get-EvergreenApp`. See the docs site on how to use the new functions [https://eucpilots.com/evergreen-docs/](https://eucpilots.com/evergreen-docs/)
+* **BREAKING CHANGE**: This version removes the `Get-` function for each application and introduces `Get-EvergreenApp`. See the docs site on how to use the new functions [https://eucpilots.com/evergreen/](https://eucpilots.com/evergreen/)
 * Adds `Get-EvergreenApp`, `Find-EvergreenApp` and `Save-EvergreenApp`
 * Adds file type to SourceForge applications
 * Re-instates `ControlUpAgent` and `ControlUpConsole`
@@ -1027,7 +1099,7 @@ BREAKING CHANGES
 * Updates `Get-MicrosoftWvdRemoteDesktop` to output the `URI` property value in the format `https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4MntQ` instead of the original `fwlink` source URL (e.g. `https://go.microsoft.com/fwlink/?linkid=2068602`)
 * Updates the following functions to use `Invoke-RestMethod` (via `Invoke-RestMethodWrapper`) instead of `Invoke-WebRequest` to simplify code and fix an issue where some functions where returning `Version` as a PSObject instead of System.String ([#109](https://github.com/aaronparker/Evergreen/issues/109))
   * `Get-AtlassianBitbucket`, `Get-Cyberduck`, `Get-FileZilla`, `Get-Fork`, `Get-RingCentral`, `Get-ScooterBeyondCompare`, `Get-SumatraPDFReader`, `Get-VideoLanVlcPlayer`
-* Updates module `ReleaseNotes` location to: [https://eucpilots.com/evergreen-docs/changelog.html](https://eucpilots.com/evergreen-docs/changelog.html)
+* Updates module `ReleaseNotes` location to: [https://eucpilots.com/evergreen/changelog.html](https://eucpilots.com/evergreen/changelog.html)
 
 ## 2101.281
 

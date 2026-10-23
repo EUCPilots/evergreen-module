@@ -1,7 +1,7 @@
 function Get-ModuleVersion {
     try {
         $ErrorActionPreference = "Stop"
-        $module = (Get-Module -Name $MyInvocation.MyCommand.ModuleName -All)[0]
+        $module = (Get-Module -Name "Evergreen" -All)[0]
         if ($null -ne $module) {
             return $module.Version
         }

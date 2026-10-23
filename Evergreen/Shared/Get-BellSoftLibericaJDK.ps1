@@ -6,7 +6,7 @@ function Get-BellSoftLibericaJDK {
     [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $false, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject] $res
     )

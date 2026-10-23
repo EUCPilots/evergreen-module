@@ -6,6 +6,28 @@
 [CmdletBinding(SupportsShouldProcess = $false)]
 param ()
 
+# Get the OS name for the user agent string
+if ($IsCoreCLR) {
+    $script:OSName = if ($IsWindows) {
+        (Get-CimInstance Win32_OperatingSystem).Caption
+    }
+    elseif ($IsLinux) {
+        (uname)  # Assuming you're in a shell context or using Invoke-Expression
+    }
+    elseif ($IsMacOS) {
+        "macOS"  # Or use `sw_vers` for more granularity
+    }
+}
+else {
+    # PowerShell 5.1 fallback via WMI
+    try {
+        $script:OSName = (Get-CimInstance Win32_OperatingSystem).Caption
+    }
+    catch {
+        $script:OSName = "Unknown Windows"
+    }
+}
+
 # Get public and private function definition files
 $PublicRoot = Join-Path -Path $PSScriptRoot -ChildPath "Public"
 $PrivateRoot = Join-Path -Path $PSScriptRoot -ChildPath "Private"
@@ -26,7 +48,6 @@ foreach ($Import in @($Public + $Private + $Shared)) {
 
 # Get module strings
 $script:resourceStrings = Get-ModuleResource
-$script:UserAgent = Get-EvergreenUserAgent
 
 # Verifies whether the required 'Apps' and 'Manifests' directories exist in the specified path.
 # If either directory is missing, it warns the user to download the Evergreen app functions.

@@ -11,6 +11,30 @@ BeforeDiscovery {
 }
 
 BeforeAll {
+    Mock Invoke-EvergreenRestMethod -ModuleName "Evergreen" {
+        @(
+            [PSCustomObject]@{
+                Application = "MicrosoftEdge"
+                Endpoints   = @("edge.example.test")
+                Ports       = @("443")
+            },
+            [PSCustomObject]@{
+                Application = "MicrosoftTeams"
+                Endpoints   = @("teams.example.test")
+                Ports       = @("443")
+            }
+        )
+    } -ParameterFilter { $Uri -like "*/endpoints/versions" }
+
+    Mock Invoke-EvergreenRestMethod -ModuleName "Evergreen" {
+        @(
+            [PSCustomObject]@{
+                Application = "MicrosoftEdge"
+                Endpoints   = @("downloads.example.test")
+                Ports       = @("443")
+            }
+        )
+    } -ParameterFilter { $Uri -like "*/endpoints/downloads" }
 }
 
 Describe -Tag "Get" -Name "Get-EvergreenEndpointFromApi" {

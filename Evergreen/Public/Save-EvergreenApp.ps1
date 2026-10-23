@@ -40,7 +40,7 @@ function Save-EvergreenApp {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter(Mandatory = $false)]
         [System.Management.Automation.SwitchParameter] $Force,
@@ -50,6 +50,10 @@ function Save-EvergreenApp {
     )
 
     begin {
+        if ($PSBoundParameters.ContainsKey("ProxyCredential") -and -not($PSBoundParameters.ContainsKey("Proxy"))) {
+            throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
+        }
+
         # Disable the Invoke-WebRequest progress bar for faster downloads
         if ($PSBoundParameters.ContainsKey("Verbose") -and !($PSBoundParameters.ContainsKey("NoProgress"))) {
             $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
@@ -142,7 +146,7 @@ function Save-EvergreenApp {
                 # If URL in the catch list, customise the user agent
                 # if ($Object.URI -match $script:resourceStrings.UserAgent.CatchList -and -not($PSBoundParameters.ContainsKey("UserAgent"))) {
                 #     Write-Verbose -Message "URL matches catch list for custom user agent: $($Object.URI)."
-                #     $UserAgent = $script:UserAgent
+                #     $UserAgent = (Get-EvergreenUserAgent)
                 # }
 
                 # Invoke-WebRequest parameters
@@ -150,7 +154,7 @@ function Save-EvergreenApp {
                     Uri             = $Object.URI
                     OutFile         = $DownloadFile
                     UseBasicParsing = $true
-                    UserAgent       = $script:UserAgent
+                    UserAgent       = (Get-EvergreenUserAgent)
                     ErrorAction     = "Continue"
                 }
                 if ($PSBoundParameters.ContainsKey("Proxy")) {

@@ -27,8 +27,8 @@ Describe -Name "Test-PSCore" {
         It "Returns False if running Windows PowerShell" {
             InModuleScope -ModuleName "Evergreen" {
                 $Version = "6.0.0"
-                If (($PSVersionTable.PSVersion -lt [version]::Parse($Version)) -and ($PSVersionTable.PSEdition -eq "Desktop")) {
-                    Test-PSCore | Should -Be $False
+                if (($PSVersionTable.PSVersion -lt [version]::Parse($Version)) -and ($PSVersionTable.PSEdition -eq "Desktop")) {
+                    Test-PSCore | Should -Be $false
                 }
             }
         }

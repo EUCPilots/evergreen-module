@@ -25,7 +25,7 @@ jobs:
     name: Run PSScriptAnalyzer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Run PSScriptAnalyzer (main push)
         uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f
@@ -37,7 +37,7 @@ jobs:
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.38.2
         with:
           sarif_file: results.sarif
 
@@ -45,8 +45,10 @@ jobs:
     name: "Run Pester tests on Windows PowerShell (main push)"
     needs: psscriptanalyzer
     runs-on: windows-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Pester tests
         shell: powershell
@@ -72,14 +74,14 @@ jobs:
 
       # Upload test results
       - name: Upload Pester test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
           path: "${{ github.workspace }}\\tests\\TestResults.xml"
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: codecov-results
@@ -98,7 +100,7 @@ jobs:
 
     steps:
       - name: Download Pester Test Result Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: test-results
           path: test-results

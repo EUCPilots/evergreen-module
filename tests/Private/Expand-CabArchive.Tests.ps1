@@ -14,9 +14,146 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Expand-CabArchive" {
+    Context "Validate Shell extraction and expand.exe fallback" {
+        BeforeAll {
+            $OriginalSystemRoot = $env:SystemRoot
+            $env:SystemRoot = $TestDrive
+            $NeedsComStub = -not (Get-Command -Name New-Object).Parameters.ContainsKey("ComObject")
+            if ($NeedsComStub) {
+                InModuleScope -ModuleName "Evergreen" {
+                    function script:New-Object {
+                        param ([System.String] $ComObject)
+                        throw "COM creation must be mocked in these tests."
+                    }
+                }
+            }
+        }
+
+        AfterAll {
+            $env:SystemRoot = $OriginalSystemRoot
+            if ($NeedsComStub) {
+                InModuleScope -ModuleName "Evergreen" {
+                    Remove-Item -Path "Function:New-Object"
+                }
+            }
+        }
+
+        BeforeEach {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $script:CabPath = Join-Path -Path $TestRoot -ChildPath "test.cab"
+                $script:CabDestination = Join-Path -Path $TestRoot -ChildPath "destination"
+                $script:ExpandStub = Join-Path -Path $TestRoot -ChildPath "expand.ps1"
+                Set-Content -Path $script:CabPath -Value "test"
+                New-Item -Path $script:CabDestination -ItemType "Directory" -Force | Out-Null
+                Set-Content -Path $script:ExpandStub -Value @'
+param ($CabPath, $Destination)
+Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Value "expanded"
+'@
+
+                Mock Test-IsWindows { $true }
+                Mock Join-Path { $script:ExpandStub } -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+
+                $script:SourceCab = [PSCustomObject]@{ Entries = $null }
+                $script:SourceCab | Add-Member -MemberType ScriptMethod -Name Items -Value { $this.Entries }
+                $script:DestinationFolder = [PSCustomObject]@{
+                    Copied = $false
+                    Path   = $script:CabDestination
+                }
+                $script:DestinationFolder | Add-Member -MemberType ScriptMethod -Name CopyHere -Value {
+                    param ($Items, $Options)
+                    $this.Copied = $true
+                    foreach ($Item in $Items) {
+                        Set-Content -Path (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                    }
+                }
+                $script:Shell = [PSCustomObject]@{
+                    CabPath = $script:CabPath
+                    Source = $script:SourceCab
+                    Destination = $script:DestinationFolder
+                }
+                $script:Shell | Add-Member -MemberType ScriptMethod -Name NameSpace -Value {
+                    param ($FolderPath)
+                    if ($FolderPath -eq $this.CabPath) { $this.Source }
+                    else {
+                        $this.Destination.Path = $FolderPath
+                        $this.Destination
+                    }
+                }
+                Mock New-Object { $script:Shell } -ParameterFilter { $ComObject -eq "Shell.Application" }
+                Mock Remove-Item {}
+            }
+        }
+
+        It "Should retry with expand.exe when Shell returns <Case> items" -TestCases @(
+            @{ Case = "null"; Entries = $null }
+            @{ Case = "empty"; Entries = @() }
+        ) {
+            param ($Case, $Entries)
+
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ Entries = $Entries } {
+                param ($Entries)
+
+                $script:SourceCab.Entries = $Entries
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+
+                Split-Path -Path $Items -Leaf | Should -Be "expanded.txt"
+                Test-Path -Path $Items -PathType "Leaf" | Should -BeTrue
+            }
+        }
+
+        It "Should still retry with expand.exe when Shell throws" {
+            InModuleScope -ModuleName "Evergreen" {
+                Mock New-Object { throw "COM unavailable" } -ParameterFilter { $ComObject -eq "Shell.Application" }
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+
+                Split-Path -Path $Items -Leaf | Should -Be "expanded.txt"
+                Test-Path -Path $Items -PathType "Leaf" | Should -BeTrue
+            }
+        }
+
+        It "Should not retry when Shell returns items" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "shell.txt" })
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+
+                $Items | Should -Be (Join-Path -Path $script:CabDestination -ChildPath "shell.txt")
+                $script:DestinationFolder.Copied | Should -BeTrue
+                Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+            }
+        }
+
+        It "Should throw when neither extraction approach returns items" {
+            InModuleScope -ModuleName "Evergreen" {
+                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*expand.exe produced no files*"
+            }
+        }
+
+        It "Should preserve existing destination files when both extraction methods fail" {
+            InModuleScope -ModuleName "Evergreen" {
+                $ExistingFile = Join-Path -Path $script:CabDestination -ChildPath "existing.txt"
+                Set-Content -Path $ExistingFile -Value "keep"
+                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*expand.exe produced no files*"
+
+                ([System.IO.File]::ReadAllText($ExistingFile)).Trim() | Should -Be "keep"
+            }
+        }
+    }
+
     Context "Validate Expand-CabArchive parameter validation" {
         It "Should throw when Path parameter is null or empty" {
-            { Expand-CabArchive -Path "" -DestinationPath "/tmp" } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { Expand-CabArchive -Path "" -DestinationPath "/tmp" } | Should -Throw
+            }
         }
 
         It "Should throw when Path does not exist" {

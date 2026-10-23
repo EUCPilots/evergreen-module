@@ -74,10 +74,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 
-Site: https://eucpilots.com/evergreen-docs
+Site: https://eucpilots.com/evergreen
 
 Author: Aaron Parker
 
 ## RELATED LINKS
 
-[Export application version information](https://eucpilots.com/evergreen-docs/convertversion/)
+[Export application version information](https://eucpilots.com/evergreen/convertversion/)

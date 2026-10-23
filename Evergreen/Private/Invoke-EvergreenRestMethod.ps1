@@ -36,7 +36,7 @@ function Invoke-EvergreenRestMethod {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $UserAgent = $script:UserAgent,
+        [System.String] $UserAgent = (Get-EvergreenUserAgent),
 
         [Parameter()]
         [System.Management.Automation.SwitchParameter] $SkipCertificateCheck,

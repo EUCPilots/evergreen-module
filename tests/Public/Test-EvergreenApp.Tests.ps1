@@ -36,4 +36,12 @@ Describe -Tag "Test" -Name "Test-EvergreenApp" {
     It "Should return an object with valid URI property" {
         $Result[0].URI | Should -BeOfType [System.String]
     }
+
+    It "Should throw if ProxyCredential is provided without Proxy" {
+        $Creds = [System.Management.Automation.PSCredential]::new(
+            "proxy-user",
+            (ConvertTo-SecureString -String "proxy-pass" -AsPlainText -Force)
+        )
+        { Test-EvergreenApp -InputObject $App -ProxyCredential $Creds -NoProgress } | Should -Throw
+    }
 }

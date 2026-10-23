@@ -1,7 +1,7 @@
 ---
 external help file: Evergreen-help.xml
 Module Name: Evergreen
-online version: https://eucpilots.com/evergreen-docs/help/en-US/Get-EvergreenLibrary/
+online version: https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibrary/
 schema: 2.0.0
 ---
 
@@ -94,10 +94,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 
-Site: https://eucpilots.com/evergreen-docs
+Site: https://eucpilots.com/evergreen
 
 Author: Aaron Parker
 
 ## RELATED LINKS
 
-[Create an Evergreen library](https://eucpilots.com/evergreen-docs/getlibrary.html)
+[Create an Evergreen library](https://eucpilots.com/evergreen/getlibrary.html)

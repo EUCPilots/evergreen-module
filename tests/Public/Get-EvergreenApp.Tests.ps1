@@ -79,6 +79,24 @@ Describe -Tag "Get" -Name "Get-EvergreenApp fail tests" {
             { Get-EvergreenApp -Name "NonExistentApplication" } | Should -Throw
         }
 
+        It "Should clean up proxy state when app is invalid" {
+            InModuleScope -ModuleName "Evergreen" {
+                { Get-EvergreenApp -Name "NonExistentApplication" -Proxy "http://127.0.0.1:8080" } | Should -Throw
+                Test-ProxyEnv | Should -BeFalse
+                Test-ProxyEnv -Creds | Should -BeFalse
+            }
+        }
+
+        It "Should throw if ProxyCredential is provided without Proxy" {
+            InModuleScope -ModuleName "Evergreen" {
+                $Creds = [System.Management.Automation.PSCredential]::new(
+                    "proxy-user",
+                    (ConvertTo-SecureString -String "proxy-pass" -AsPlainText -Force)
+                )
+                { Get-EvergreenApp -Name "MicrosoftEdge" -ProxyCredential $Creds } | Should -Throw
+            }
+        }
+
         It "Should throw with an invalid proxy server " {
             { Get-EvergreenApp -Name "MicrosoftEdge" -Proxy "test.local" } | Should -Throw
         }

@@ -64,3 +64,22 @@ Describe -Tag "Save" -Name "Save-EvergreenApp" -ForEach $Installers {
         }
     }
 }
+
+Describe -Tag "Save" -Name "Save-EvergreenApp proxy validation" {
+    It "Should throw if ProxyCredential is provided without Proxy" {
+        $Creds = [System.Management.Automation.PSCredential]::new(
+            "proxy-user",
+            (ConvertTo-SecureString -String "proxy-pass" -AsPlainText -Force)
+        )
+
+        $Dummy = [PSCustomObject]@{
+            URI          = "https://example.com/app.msi"
+            Version      = "1.0.0"
+            Channel      = "Stable"
+            Release      = "Enterprise"
+            Architecture = "x64"
+        }
+
+        { Save-EvergreenApp -InputObject $Dummy -Path ([System.IO.Path]::GetTempPath()) -ProxyCredential $Creds -NoProgress } | Should -Throw
+    }
+}
