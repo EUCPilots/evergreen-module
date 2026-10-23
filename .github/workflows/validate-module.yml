@@ -57,14 +57,6 @@ jobs:
           .\tests\Install-Pester.ps1
           Import-Module -Name "Pester" -Force -ErrorAction "Stop"
           Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
-          $GitHubToken = $env:GITHUB_TOKEN
-          Remove-Item Env:\GITHUB_TOKEN -ErrorAction "SilentlyContinue"
-          try {
-            Update-Evergreen -Force
-          }
-          finally {
-            $env:GITHUB_TOKEN = $GitHubToken
-          }
 
           $Config = [PesterConfiguration]::Default
           $Config.Run.Path = "$env:GITHUB_WORKSPACE\tests"
@@ -78,6 +70,8 @@ jobs:
           $Config.TestResult.OutputFormat = "NUnitXml"
           $Config.TestResult.OutputPath = "$env:GITHUB_WORKSPACE\tests\TestResults.xml"
           Invoke-Pester -Configuration $Config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Upload test results
       - name: Upload Pester test results
