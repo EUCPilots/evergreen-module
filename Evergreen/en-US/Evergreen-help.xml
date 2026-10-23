@@ -1035,6 +1035,71 @@ Architecture : x64</dev:code>
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Get-EvergreenAppsVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenAppsVersion</command:noun>
+      <maml:description>
+        <maml:para>Returns the latest release version of the Evergreen apps repository.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Queries the GitHub Releases API for the latest release of the Evergreen apps repository and returns its version.</maml:para>
+      <maml:para>GitHub API rate limits apply. Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to use an authenticated request.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenAppsVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters />
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>None</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Author: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppsVersion</dev:code>
+        <dev:remarks>
+          <maml:para>Description: Returns the latest available release version of the Evergreen apps repository.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppsVersion/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Evergreen apps repository</maml:linkText>
+        <maml:uri>https://github.com/EUCPilots/evergreen-apps</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Get-EvergreenEndpointFromApi</command:name>
       <command:verb>Get</command:verb>
       <command:noun>EvergreenEndpointFromApi</command:noun>
@@ -1448,6 +1513,8 @@ c.1password.com</dev:code>
       <maml:para>`Remove-EvergreenLibraryAppVersion` prunes historical versions from an Evergreen library application manifest.</maml:para>
       <maml:para>The cmdlet validates that `-Path` points to an Evergreen library by checking for `EvergreenLibrary.json`. For each target application, it reads the app manifest (`&lt;ApplicationName&gt;.json`), sorts versions from newest to oldest, keeps the number of entries defined by `-Keep`, removes older installer files from disk, and writes the retained versions back to the app manifest.</maml:para>
       <maml:para>By default, all applications in the library are processed and the latest 3 versions are retained.</maml:para>
+      <maml:para>The keep limit counts individual manifest entries in both Windows PowerShell 5.1 and PowerShell 7. The retained manifest remains a JSON array, even when `-Keep 1` is used. Only installer files recorded in pruned entries are removed; empty version directories are not removed.</maml:para>
+      <maml:para>Use `-Verbose` to troubleshoot library validation, application selection, manifest reads, version sorting, retained and pruned entries, skipped installer files, and manifest updates. Messages distinguish planned pruning from files actually removed and report actions skipped by `-WhatIf` or declined confirmation. Verbose messages do not change the returned objects.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -1626,6 +1693,13 @@ c.1password.com</dev:code>
         <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Keep 5 -WhatIf</dev:code>
         <dev:remarks>
           <maml:para>Description: Shows what files and manifests would be changed while keeping the latest 5 versions, without making any changes.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 4 --------------------------</maml:title>
+        <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Name "MicrosoftEdge" -Keep 3 -WhatIf -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>Description: Shows detailed troubleshooting messages and planned changes for MicrosoftEdge without deleting installers or updating its manifest.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
