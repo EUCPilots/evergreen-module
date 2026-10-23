@@ -2,7 +2,12 @@
 
 ## VERSION
 
-* 
+* Unify redirect resolution with `HttpClient` without reading response bodies. Support relative redirect locations, fall back to `GET` when `HEAD` is unsupported, enforce redirect limits, and forward authorization only across same-origin redirects.
+* Detect installer types from release asset filenames in the Codeberg, GitHub, and GitLab helpers. Address [#936](https://github.com/EUCPilots/evergreen-apps/issues/936)
+* Require explicit resource objects in shared application helpers, removing implicit resource lookups for consistent behavior.
+* Fix `Remove-EvergreenLibraryAppVersion` retention across PowerShell versions, including preserving a JSON array when a single version remains. Address [#928](https://github.com/EUCPilots/evergreen-apps/issues/928)
+* Stage CAB extraction before moving files into the destination, preserving existing files when extraction fails and improving fallback handling.
+* Improve test reliability with mocked responses and add regression coverage for redirect resolution, CAB extraction, API behavior, and library retention.
 
 ## 2610.2856.0
 
