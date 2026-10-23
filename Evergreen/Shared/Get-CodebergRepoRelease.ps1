@@ -185,7 +185,7 @@ function Get-CodebergRepoRelease {
                                 Date          = ConvertTo-DateTime -DateTime $item.created_at -Pattern "MM/dd/yyyy HH:mm:ss"
                                 Size          = $asset.size
                                 Architecture  = Get-Architecture -String $(Split-Path -Path $asset.browser_download_url -Leaf)
-                                InstallerType = Get-InstallerType -String $asset.browser_download_url
+                                InstallerType = Get-InstallerType -String $(Split-Path -Path $asset.browser_download_url -Leaf)
                                 Type          = [System.IO.Path]::GetExtension($asset.browser_download_url).Split(".")[-1]
                                 URI           = $asset.browser_download_url
                             }

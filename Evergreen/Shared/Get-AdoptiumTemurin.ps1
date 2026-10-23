@@ -6,7 +6,7 @@ function Get-AdoptiumTemurin {
     [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $false, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject] $res
     )
@@ -20,7 +20,7 @@ function Get-AdoptiumTemurin {
     Write-Verbose -Message "$($MyInvocation.MyCommand): found $($Releases.count) releases."
 
     # Build the output object for each returned release
-    foreach ($Release in ($Releases | Where-Object { $_.binary.image_type -match $res.Get.Update.MatchImage -and $null -ne $_.binary.installer.link})) {
+    foreach ($Release in ($Releases | Where-Object { $_.binary.image_type -match $res.Get.Update.MatchImage -and $null -ne $_.binary.installer.link })) {
 
         if ($res.Get.Update.ResolveUri -eq $true) {
             Write-Verbose -Message "$($MyInvocation.MyCommand): Resolving $($Release.binary.installer.link)."

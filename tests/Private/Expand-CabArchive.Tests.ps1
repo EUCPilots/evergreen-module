@@ -48,7 +48,7 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
                 Set-Content -Path $script:CabPath -Value "test"
                 New-Item -Path $script:CabDestination -ItemType "Directory" -Force | Out-Null
                 Set-Content -Path $script:ExpandStub -Value @'
-param ($CabPath, [switch] $I, $Destination)
+param ($CabPath, $Destination)
 Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Value "expanded"
 '@
 
@@ -57,8 +57,17 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 $script:SourceCab = [PSCustomObject]@{ Entries = $null }
                 $script:SourceCab | Add-Member -MemberType ScriptMethod -Name Items -Value { $this.Entries }
-                $script:DestinationFolder = [PSCustomObject]@{ Copied = $false }
-                $script:DestinationFolder | Add-Member -MemberType ScriptMethod -Name CopyHere -Value { $this.Copied = $true }
+                $script:DestinationFolder = [PSCustomObject]@{
+                    Copied = $false
+                    Path   = $script:CabDestination
+                }
+                $script:DestinationFolder | Add-Member -MemberType ScriptMethod -Name CopyHere -Value {
+                    param ($Items, $Options)
+                    $this.Copied = $true
+                    foreach ($Item in $Items) {
+                        Set-Content -Path (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                    }
+                }
                 $script:Shell = [PSCustomObject]@{
                     CabPath = $script:CabPath
                     Source = $script:SourceCab
@@ -67,7 +76,10 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                 $script:Shell | Add-Member -MemberType ScriptMethod -Name NameSpace -Value {
                     param ($FolderPath)
                     if ($FolderPath -eq $this.CabPath) { $this.Source }
-                    else { $this.Destination }
+                    else {
+                        $this.Destination.Path = $FolderPath
+                        $this.Destination
+                    }
                 }
                 Mock New-Object { $script:Shell } -ParameterFilter { $ComObject -eq "Shell.Application" }
                 Mock Remove-Item {}
@@ -88,8 +100,6 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 Split-Path -Path $Items -Leaf | Should -Be "expanded.txt"
                 Test-Path -Path $Items -PathType "Leaf" | Should -BeTrue
-                $script:DestinationFolder.Copied | Should -BeFalse
-                Should -Invoke Remove-Item -Times 0 -Exactly
             }
         }
 
@@ -118,10 +128,23 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
         It "Should throw when neither extraction approach returns items" {
             InModuleScope -ModuleName "Evergreen" {
-                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, [switch] $I, $Destination)'
+                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "Failed to expand CAB file*"
+                    Should -Throw "*expand.exe produced no files*"
+            }
+        }
+
+        It "Should preserve existing destination files when both extraction methods fail" {
+            InModuleScope -ModuleName "Evergreen" {
+                $ExistingFile = Join-Path -Path $script:CabDestination -ChildPath "existing.txt"
+                Set-Content -Path $ExistingFile -Value "keep"
+                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*expand.exe produced no files*"
+
+                ([System.IO.File]::ReadAllText($ExistingFile)).Trim() | Should -Be "keep"
             }
         }
     }

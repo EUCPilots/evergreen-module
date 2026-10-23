@@ -26,6 +26,8 @@ The cmdlet validates that `-Path` points to an Evergreen library by checking for
 
 By default, all applications in the library are processed and the latest 3 versions are retained.
 
+The keep limit counts individual manifest entries in both Windows PowerShell 5.1 and PowerShell 7. The retained manifest remains a JSON array, even when `-Keep 1` is used. Only installer files recorded in pruned entries are removed; empty version directories are not removed.
+
 Use `-Verbose` to troubleshoot library validation, application selection, manifest reads, version sorting, retained and pruned entries, skipped installer files, and manifest updates. Messages distinguish planned pruning from files actually removed and report actions skipped by `-WhatIf` or declined confirmation. Verbose messages do not change the returned objects.
 
 ## EXAMPLES

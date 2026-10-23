@@ -61,7 +61,7 @@ function Remove-EvergreenLibraryAppVersion {
 
             try {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Reading app manifest '$AppManifest'."
-                [System.Array] $AppVersions = @(Get-Content -Path $AppManifest -ErrorAction "Stop" | ConvertFrom-Json -ErrorAction "Stop")
+                [System.Array] $AppVersions = Get-Content -Path $AppManifest -Raw -ErrorAction "Stop" | ConvertFrom-Json -ErrorAction "Stop"
             }
             catch {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping '$($Application.Name)' because its app manifest could not be read."
@@ -128,7 +128,7 @@ function Remove-EvergreenLibraryAppVersion {
             [System.Array] $RetainedObjects = @($RetainedItems | Select-Object -ExpandProperty "Item")
             if ($PSCmdlet.ShouldProcess($AppManifest, "Update retained versions")) {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Writing $($RetainedObjects.Count) retained entries to '$AppManifest'."
-                $RetainedObjects | ConvertTo-Json -ErrorAction "Stop" | Out-File -FilePath $AppManifest -Encoding "Utf8" -NoNewline -ErrorAction "Stop"
+                ConvertTo-Json -InputObject $RetainedObjects -ErrorAction "Stop" | Out-File -FilePath $AppManifest -Encoding "Utf8" -NoNewline -ErrorAction "Stop"
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Updated app manifest '$AppManifest'."
             }
             else {

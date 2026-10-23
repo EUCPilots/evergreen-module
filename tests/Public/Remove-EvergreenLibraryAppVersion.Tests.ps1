@@ -63,7 +63,7 @@ BeforeAll {
                 Path    = $installerPath
             }
         }
-        $contosoVersions | ConvertTo-Json | Out-File -FilePath (Join-Path -Path $contosoPath -ChildPath "ContosoApp.json") -Encoding "Utf8" -NoNewline
+        ConvertTo-Json -InputObject $contosoVersions | Out-File -FilePath (Join-Path -Path $contosoPath -ChildPath "ContosoApp.json") -Encoding "Utf8" -NoNewline
 
         $fabrikamPath = Join-Path -Path $Path -ChildPath "FabrikamApp"
         New-Item -Path $fabrikamPath -ItemType "Directory" -Force | Out-Null
@@ -78,7 +78,7 @@ BeforeAll {
                 Path    = $installerPath
             }
         }
-        $fabrikamVersions | ConvertTo-Json | Out-File -FilePath (Join-Path -Path $fabrikamPath -ChildPath "FabrikamApp.json") -Encoding "Utf8" -NoNewline
+        ConvertTo-Json -InputObject $fabrikamVersions | Out-File -FilePath (Join-Path -Path $fabrikamPath -ChildPath "FabrikamApp.json") -Encoding "Utf8" -NoNewline
     }
 }
 
@@ -104,9 +104,35 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "ContosoApp/Contoso-3.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "ContosoApp/Contoso-4.0.0.exe") | Should -Be $true
 
-            $manifest = @(Get-Content -Path (Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json") | ConvertFrom-Json)
+            [System.Array] $manifest = Get-Content -Path (Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json") -Raw | ConvertFrom-Json
             $manifest.Count | Should -Be 3
             ($manifest.Version -contains "1.0.0") | Should -Be $false
+        }
+
+        It "Should retain exactly <Keep> entries and installers from a JSON array" -TestCases @(
+            @{ Keep = 1; ExpectedVersions = @("4.0.0") }
+            @{ Keep = 2; ExpectedVersions = @("4.0.0", "3.0.0") }
+        ) {
+            param ($Keep, $ExpectedVersions)
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep $Keep -Name "ContosoApp" -Confirm:$false
+            $result.KeptCount | Should -Be $Keep
+            $result.RemovedCount | Should -Be (4 - $Keep)
+            $result.RemovedFiles.Count | Should -Be (4 - $Keep)
+
+            $appPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp"
+            $manifestPath = Join-Path -Path $appPath -ChildPath "ContosoApp.json"
+            $json = Get-Content -Path $manifestPath -Raw
+            $json.TrimStart().StartsWith("[") | Should -Be $true
+            [System.Array] $manifest = $json | ConvertFrom-Json
+            $manifest.Count | Should -Be $Keep
+            ($manifest.Version -join ",") | Should -Be ($ExpectedVersions -join ",")
+            @(Get-ChildItem -Path $appPath -Filter "*.exe" -File).Count | Should -Be $Keep
+
+            $secondResult = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep $Keep -Name "ContosoApp" -Confirm:$false
+            $secondResult.KeptCount | Should -Be $Keep
+            $secondResult.RemovedCount | Should -Be 0
+            (Get-Content -Path $manifestPath -Raw) | Should -Be $json
         }
 
         It "Should not prune apps not selected by Name" {
@@ -144,10 +170,10 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
 
         It "Should explain skipped installer removals" {
             $manifestPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json"
-            $versions = @(Get-Content -Path $manifestPath | ConvertFrom-Json)
+            [System.Array] $versions = Get-Content -Path $manifestPath -Raw | ConvertFrom-Json
             $versions[0].Path = ""
             Remove-Item -Path $versions[1].Path -Force
-            $versions | ConvertTo-Json | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
 
             $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 2 -Name "ContosoApp" -Confirm:$false -Verbose 4>&1)
             $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
