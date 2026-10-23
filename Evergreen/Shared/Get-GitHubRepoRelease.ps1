@@ -197,7 +197,7 @@ function Get-GitHubRepoRelease {
 
                                 $Object = [PSCustomObject] @{
                                     Version       = $Version
-                                    Date          = ConvertTo-DateTime -DateTime $item.created_at -Pattern "MM/dd/yyyy HH:mm:ss"
+                                    Date          = ConvertTo-DateTime -DateTime $item.created_at -AutoDetect
                                     Size          = $asset.size
                                     Sha256        = if ($null -eq $asset.digest) { $null } else { ($asset.digest -split ":")[-1] }
                                     Architecture  = Get-Architecture -String $(Split-Path -Path $asset.browser_download_url -Leaf)
