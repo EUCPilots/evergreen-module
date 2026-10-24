@@ -23,12 +23,20 @@ Describe -Name "Get-Platform" {
                 Get-Platform -String "linux" | Should -Be "Linux"
             }
 
+            It "Returns Linux when the archive name explicitly includes Linux" {
+                Get-Platform -String "tool-linux-x64.tar.gz" | Should -Be "Linux"
+            }
+
+            It "Does not infer Linux from a generic tar.gz archive" {
+                Get-Platform -String "tool.tar.gz" | Should -Be "Unknown"
+            }
+
             It "Returns NuGet" {
                 Get-Platform -String "file.nupkg" | Should -Be "NuGet"
             }
 
-            It "Returns Debian" {
-                Get-Platform -String "debian" | Should -Be "Debian"
+            It "Returns Debian for a Debian package extension" {
+                Get-Platform -String "tool.deb" | Should -Be "Debian"
             }
 
             It "Returns Debian" {
@@ -46,11 +54,27 @@ Describe -Name "Get-Platform" {
             It "Returns Windows" {
                 Get-Platform -String "file.exe" | Should -Be "Windows"
             }
+
+            It "Matches platform indicators without regard to case" {
+                Get-Platform -String "TOOL-OSX-ARM64" | Should -Be "macOS"
+            }
+
+            It "Ignores platform-like query parameters" {
+                Get-Platform -String "https://example.com/tool.exe?platform=linux" | Should -Be "Windows"
+            }
+
+            It "Does not match a platform name embedded in another word" {
+                Get-Platform -String "superlinuxclient" | Should -Be "Unknown"
+            }
+
+            It "Returns Unknown for conflicting platform indicators" {
+                Get-Platform -String "tool-windows-linux.zip" | Should -Be "Unknown"
+            }
         }
 
-        Context "Ensure the default platform is returned" {
-            It "Given a string that won't match, returns Windows" {
-                Get-Platform -String "Neque porro quisquam est qui dolorem" | Should -Be "Windows"
+        Context "Ensure unknown platforms are explicit" {
+            It "Given a string that won't match, returns Unknown" {
+                Get-Platform -String "Neque porro quisquam est qui dolorem" | Should -Be "Unknown"
             }
         }
     }

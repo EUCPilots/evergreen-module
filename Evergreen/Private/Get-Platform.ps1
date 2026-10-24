@@ -7,18 +7,34 @@ function Get-Platform {
         [System.String] $String
     )
 
-    switch -Regex ($String) {
-        "\.tar.gz|linux" { $platform = "Linux"; break }
-        "\.nupkg" { $platform = "NuGet"; break }
-        "macos|osx|darwin" { $platform = "macOS"; break }
-        "\.deb|debian" { $platform = "Debian"; break }
-        "ubuntu" { $platform = "Ubuntu"; break }
-        "centos" { $platform = "CentOS"; break }
-        "\.exe|\.msi|\.msix|\.appx|\.appxbundle|windows|win" { $platform = "Windows"; break }
-        default {
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Platform not found, defaulting to Windows."
-            $platform = "Windows"
+    $inputValue = $String -replace '[?#].*$', ''
+    if ($inputValue -match '(?i)\.nupkg$') {
+        Write-Output -InputObject "NuGet"
+        return
+    }
+
+    $platforms = @()
+    $indicators = @{
+        macOS   = '(?i)(?<![a-z0-9])(?:macos|osx|darwin)(?![a-z0-9])'
+        Debian  = '(?i)(?<![a-z0-9])debian(?![a-z0-9])|\.deb$'
+        Ubuntu  = '(?i)(?<![a-z0-9])ubuntu(?![a-z0-9])'
+        CentOS  = '(?i)(?<![a-z0-9])centos(?![a-z0-9])'
+        Linux   = '(?i)(?<![a-z0-9])linux(?![a-z0-9])'
+        Windows = '(?i)\.(?:exe|msi|msix|msixbundle|appx|appxbundle)$|(?<![a-z0-9])(?:windows|win(?:32|64)?)(?![a-z0-9])'
+    }
+
+    foreach ($platform in $indicators.Keys) {
+        if ($inputValue -match $indicators[$platform]) {
+            $platforms += $platform
         }
     }
-    Write-Output -InputObject $platform
+
+    if ($platforms.Count -eq 1) {
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Platform determined to be $($platforms[0])."
+        Write-Output -InputObject $platforms[0]
+        return
+    }
+
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Platform not found or ambiguous; returning Unknown."
+    Write-Output -InputObject "Unknown"
 }
