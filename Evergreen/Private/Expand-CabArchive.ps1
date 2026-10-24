@@ -40,12 +40,14 @@ function Expand-CabArchive {
         }
     }
 
-    $StageRoot = Join-Path -Path $DestinationPath -ChildPath ".Expand-CabArchive-$([System.Guid]::NewGuid().ToString())"
-    $ShellStage = Join-Path -Path $StageRoot -ChildPath "Shell"
-    $FallbackStage = Join-Path -Path $StageRoot -ChildPath "Expand"
-    $BackupStage = Join-Path -Path $StageRoot -ChildPath "Backup"
+    $StageRoot = [System.IO.Path]::Combine($DestinationPath, ".Expand-CabArchive-$([System.Guid]::NewGuid().ToString())")
+    $ShellStage = [System.IO.Path]::Combine($StageRoot, "Shell")
+    $FallbackStage = [System.IO.Path]::Combine($StageRoot, "Expand")
+    $BackupStage = [System.IO.Path]::Combine($StageRoot, "Backup")
     $ExpectedFiles = @()
     $KeepStage = $false
+    $DestinationCreated = $false
+    $OperationSucceeded = $false
     $UnsafeCabEntryError = $null
 
     $NormalizeRelativePath = {
@@ -61,7 +63,10 @@ function Expand-CabArchive {
         }
         $InvalidCharacters = [System.IO.Path]::GetInvalidFileNameChars()
         foreach ($Segment in $Segments) {
-            if ($Segment.IndexOfAny($InvalidCharacters) -ge 0) {
+            if ($Segment.IndexOfAny($InvalidCharacters) -ge 0 -or
+                $Segment -match '[<>:"/\\|?*\x00-\x1F]' -or
+                $Segment -match '[ .]$' -or
+                $Segment -match '^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)') {
                 throw "CAB item path '$Name' contains an invalid file name."
             }
         }
@@ -83,7 +88,7 @@ function Expand-CabArchive {
                     $MatchesExpected = $FilePaths[$Index] -ieq $ExpectedFile.RelativePath
                 }
                 else {
-                    $MatchesExpected = (Split-Path -Path $FilePaths[$Index] -Leaf) -ieq $ExpectedFile.RelativePath
+                    $MatchesExpected = [System.IO.Path]::GetFileName($FilePaths[$Index]) -ieq $ExpectedFile.RelativePath
                 }
                 if ($MatchesExpected) {
                     $MatchedIndex = $Index
@@ -101,7 +106,10 @@ function Expand-CabArchive {
     }
 
     try {
-        $null = New-Item -Path $DestinationPath -ItemType "Directory" -Force -ErrorAction "Stop"
+        if (-not (Test-Path -LiteralPath $DestinationPath -PathType "Container")) {
+            $null = [System.IO.Directory]::CreateDirectory($DestinationPath)
+            $DestinationCreated = $true
+        }
         $ShellSucceeded = $false
         $StagePath = $null
 
@@ -138,7 +146,7 @@ function Expand-CabArchive {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): CAB file contains: '$($File.RelativePath)'."
             }
 
-            $null = New-Item -Path $ShellStage -ItemType "Directory" -Force -ErrorAction "Stop"
+            $null = [System.IO.Directory]::CreateDirectory($ShellStage)
             $DestinationFolder = $Shell.NameSpace($ShellStage)
             if ($null -eq $DestinationFolder) {
                 throw "Shell.Application could not open staging directory '$ShellStage'."
@@ -204,7 +212,25 @@ function Expand-CabArchive {
             }
 
             try {
-                $null = New-Item -Path $FallbackStage -ItemType "Directory" -Force -ErrorAction "Stop"
+                if ($ExpectedFiles.Count -eq 0) {
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): Listing CAB contents with expand.exe to verify fallback completeness."
+                    $LASTEXITCODE = 0
+                    $CabListing = @(& $ExpandExe -D $Path 2>&1 | ForEach-Object { $_.ToString() })
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "expand.exe could not list CAB contents (exit code $LASTEXITCODE)."
+                    }
+                    foreach ($ListingLine in $CabListing) {
+                        if ($ListingLine -match '^\s{3,}(.+?)\s*$') {
+                            $RelativePath = & $NormalizeRelativePath $Matches[1]
+                            $ExpectedFiles += [PSCustomObject]@{ RelativePath = $RelativePath }
+                        }
+                    }
+                    if ($ExpectedFiles.Count -eq 0) {
+                        throw "expand.exe did not return a verifiable CAB file list."
+                    }
+                }
+
+                $null = [System.IO.Directory]::CreateDirectory($FallbackStage)
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Expanding CAB file '$Path' with expand.exe to staging directory '$FallbackStage'."
                 $LASTEXITCODE = 0
                 & $ExpandExe $Path $FallbackStage | Out-Null
@@ -217,14 +243,9 @@ function Expand-CabArchive {
             }
 
             $ExtractedFiles = @(Get-ChildItem -LiteralPath $FallbackStage -File -Recurse -Force -ErrorAction "Stop")
-            if ($ExtractedFiles.Count -eq 0) {
-                throw "$($MyInvocation.MyCommand): Shell extraction failed: $ShellError expand.exe produced no files."
-            }
-            if ($ExpectedFiles.Count -gt 0) {
-                $MissingFiles = @(& $GetMissingExpectedFiles $ExpectedFiles $ExtractedFiles $FallbackStage)
-                if ($MissingFiles.Count -gt 0) {
-                    throw "$($MyInvocation.MyCommand): expand.exe did not extract all CAB files. Missing: $($MissingFiles -join ', ')."
-                }
+            $MissingFiles = @(& $GetMissingExpectedFiles $ExpectedFiles $ExtractedFiles $FallbackStage)
+            if ($MissingFiles.Count -gt 0) {
+                throw "$($MyInvocation.MyCommand): expand.exe did not extract all CAB files. Missing: $($MissingFiles -join ', ')."
             }
             $StagePath = $FallbackStage
         }
@@ -244,7 +265,7 @@ function Expand-CabArchive {
         foreach ($File in $ExtractedFiles) {
             $RelativePath = $File.FullName.Substring($StagePath.Length).TrimStart([System.Char[]]@('\', '/'))
             $RelativePath = & $NormalizeRelativePath $RelativePath
-            $DestinationFile = [System.IO.Path]::GetFullPath((Join-Path -Path $DestinationPath -ChildPath $RelativePath))
+            $DestinationFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($DestinationPath, $RelativePath))
             $DestinationPrefix = $DestinationPath.TrimEnd([System.Char[]]@('\', '/')) + [System.IO.Path]::DirectorySeparatorChar
             if (-not $DestinationFile.StartsWith($DestinationPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
                 throw "$($MyInvocation.MyCommand): Extracted path '$RelativePath' resolves outside destination '$DestinationPath'."
@@ -258,7 +279,7 @@ function Expand-CabArchive {
                 Source = $File.FullName
                 Target = $DestinationFile
                 RelativePath = $RelativePath
-                Backup = Join-Path -Path $BackupStage -ChildPath $RelativePath
+                Backup = [System.IO.Path]::Combine($BackupStage, $RelativePath)
                 HadBackup = $false
                 Installed = $false
             }
@@ -268,20 +289,20 @@ function Expand-CabArchive {
         $PromotionRecords = @()
         try {
             foreach ($Promotion in $Promotions) {
-                $Parent = Split-Path -Path $Promotion.Target -Parent
+                $Parent = [System.IO.Path]::GetDirectoryName($Promotion.Target)
                 $MissingParents = @()
                 $CurrentParent = $Parent
                 while ($CurrentParent.StartsWith($DestinationPath, [System.StringComparison]::OrdinalIgnoreCase) -and
                     -not (Test-Path -LiteralPath $CurrentParent -PathType "Container")) {
                     $MissingParents += $CurrentParent
-                    $CurrentParent = Split-Path -Path $CurrentParent -Parent
+                    $CurrentParent = [System.IO.Path]::GetDirectoryName($CurrentParent)
                 }
                 [array]::Reverse($MissingParents)
                 foreach ($Directory in $MissingParents) {
                     if (Test-Path -LiteralPath $Directory -PathType "Leaf") {
                         throw "Cannot create destination directory '$Directory' because a file already exists there."
                     }
-                    $null = New-Item -Path $Directory -ItemType "Directory" -ErrorAction "Stop"
+                    $null = [System.IO.Directory]::CreateDirectory($Directory)
                     $CreatedDirectories += $Directory
                 }
 
@@ -294,14 +315,14 @@ function Expand-CabArchive {
                     if ($CurrentParent -ieq $DestinationPath) {
                         break
                     }
-                    $CurrentParent = Split-Path -Path $CurrentParent -Parent
+                    $CurrentParent = [System.IO.Path]::GetDirectoryName($CurrentParent)
                 }
 
                 if (Test-Path -LiteralPath $Promotion.Target) {
                     if (-not (Test-Path -LiteralPath $Promotion.Target -PathType "Leaf")) {
                         throw "Cannot replace destination directory '$($Promotion.Target)' with an extracted file."
                     }
-                    $null = New-Item -Path (Split-Path -Path $Promotion.Backup -Parent) -ItemType "Directory" -Force -ErrorAction "Stop"
+                    $null = [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($Promotion.Backup))
                 }
 
                 $Record = [PSCustomObject]@{
@@ -352,11 +373,17 @@ function Expand-CabArchive {
             throw "$($MyInvocation.MyCommand): Promotion failed; changes were rolled back: $PromotionError"
         }
 
+        $OperationSucceeded = $true
         return @($Promotions | ForEach-Object { $_.Target })
     }
     finally {
         if (-not $KeepStage) {
             Remove-Item -LiteralPath $StageRoot -Recurse -Force -ErrorAction "SilentlyContinue"
+        }
+        if (-not $OperationSucceeded -and $DestinationCreated -and
+            (Test-Path -LiteralPath $DestinationPath -PathType "Container") -and
+            [System.IO.Directory]::GetFileSystemEntries($DestinationPath).Length -eq 0) {
+            [System.IO.Directory]::Delete($DestinationPath)
         }
     }
 }

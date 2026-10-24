@@ -48,7 +48,17 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
                 Set-Content -Path $script:CabPath -Value "test"
                 New-Item -Path $script:CabDestination -ItemType "Directory" -Force | Out-Null
                 Set-Content -Path $script:ExpandStub -Value @'
-param ($CabPath, $Destination)
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   expanded.txt"
+    exit 0
+}
 Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Value "expanded"
 '@
 
@@ -65,7 +75,7 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     param ($Items, $Options)
                     $this.Copied = $true
                     foreach ($Item in $Items) {
-                        Set-Content -Path (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                        Set-Content -LiteralPath (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
                     }
                 }
                 $script:Shell = [PSCustomObject]@{
@@ -137,6 +147,25 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
             }
         }
 
+        It "Should reject Windows reserved and normalizing file names" -TestCases @(
+            @{ Name = "CON.txt" }
+            @{ Name = "trailing-dot." }
+            @{ Name = "trailing-space " }
+        ) {
+            param ($Name)
+
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ EntryName = $Name } {
+                param ($EntryName)
+
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = $EntryName })
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*Refusing to extract unsafe CAB entry*"
+
+                Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+            }
+        }
+
         It "Should resolve a relative destination path from the current location" {
             InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
                 param ($TestRoot)
@@ -159,6 +188,20 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     }
                     Set-Location -LiteralPath $OriginalLocation
                 }
+            }
+        }
+
+        It "Should support destination paths containing wildcard characters" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $LiteralDestination = [System.IO.Path]::Combine($TestRoot, "destination[1]")
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "shell.txt" })
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $LiteralDestination
+
+                $Items | Should -Be ([System.IO.Path]::Combine($LiteralDestination, "shell.txt"))
+                Test-Path -LiteralPath $Items -PathType "Leaf" | Should -BeTrue
             }
         }
 
@@ -185,10 +228,22 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
         It "Should throw when neither extraction approach returns items" {
             InModuleScope -ModuleName "Evergreen" {
-                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   missing.txt"
+    exit 0
+}
+'@
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "*expand.exe produced no files*"
+                    Should -Throw "*expand.exe did not extract all CAB files*"
             }
         }
 
@@ -196,12 +251,46 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
             InModuleScope -ModuleName "Evergreen" {
                 $ExistingFile = Join-Path -Path $script:CabDestination -ChildPath "existing.txt"
                 Set-Content -Path $ExistingFile -Value "keep"
-                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   missing.txt"
+    exit 0
+}
+'@
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "*expand.exe produced no files*"
+                    Should -Throw "*expand.exe did not extract all CAB files*"
 
                 ([System.IO.File]::ReadAllText($ExistingFile)).Trim() | Should -Be "keep"
+            }
+        }
+
+        It "Should remove a newly created destination when extraction fails" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $NewDestination = [System.IO.Path]::Combine($TestRoot, "failed-destination")
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+'@
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $NewDestination } |
+                    Should -Throw "*verifiable CAB file list*"
+
+                Test-Path -LiteralPath $NewDestination | Should -BeFalse
             }
         }
     }
