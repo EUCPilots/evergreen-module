@@ -28,10 +28,17 @@ Describe -Tag "Private" -Name "Convert-Segment" {
             }
         }
 
+        It "Should convert numeric segments within the Int32 range exactly" {
+            InModuleScope -ModuleName "Evergreen" {
+                Convert-Segment -Segment "2147483647" | Should -Be 2147483647
+            }
+        }
+
         It "Should handle alphanumeric segments" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Convert-Segment -Segment "abc123"
-                $Result | Should -Not -BeNullOrEmpty
+                $Result | Should -BeOfType [int]
+                $Result | Should -BeGreaterOrEqual 0
             }
         }
 
@@ -53,12 +60,32 @@ Describe -Tag "Private" -Name "Convert-Segment" {
     Context "Validate Convert-Segment with edge cases" {
         It "Should handle empty string" {
             InModuleScope -ModuleName "Evergreen" {
-                { Convert-Segment -Segment "" } | Should -Not -Throw
+                Convert-Segment -Segment "" | Should -Be 0
             }
         }
 
         It "Should throw with null value" {
-            { Convert-Segment -Segment $null } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { Convert-Segment -Segment $null } | Should -Throw -ExceptionType ([System.ArgumentNullException])
+            }
+        }
+
+        It "Should throw when a numeric segment exceeds the Int32 range" {
+            InModuleScope -ModuleName "Evergreen" {
+                { Convert-Segment -Segment "2147483648" } | Should -Throw -ExceptionType ([System.OverflowException])
+            }
+        }
+
+        It "Should return a bounded integer for long and Unicode segments" {
+            InModuleScope -ModuleName "Evergreen" {
+                $LongSegment = Convert-Segment -Segment ("x" * 1000)
+                $UnicodeSegment = Convert-Segment -Segment "版本"
+
+                $LongSegment | Should -BeOfType [int]
+                $LongSegment | Should -BeGreaterOrEqual 0
+                $UnicodeSegment | Should -BeOfType [int]
+                $UnicodeSegment | Should -BeGreaterOrEqual 0
+            }
         }
     }
 }
