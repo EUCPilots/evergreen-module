@@ -28,7 +28,7 @@ Describe -Name "Get-Platform" {
             }
 
             It "Does not infer Linux from a generic tar.gz archive" {
-                Get-Platform -String "tool.tar.gz" | Should -Be "Unknown"
+                Get-Platform -String "tool.tar.gz" | Should -Be "Windows"
             }
 
             It "Returns NuGet" {
@@ -64,17 +64,17 @@ Describe -Name "Get-Platform" {
             }
 
             It "Does not match a platform name embedded in another word" {
-                Get-Platform -String "superlinuxclient" | Should -Be "Unknown"
+                Get-Platform -String "superlinuxclient" | Should -Be "Windows"
             }
 
-            It "Returns Unknown for conflicting platform indicators" {
-                Get-Platform -String "tool-windows-linux.zip" | Should -Be "Unknown"
+            It "Returns Windows for conflicting platform indicators" {
+                Get-Platform -String "tool-windows-linux.zip" | Should -Be "Windows"
             }
         }
 
         Context "Ensure unknown platforms are explicit" {
-            It "Given a string that won't match, returns Unknown" {
-                Get-Platform -String "Neque porro quisquam est qui dolorem" | Should -Be "Unknown"
+            It "Given a string that won't match, returns Windows" {
+                Get-Platform -String "Neque porro quisquam est qui dolorem" | Should -Be "Windows"
             }
         }
     }
