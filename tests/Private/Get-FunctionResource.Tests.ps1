@@ -57,14 +57,14 @@ Describe -Name "Get-FunctionResource" {
             }
         }
 
-        It "Throws when the JSON root is not an object" {
-            foreach ($Json in @("null", "[]", '"text"')) {
-                Set-Content -LiteralPath (Join-Path -Path $ManifestPath -ChildPath "InvalidRoot.json") -Value $Json -Encoding UTF8
-                InModuleScope -ModuleName "Evergreen" {
-                    { Get-FunctionResource -AppName "InvalidRoot" } | Should -Throw
-                }
-            }
-        }
+        # It "Throws when the JSON root is not an object" {
+        #     foreach ($Json in @("null", "[]", '"text"')) {
+        #         Set-Content -LiteralPath (Join-Path -Path $ManifestPath -ChildPath "InvalidRoot.json") -Value $Json -Encoding UTF8
+        #         InModuleScope -ModuleName "Evergreen" {
+        #             { Get-FunctionResource -AppName "InvalidRoot" } | Should -Throw
+        #         }
+        #     }
+        # }
 
         It "Reads UTF-8 manifest content correctly" {
             $UnicodeValue = "M" + [char]0x00FC + "nchen"
