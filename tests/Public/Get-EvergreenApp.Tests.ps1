@@ -20,9 +20,11 @@ BeforeDiscovery {
     # Select all applications only when explicitly requested; otherwise sample 50.
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
     $ApplicationsToTest = if ($env:EVERGREEN_TEST_ALL_APPLICATIONS -eq "true") {
+        Write-Host "Get-EvergreenApp: Testing all applications"
         $Applications
     }
     else {
+        Write-Host "Get-EvergreenApp: Testing a random sample of applications"
         Get-Random -InputObject $Applications -Count 50
     }
 }
