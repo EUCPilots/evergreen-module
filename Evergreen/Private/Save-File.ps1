@@ -1,20 +1,36 @@
 ﻿function Save-File {
     <#
         .SYNOPSIS
-            Downloads a file with Invoke-WebRequest and returns the downloaded file path.
+            Downloads a file with Invoke-WebRequest and returns the downloaded file as a FileInfo object.
     #>
-    [OutputType([System.Array])]
+    [OutputType([System.IO.FileInfo])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
-        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
         [System.String] $Uri
     )
 
-    # Create an OutFile to save the download to
-    $OutFile = Join-Path -Path $([System.IO.Path]::GetTempPath()) -ChildPath (Split-Path -Path $Uri -Leaf)
+    $downloadUri = $null
+    if (-not [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref]$downloadUri) -or $downloadUri.Scheme -notin @("http", "https")) {
+        throw [System.ArgumentException]::new("Uri must be an absolute HTTP or HTTPS URL.", "Uri")
+    }
+
+    $fileName = [System.IO.Path]::GetFileName($downloadUri.AbsolutePath)
+    $fileName = [System.Uri]::UnescapeDataString($fileName)
+    foreach ($invalidCharacter in [System.IO.Path]::GetInvalidFileNameChars()) {
+        $fileName = $fileName.Replace([string]$invalidCharacter, "_")
+    }
+    if ([string]::IsNullOrWhiteSpace($fileName) -or $fileName -in @(".", "..")) {
+        $fileName = "download"
+    }
+
+    $uniqueFileName = "$([guid]::NewGuid().ToString('N'))-$fileName"
+    $OutFile = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $uniqueFileName
     Write-Verbose -Message "$($MyInvocation.MyCommand): Using save path: $OutFile."
 
+    $originalSecurityProtocol = $null
+    $restoreSecurityProtocol = $false
     try {
         $params = @{
             Uri             = $Uri
@@ -26,14 +42,28 @@
             $params.SslProtocol = "Tls12"
         }
         else {
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            $originalSecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+            [System.Net.ServicePointManager]::SecurityProtocol = $originalSecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+            $restoreSecurityProtocol = $true
         }
-        Invoke-WebRequest @params
+        Invoke-WebRequest @params -ErrorAction Stop | Out-Null
     }
     catch {
-        throw $_
+        if (Test-Path -LiteralPath $OutFile) {
+            try {
+                Remove-Item -LiteralPath $OutFile -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Warning -Message "Failed to remove partial download '$OutFile': $($_.Exception.Message)"
+            }
+        }
+        throw
+    }
+    finally {
+        if ($restoreSecurityProtocol) {
+            [System.Net.ServicePointManager]::SecurityProtocol = $originalSecurityProtocol
+        }
     }
 
-    # Write the OutFile properties to the pipeline
-    Write-Output -InputObject (Get-ChildItem -Path $OutFile)
+    Get-Item -LiteralPath $OutFile -ErrorAction Stop
 }
