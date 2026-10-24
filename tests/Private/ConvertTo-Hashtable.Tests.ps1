@@ -30,7 +30,7 @@ Describe -Name "ConvertTo-Hashtable" {
                         [PSCustomObject]@{ Name = "First" }
                         [PSCustomObject]@{ Name = "Second" }
                     )
-                    Empty = @()
+                    EmptyArray = @()
                 }
 
                 $object = ConvertTo-Hashtable -InputObject $inputObject
@@ -39,8 +39,8 @@ Describe -Name "ConvertTo-Hashtable" {
                 $object.Items | Should -HaveCount 2
                 $object.Items[0] | Should -BeOfType "Hashtable"
                 $object.Items[1].Name | Should -Be "Second"
-                $object.Empty | Should -BeOfType "Object[]"
-                $object.Empty | Should -BeNullOrEmpty
+                ($object["EmptyArray"] -is [System.Object[]]) | Should -BeTrue
+                $object["EmptyArray"].Count | Should -Be 0
             }
         }
 
@@ -66,6 +66,10 @@ Describe -Name "ConvertTo-Hashtable" {
                 $object | Should -HaveCount 2
                 $object[0] | Should -BeOfType "Hashtable"
                 $object[1].Name | Should -Be "Second"
+
+                $emptyObject = ConvertTo-Hashtable -InputObject ([System.Object[]]@())
+                ($emptyObject -is [System.Object[]]) | Should -BeTrue
+                $emptyObject.Count | Should -Be 0
             }
         }
 
