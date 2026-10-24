@@ -40,43 +40,54 @@ function Get-JetBrainsApp {
             Write-Warning -Message "$($MyInvocation.MyCommand): No release data was returned for edition '$($Edition.Key)' ($($Edition.Value)) from '$Uri'."
             continue
         }
-        $Release = $ReleaseProperty.Value
-        $WindowsDownload = $Release.downloads.windows
-        if ($null -eq $WindowsDownload -or [System.String]::IsNullOrWhiteSpace($WindowsDownload.link)) {
-            Write-Warning -Message "$($MyInvocation.MyCommand): No Windows download link was returned for edition '$($Edition.Key)' ($($Edition.Value)) from '$Uri'."
-            continue
-        }
-        if ([System.String]::IsNullOrWhiteSpace($Release.version) -or [System.String]::IsNullOrWhiteSpace($Release.date)) {
-            throw "$($MyInvocation.MyCommand): Release data for edition '$($Edition.Key)' ($($Edition.Value)) is missing the version or date."
-        }
-
-        $Sha256 = $null
-        if (-not [System.String]::IsNullOrWhiteSpace($WindowsDownload.checksumLink)) {
-            try {
-                $ChecksumResponse = Invoke-EvergreenRestMethod -Uri $WindowsDownload.checksumLink
-                $ChecksumParts = @("$ChecksumResponse" -split '\s+' | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) })
-                if ($ChecksumParts.Count -gt 0) {
-                    $Sha256 = $ChecksumParts[0]
+        foreach ($Release in $ReleaseProperty.Value) {
+            $WindowsDownloads = @(
+                foreach ($DownloadName in @("windows", "windowsZip", "windowsARM64", "windowsZipARM64")) {
+                    $Download = $Release.downloads.$DownloadName
+                    if ($null -ne $Download -and -not [System.String]::IsNullOrWhiteSpace($Download.link)) {
+                        $Download
+                    }
                 }
-                else {
-                    Write-Warning -Message "$($MyInvocation.MyCommand): The SHA256 checksum response was empty for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'."
-                }
+            )
+            if ($WindowsDownloads.Count -eq 0) {
+                Write-Warning -Message "$($MyInvocation.MyCommand): No Windows download link was returned for edition '$($Edition.Key)' ($($Edition.Value)) from '$Uri'."
+                continue
             }
-            catch {
-                Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'. Error: $_"
+            if ([System.String]::IsNullOrWhiteSpace($Release.version) -or [System.String]::IsNullOrWhiteSpace($Release.date)) {
+                throw "$($MyInvocation.MyCommand): Release data for edition '$($Edition.Key)' ($($Edition.Value)) is missing the version or date."
             }
-        }
 
-        $PSObject = [PSCustomObject] @{
-            Version = $Release.version
-            Build   = $Release.build
-            Edition = $Edition.Key
-            Date    = ConvertTo-DateTime -DateTime $Release.date -Pattern $Update.DatePattern
-            Sha256  = $Sha256
-            Size    = $WindowsDownload.size
-            Type    = Get-FileType -File $WindowsDownload.link
-            URI     = $WindowsDownload.link
+            foreach ($WindowsDownload in $WindowsDownloads) {
+                $Sha256 = $null
+                if (-not [System.String]::IsNullOrWhiteSpace($WindowsDownload.checksumLink)) {
+                    try {
+                        $ChecksumResponse = Invoke-EvergreenRestMethod -Uri $WindowsDownload.checksumLink
+                        $ChecksumParts = @("$ChecksumResponse" -split '\s+' | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) })
+                        if ($ChecksumParts.Count -gt 0) {
+                            $Sha256 = $ChecksumParts[0]
+                        }
+                        else {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): The SHA256 checksum response was empty for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'."
+                        }
+                    }
+                    catch {
+                        Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'. Error: $_"
+                    }
+                }
+
+                $PSObject = [PSCustomObject] @{
+                    Version      = $Release.version
+                    Build        = $Release.build
+                    Edition      = $Edition.Key
+                    Date         = ConvertTo-DateTime -DateTime $Release.date -Pattern $Update.DatePattern
+                    Sha256       = $Sha256
+                    Size         = $WindowsDownload.size
+                    Architecture = Get-Architecture -String $WindowsDownload.link
+                    Type         = Get-FileType -File $WindowsDownload.link
+                    URI          = $WindowsDownload.link
+                }
+                Write-Output -InputObject $PSObject
+            }
         }
-        Write-Output -InputObject $PSObject
     }
 }
