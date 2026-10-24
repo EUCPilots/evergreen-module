@@ -24,7 +24,8 @@ function Get-ModuleResource {
             $script:resourceStringsTable = $content | ConvertFrom-Json -AsHashtable -ErrorAction "Stop"
         }
         else {
-            $script:resourceStringsTable = $content | ConvertFrom-Json -ErrorAction "Stop" | ConvertTo-Hashtable
+            $object = ConvertFrom-Json -InputObject $content -ErrorAction "Stop"
+            $script:resourceStringsTable = ConvertTo-Hashtable -InputObject $object
         }
         Write-Output -InputObject $script:resourceStringsTable
     }

@@ -24,7 +24,14 @@ function ConvertTo-Hashtable {
         ## Check if the input is an array or collection. If so, we also need to convert
         ## those types into hash tables as well. This function will convert all child
         ## objects into hash tables (if applicable)
-        if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [System.String]) {
+        if ($InputObject -is [System.Collections.IDictionary]) {
+            $hash = @{ }
+            foreach ($key in $InputObject.Keys) {
+                $hash[$key] = ConvertTo-Hashtable -InputObject $InputObject[$key]
+            }
+            Write-Output -InputObject $hash
+        }
+        elseif ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [System.String]) {
             $collection = @(
                 foreach ($object in $InputObject) {
                     ConvertTo-Hashtable -InputObject $object
@@ -34,7 +41,7 @@ function ConvertTo-Hashtable {
             ## Return the array but don't enumerate it because the object may be pretty complex
             Write-Output -NoEnumerate -InputObject $collection
         }
-        elseif ($InputObject -is [PSObject]) {
+        elseif ($InputObject -is [PSCustomObject]) {
             ## If the object has properties that need enumeration
             ## Convert it to its own hash table and return it
             $hash = @{ }

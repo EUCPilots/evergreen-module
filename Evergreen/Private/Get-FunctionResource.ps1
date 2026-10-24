@@ -31,7 +31,8 @@ function Get-FunctionResource {
             $hashTable = $content | ConvertFrom-Json -AsHashtable
         }
         else {
-            $hashTable = $content | ConvertFrom-Json | ConvertTo-Hashtable
+            $object = ConvertFrom-Json -InputObject $content
+            $hashTable = ConvertTo-Hashtable -InputObject $object
         }
     }
     catch {
