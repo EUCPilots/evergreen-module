@@ -17,12 +17,17 @@ BeforeDiscovery {
     #     Where-Object { $_.Name -notmatch $AppsToSkip } | `
     #     Sort-Object { Get-Random } | Select-Object -ExpandProperty "Name"
 
-    # Export the list of apps
+    # Select all applications only when explicitly requested; otherwise sample 50.
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
-    $RandomApplications = Get-Random -InputObject $Applications -Count 50
+    $ApplicationsToTest = if ($env:EVERGREEN_TEST_ALL_APPLICATIONS -eq "true") {
+        $Applications
+    }
+    else {
+        Get-Random -InputObject $Applications -Count 50
+    }
 }
 
-Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $RandomApplications {
+Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $ApplicationsToTest {
     BeforeAll {
         # Renaming the automatic $_ variable to $application to make it easier to work with
         $application = $_

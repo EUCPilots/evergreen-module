@@ -15,6 +15,12 @@ on:
     paths:
       - 'Evergreen/**'
   workflow_dispatch:
+    inputs:
+      test_all_applications:
+        description: 'Test all applications'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   psscriptanalyzer:
@@ -53,6 +59,8 @@ jobs:
       - name: Pester tests
         shell: powershell
         working-directory: "${{ github.workspace }}"
+        env:
+          EVERGREEN_TEST_ALL_APPLICATIONS: ${{ github.event_name == 'workflow_dispatch' && inputs.test_all_applications == true }}
         run: |
           .\tests\Install-Pester.ps1
           Import-Module -Name "Pester" -Force -ErrorAction "Stop"

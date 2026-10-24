@@ -53,6 +53,12 @@ Evergreen's focus is on integration for PowerShell scripts to provide product ve
 
 Documentation for Evergreen, including usage examples, is located here: [https://eucpilots.com/evergreen/](https://eucpilots.com/evergreen/).
 
+## Testing Applications
+
+The [Validate module workflow](.github/workflows/validate-module.yml) tests a random sample of 50 applications with `Get-EvergreenApp` by default. To test all available applications, run the workflow manually from GitHub Actions and enable **Test all applications instead of a random sample of 50**. Push and pull request runs continue to use the random sample.
+
+For local Pester runs, set `$env:EVERGREEN_TEST_ALL_APPLICATIONS = "true"` before running the tests to test all applications. Remove the variable with `Remove-Item Env:\EVERGREEN_TEST_ALL_APPLICATIONS` to restore the default random sample.
+
 ## Versioning
 
 The module uses a version notation that follows: YearMonth.Build. It is expected that the module will have changes on a regular basis, so the version numbering is intended to make it as simple as possible to understand when the last update was made. See the [CHANGELOG](https://eucpilots.com/evergreen/changelog/) for details on changes introduced in each version.
