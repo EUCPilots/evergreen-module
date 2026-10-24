@@ -9,13 +9,15 @@ function Test-ProxyEnv {
         [System.Management.Automation.SwitchParameter] $Creds
     )
 
-    begin {}
     process {
-        if ($PSBoundParameters.ContainsKey("Creds")) {
-            Test-Path -Path "Variable:EvergreenProxyCreds"
+        if ($Creds) {
+            return (Test-Path -Path "Variable:EvergreenProxyCreds") -and
+                ($null -ne $script:EvergreenProxyCreds) -and
+                ($script:EvergreenProxyCreds -is [System.Management.Automation.PSCredential]) -and
+                -not [System.String]::IsNullOrEmpty($script:EvergreenProxyCreds.UserName)
         }
-        else {
-            Test-Path -Path "Variable:EvergreenProxy"
-        }
+
+        return (Test-Path -Path "Variable:EvergreenProxy") -and
+            (-not [System.String]::IsNullOrWhiteSpace($script:EvergreenProxy))
     }
 }

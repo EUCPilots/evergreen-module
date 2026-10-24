@@ -29,6 +29,20 @@ Describe -Name "Test-ProxyEnv" {
                 Test-ProxyEnv -Creds | Should -BeFalse
             }
         }
+
+        It "Checks the proxy when Creds is explicitly false" {
+            InModuleScope -ModuleName "Evergreen" {
+                Set-ProxyEnv -Proxy "proxyserver"
+                Test-ProxyEnv -Creds:$false | Should -BeTrue
+            }
+        }
+
+        It "Returns False for an empty credential value" {
+            InModuleScope -ModuleName "Evergreen" {
+                Set-ProxyEnv -Proxy "proxyserver" -ProxyCredential ([System.Management.Automation.PSCredential]::Empty)
+                Test-ProxyEnv -Creds | Should -BeFalse
+            }
+        }
     }
 
     AfterAll {
