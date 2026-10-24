@@ -73,6 +73,31 @@ Describe -Name "ConvertTo-Hashtable" {
             }
         }
 
+        It "Preserves single-item and nested arrays" {
+            InModuleScope -ModuleName "Evergreen" {
+                $inputObject = [PSCustomObject]@{
+                    Single = @([PSCustomObject]@{ Name = "Only" })
+                    Nested = @(
+                        ,@()
+                        ,@([PSCustomObject]@{ Name = "Nested" })
+                    )
+                }
+
+                $object = ConvertTo-Hashtable -InputObject $inputObject
+
+                ($object.Single -is [System.Object[]]) | Should -BeTrue
+                $object.Single.Count | Should -Be 1
+                $object.Single[0] | Should -BeOfType "Hashtable"
+                $object.Single[0].Name | Should -Be "Only"
+                $object.Nested.Count | Should -Be 2
+                ($object.Nested[0] -is [System.Object[]]) | Should -BeTrue
+                $object.Nested[0].Count | Should -Be 0
+                ($object.Nested[1] -is [System.Object[]]) | Should -BeTrue
+                $object.Nested[1].Count | Should -Be 1
+                $object.Nested[1][0].Name | Should -Be "Nested"
+            }
+        }
+
         It "Returns Null if sent Null" {
             InModuleScope -ModuleName "Evergreen" {
                 ConvertTo-Hashtable | Should -BeNullOrEmpty

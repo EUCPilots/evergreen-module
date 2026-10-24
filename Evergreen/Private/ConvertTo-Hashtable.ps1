@@ -38,8 +38,8 @@ function ConvertTo-Hashtable {
                 }
             )
 
-            ## Return the array but don't enumerate it because the object may be pretty complex
-            Write-Output -NoEnumerate -InputObject $collection
+            ## Preserve empty arrays on Windows PowerShell 5.1 as well as nested arrays.
+            ,$collection
         }
         elseif ($InputObject -is [PSCustomObject]) {
             ## If the object has properties that need enumeration
