@@ -25,5 +25,35 @@ Describe -Name "Get-FileType" {
                 Get-FileType -File "testtxt" | Should -BeNullOrEmpty
             }
         }
+
+        It "Extracts the extension from a URL with a query string and fragment" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-FileType -File "https://example.com/download/package.msi?token=abc#section" | Should -Be "msi"
+            }
+        }
+
+        It "Returns null for a URL without a file extension" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-FileType -File "https://example.com/download/package?token=abc" | Should -BeNullOrEmpty
+            }
+        }
+
+        It "Returns null for a dotfile without an extension" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-FileType -File ".gitignore" | Should -BeNullOrEmpty
+            }
+        }
+
+        It "Returns null for a path with a trailing dot" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-FileType -File "package." | Should -BeNullOrEmpty
+            }
+        }
+
+        It "Rejects whitespace-only input" {
+            InModuleScope -ModuleName "Evergreen" {
+                { Get-FileType -File "   " } | Should -Throw
+            }
+        }
     }
 }
