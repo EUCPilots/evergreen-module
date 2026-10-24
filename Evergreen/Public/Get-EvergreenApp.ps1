@@ -39,7 +39,7 @@ function Get-EvergreenApp {
         }
 
         # Force Invoke-EvergreenRestMethod and Invoke-EvergreenWebRequest to ignore certificate errors
-        if ($PSBoundParameters.ContainsKey("SkipCertificateCheck")) {
+        if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $true
         }
     }
@@ -135,7 +135,7 @@ function Get-EvergreenApp {
     end {
         # Remove these variables for next run
         Remove-Variable -Name "Output", "function" -ErrorAction "SilentlyContinue"
-        if ($PSBoundParameters.ContainsKey("SkipCertificateCheck")) {
+        if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $false
         }
     }

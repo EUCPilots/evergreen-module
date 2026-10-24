@@ -4,8 +4,10 @@ function Invoke-EvergreenWebRequest {
             Validates and return responses from Invoke-WebRequest
             Enables normalisation for all public functions and across PowerShell/Windows PowerShell
             Some validation of $Uri is expected before passing to this function
+        .DESCRIPTION
+            With -Raw, the response is written to a temporary file to avoid response parsing, then returned as UTF-8 text.
+            Binary responses are not supported by -Raw.
     #>
-    [OutputType([Microsoft.PowerShell.Commands.WebResponseObject])]
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
@@ -51,11 +53,21 @@ function Invoke-EvergreenWebRequest {
         $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
     }
 
-    # PowerShell 5.1: Trust certificate used by the remote server (typically self-sign certs)
-    # PowerShell Core will use -SkipCertificateCheck
-    if (($script:SkipCertificateCheck -eq $true -or $PSBoundParameters.ContainsKey("SkipCertificateCheck")) -and -not(Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Creating class TrustAllCertsPolicy."
-        Add-Type @"
+    $SkipCertificateCheckEnabled = ($script:SkipCertificateCheck -eq $true -or $SkipCertificateCheck.IsPresent)
+    $IsPSCore = Test-PSCore
+    $TempFile = $null
+    $PreviousCertificatePolicy = $null
+    $RestoreCertificatePolicy = $false
+    $PreviousSecurityProtocol = $null
+    $RestoreSecurityProtocol = $false
+
+    try {
+        if ($PSCmdlet.ShouldProcess($Uri, "Invoke-WebRequest")) {
+            # Windows PowerShell 5.1 does not support SkipCertificateCheck on Invoke-WebRequest.
+            # Its ServicePointManager fallback is process-wide, so restore the previous policy below.
+            if ($SkipCertificateCheckEnabled -and -not $IsPSCore) {
+                if (-not ("TrustAllCertsPolicy" -as [type])) {
+                    Add-Type @"
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 public class TrustAllCertsPolicy : ICertificatePolicy {
@@ -66,111 +78,124 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
     }
 }
 "@
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Trust all certificates."
-        [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName "TrustAllCertsPolicy"
-    }
+                }
+                $PreviousCertificatePolicy = [System.Net.ServicePointManager]::CertificatePolicy
+                [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName "TrustAllCertsPolicy"
+                $RestoreCertificatePolicy = $true
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Trusting certificates for this request."
+            }
 
-    # Use TLS for connections
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            if (-not $IsPSCore) {
+                $PreviousSecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+                $RestoreSecurityProtocol = $true
+                if ($SslProtocol -eq "Tls13") {
+                    throw [System.NotSupportedException]::New("TLS 1.3 is not supported by Windows PowerShell 5.1.")
+                }
+                $RequestedProtocol = if ($PSBoundParameters.ContainsKey("SslProtocol") -and $SslProtocol -ne "Default") {
+                    [System.Enum]::Parse([System.Net.SecurityProtocolType], $SslProtocol, $true)
+                }
+                else {
+                    [System.Net.SecurityProtocolType]::Tls12
+                }
+                [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol -bor $RequestedProtocol
+            }
 
-    # Build the Invoke-WebRequest parameters
-    $params = @{
-        Uri             = $Uri
-        Method          = $Method
-        UserAgent       = $UserAgent
-        UseBasicParsing = $true
-    }
+            # Build the Invoke-WebRequest parameters
+            $params = @{
+                Uri             = $Uri
+                Method          = $Method
+                UserAgent       = $UserAgent
+                UseBasicParsing = $true
+            }
 
-    # Set additional parameters
-    if ($PSBoundParameters.ContainsKey("ContentType")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding ContentType."
-        $params.ContentType = $ContentType
-    }
-    if ($PSBoundParameters.ContainsKey("Headers")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Headers."
-        $params.Headers = $Headers
-    }
-    if (($script:SkipCertificateCheck -eq $true -or $PSBoundParameters.ContainsKey("SkipCertificateCheck")) -and (Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SkipCertificateCheck."
-        $params.SkipCertificateCheck = $true
-    }
-    if ($PSBoundParameters.ContainsKey("SslProtocol") -and (Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SslProtocol."
-        $params.SslProtocol = $SslProtocol
-    }
-    if ($PSBoundParameters.ContainsKey("Raw")) {
-        $tempFile = New-TemporaryFile -WhatIf:$WhatIfPreference
-        $params.OutFile = $tempFile
-        $params.PassThru = $true
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Using temp file $tempFile."
-    }
-    if (Test-ProxyEnv) {
-        $params.Proxy = $script:EvergreenProxy
-    }
-    if (Test-ProxyEnv -Creds) {
-        $params.ProxyCredential = $script:EvergreenProxyCreds
-    }
-    #endregion
+            # Set additional parameters
+            if ($PSBoundParameters.ContainsKey("ContentType")) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Adding ContentType."
+                $params.ContentType = $ContentType
+            }
+            if ($PSBoundParameters.ContainsKey("Headers")) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Headers."
+                $params.Headers = $Headers
+            }
+            if ($SkipCertificateCheckEnabled -and $IsPSCore) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SkipCertificateCheck."
+                $params.SkipCertificateCheck = $true
+            }
+            if ($PSBoundParameters.ContainsKey("SslProtocol") -and $IsPSCore) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SslProtocol."
+                $params.SslProtocol = $SslProtocol
+            }
+            if ($PSBoundParameters.ContainsKey("Raw")) {
+                $TempFile = New-TemporaryFile
+                $params.OutFile = $TempFile.FullName
+                $params.PassThru = $true
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Using temporary response file."
+            }
+            if (Test-ProxyEnv) {
+                $params.Proxy = $script:EvergreenProxy
+            }
+            if (Test-ProxyEnv -Creds) {
+                $params.ProxyCredential = $script:EvergreenProxyCreds
+            }
+            #endregion
 
-    # Output the parameters when using -Verbose
-    foreach ($item in $params.GetEnumerator()) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-WebRequest parameter: $($item.name): $($item.value)."
-    }
+            # Output the parameters when using -Verbose
+            foreach ($item in $params.GetEnumerator()) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-WebRequest parameter: $($item.name): $($item.value)."
+            }
 
-    # Call Invoke-WebRequest
-    try {
-        if ($PSCmdlet.ShouldProcess($Uri, "Invoke-WebRequest")) {
+            # Raw response files are returned as UTF-8 text for existing text-response callers.
+            if ($PSBoundParameters.ContainsKey("Raw")) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Raw output is UTF-8 text; binary responses are not supported."
+            }
             $Response = Invoke-WebRequest @params
+
+            if ($null -ne $Response) {
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Response: $($Response.StatusCode)."
+                Write-Verbose -Message "$($MyInvocation.MyCommand): Content type: $($Response.Headers.'Content-Type')."
+
+                # Output content from the response
+                switch ($ReturnObject) {
+                    "All" {
+                        Write-Verbose -Message "$($MyInvocation.MyCommand): Returning entire response."
+                        Write-Output -InputObject $Response
+                    }
+                    "Headers" {
+                        Write-Verbose -Message "$($MyInvocation.MyCommand): Returning headers."
+                        Write-Output -InputObject $Response.Headers
+                    }
+                    "RawContent" {
+                        Write-Verbose -Message "$($MyInvocation.MyCommand): Returning raw content of length: $($Response.RawContent.Length)."
+                        Write-Output -InputObject $Response.RawContent
+                    }
+                    default {
+                        if ($PSBoundParameters.ContainsKey("Raw")) {
+                            $Content = Get-Content -LiteralPath $TempFile.FullName -Raw -Encoding UTF8
+                        }
+                        else {
+                            $Content = $Response.Content
+                        }
+                        Write-Verbose -Message "$($MyInvocation.MyCommand): Returning content of length: $($Content.Length)."
+                        Write-Output -InputObject $Content
+                    }
+                }
+            }
         }
     }
     catch {
         Write-Warning -Message "$($MyInvocation.MyCommand): $($_.Exception.Message), with: $Uri."
         Write-Warning -Message "$($MyInvocation.MyCommand): For troubleshooting steps see: $($script:resourceStrings.Uri.Info)."
-        throw $_
+        throw
     }
-
-    if ($null -ne $Response) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Response: $($Response.StatusCode)."
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Content type: $($Response.Headers.'Content-Type')."
-
-        # Output content from the response
-        switch ($ReturnObject) {
-            "All" {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Returning entire response."
-                Write-Output -InputObject $Response
-                break
-            }
-            "Headers" {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Returning headers."
-                Write-Output -InputObject $Response.Headers
-                break
-            }
-            "RawContent" {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Returning raw content of length: $($Response.RawContent.Length)."
-                Write-Output -InputObject $Response.RawContent
-                break
-            }
-            "Content" {
-                if ($PSBoundParameters.ContainsKey("Raw")) {
-                    $Content = Get-Content -Path $TempFile
-                }
-                else {
-                    $Content = $Response.Content
-                }
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Returning content of length: $($Content.Length)."
-                Write-Output -InputObject $Content
-                break
-            }
-            default {
-                if ($PSBoundParameters.ContainsKey("Raw")) {
-                    $Content = Get-Content -Path $TempFile
-                }
-                else {
-                    $Content = $Response.Content
-                }
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Returning content of length: $($Content.Length)."
-                Write-Output -InputObject $Content
-            }
+    finally {
+        if ($RestoreCertificatePolicy) {
+            [System.Net.ServicePointManager]::CertificatePolicy = $PreviousCertificatePolicy
+        }
+        if ($RestoreSecurityProtocol) {
+            [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol
+        }
+        if ($null -ne $TempFile -and (Test-Path -LiteralPath $TempFile.FullName)) {
+            Remove-Item -LiteralPath $TempFile.FullName -Force -ErrorAction Stop
         }
     }
 }

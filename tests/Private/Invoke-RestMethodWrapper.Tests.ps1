@@ -15,6 +15,16 @@ BeforeAll {
 InModuleScope -ModuleName "Evergreen" {
     Describe -Name "Invoke-EvergreenRestMethod" {
         Context "Ensure Invoke-EvergreenRestMethod works as expected" {
+            It "Does not disable certificate validation when explicitly passed false" {
+                Mock Invoke-RestMethod { "mock response" }
+
+                Invoke-EvergreenRestMethod -Uri "https://example.com" -SkipCertificateCheck:$false |
+                    Should -Be "mock response"
+                Should -Invoke Invoke-RestMethod -ParameterFilter {
+                    $PSBoundParameters.ContainsKey("SkipCertificateCheck")
+                } -Times 0 -Exactly
+            }
+
             It "Returns data from a proper URL" {
                 $params = @{
                     ContentType          = "application/vnd.github.v3+json"
