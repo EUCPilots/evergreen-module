@@ -83,7 +83,7 @@ function Remove-EvergreenLibraryAppVersion {
                 continue
             }
 
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Sorting versions by parsed version, version text, then manifest index (descending). Entries with parsed versions take priority."
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Sorting System.Version-compatible entries by numeric version, then other entries by version text, with manifest index as the final tie-breaker (descending). System.Version-compatible entries take priority."
             $ItemsWithSortData = for ($i = 0; $i -lt $AppVersions.Count; $i++) {
                 Get-VersionItemSortData -Item $AppVersions[$i] -Index $i
             }

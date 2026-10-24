@@ -135,6 +135,24 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             (Get-Content -Path $manifestPath -Raw) | Should -Be $json
         }
 
+        It "Should prioritize parseable versions and sort other version text descending" {
+            $manifestPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json"
+            $versions = @(
+                [PSCustomObject] @{ Version = "2.0.0-rc.1"; Path = "" }
+                [PSCustomObject] @{ Version = "1.0.0"; Path = "" }
+                [PSCustomObject] @{ Version = "3.0.0"; Path = "" }
+                [PSCustomObject] @{ Version = "2.0.0-beta.1"; Path = "" }
+                [PSCustomObject] @{ Path = "" }
+            )
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
+            [System.Array] $manifest = Get-Content -Path $manifestPath -Raw | ConvertFrom-Json
+
+            $result.KeptCount | Should -Be 3
+            ($manifest.Version -join ",") | Should -Be "3.0.0,1.0.0,2.0.0-rc.1"
+        }
+
         It "Should not prune apps not selected by Name" {
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-1.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-2.0.0.exe") | Should -Be $true
