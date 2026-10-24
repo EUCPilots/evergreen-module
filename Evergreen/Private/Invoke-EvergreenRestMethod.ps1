@@ -6,7 +6,6 @@ function Invoke-EvergreenRestMethod {
             Some validation of $Uri is expected before passing to this function
             Does not support redirection, as this should be handled before sending to this function
     #>
-    [OutputType([Microsoft.PowerShell.Commands.WebResponseObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
@@ -53,11 +52,26 @@ function Invoke-EvergreenRestMethod {
         $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Continue
     }
 
-    # PowerShell 5.1: Trust certificate used by the remote server (typically self-sign certs)
-    # PowerShell Core will use -SkipCertificateCheck
-    if (($script:SkipCertificateCheck -eq $true -or $PSBoundParameters.ContainsKey("SkipCertificateCheck")) -and -not(Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Creating class TrustAllCertsPolicy."
-        Add-Type @"
+    $SkipCertificateCheckEnabled = ($script:SkipCertificateCheck -eq $true -or $SkipCertificateCheck.IsPresent)
+    $IsPSCore = Test-PSCore
+    if ($AllowInsecureRedirect.IsPresent) {
+        $RestMethodCommand = Get-Command -Name Invoke-RestMethod -ErrorAction Stop
+        if (-not $RestMethodCommand.Parameters.ContainsKey("AllowInsecureRedirect")) {
+            throw [System.NotSupportedException]::New("AllowInsecureRedirect is not supported by this PowerShell version.")
+        }
+    }
+
+    $PreviousCertificatePolicy = $null
+    $RestoreCertificatePolicy = $false
+    $PreviousSecurityProtocol = $null
+    $RestoreSecurityProtocol = $false
+
+    try {
+        # Windows PowerShell 5.1 does not support SkipCertificateCheck on Invoke-RestMethod.
+        # Its ServicePointManager fallback is process-wide, so restore the previous policy below.
+        if ($SkipCertificateCheckEnabled -and -not $IsPSCore) {
+            if (-not ("TrustAllCertsPolicy" -as [type])) {
+                Add-Type @"
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 public class TrustAllCertsPolicy : ICertificatePolicy {
@@ -68,64 +82,85 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
     }
 }
 "@
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Trust all certificates."
-        [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName "TrustAllCertsPolicy"
-    }
+            }
+            $PreviousCertificatePolicy = [System.Net.ServicePointManager]::CertificatePolicy
+            [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName "TrustAllCertsPolicy"
+            $RestoreCertificatePolicy = $true
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Trusting certificates for this request."
+        }
 
-    # Use TLS for connections
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        if (-not $IsPSCore) {
+            $PreviousSecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+            $RestoreSecurityProtocol = $true
+            if ($SslProtocol -eq "Tls13") {
+                throw [System.NotSupportedException]::New("TLS 1.3 is not supported by Windows PowerShell 5.1.")
+            }
+            $RequestedProtocol = if ($PSBoundParameters.ContainsKey("SslProtocol") -and $SslProtocol -ne "Default") {
+                [System.Enum]::Parse([System.Net.SecurityProtocolType], $SslProtocol, $true)
+            }
+            else {
+                [System.Net.SecurityProtocolType]::Tls12
+            }
+            [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol -bor $RequestedProtocol
+        }
 
-    #region Build the Invoke-RestMethod parameters
-    $params = @{
-        Uri                = $Uri
-        ContentType        = $ContentType
-        DisableKeepAlive   = $true
-        MaximumRedirection = 2
-        Method             = $Method
-        UseBasicParsing    = $true
-        UserAgent          = $UserAgent
-    }
-    if ($PSBoundParameters.ContainsKey("Headers")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Headers."
-        $params.Headers = $Headers
-    }
-    if ($PSBoundParameters.ContainsKey("Body")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Body."
-        $params.Body = $Body
-    }
-    if (($script:SkipCertificateCheck -eq $true -or $PSBoundParameters.ContainsKey("SkipCertificateCheck")) -and (Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SkipCertificateCheck."
-        $params.SkipCertificateCheck = $true
-    }
-    if ($PSBoundParameters.ContainsKey("SslProtocol") -and (Test-PSCore)) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SslProtocol."
-        $params.SslProtocol = $SslProtocol
-    }
-    if ($PSBoundParameters.ContainsKey("AllowInsecureRedirect")) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Body."
-        $params.AllowInsecureRedirect = $true
-    }
-    if (Test-ProxyEnv) {
-        $params.Proxy = $script:EvergreenProxy
-    }
-    if (Test-ProxyEnv -Creds) {
-        $params.ProxyCredential = $script:EvergreenProxyCreds
-    }
-    #endregion
+        #region Build the Invoke-RestMethod parameters
+        $params = @{
+            Uri                = $Uri
+            ContentType        = $ContentType
+            MaximumRedirection = 2
+            Method             = $Method
+            UseBasicParsing    = $true
+            UserAgent          = $UserAgent
+        }
+        if ($PSBoundParameters.ContainsKey("Headers")) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Headers."
+            $params.Headers = $Headers
+        }
+        if ($PSBoundParameters.ContainsKey("Body")) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Adding Body."
+            $params.Body = $Body
+        }
+        if ($SkipCertificateCheckEnabled -and $IsPSCore) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SkipCertificateCheck."
+            $params.SkipCertificateCheck = $true
+        }
+        if ($PSBoundParameters.ContainsKey("SslProtocol") -and $IsPSCore) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SslProtocol."
+            $params.SslProtocol = $SslProtocol
+        }
+        if ($AllowInsecureRedirect.IsPresent) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Adding AllowInsecureRedirect."
+            $params.AllowInsecureRedirect = $true
+        }
+        if (Test-ProxyEnv) {
+            $params.Proxy = $script:EvergreenProxy
+        }
+        if (Test-ProxyEnv -Creds) {
+            $params.ProxyCredential = $script:EvergreenProxyCreds
+        }
+        #endregion
 
-    # Output the parameters when using -Verbose
-    foreach ($item in $params.GetEnumerator()) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-RestMethod parameter: $($item.name): $($item.value)."
-    }
+        # Output the parameters when using -Verbose
+        foreach ($item in $params.GetEnumerator()) {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-RestMethod parameter: $($item.name): $($item.value)."
+        }
 
-    # Call Invoke-RestMethod
-    try {
+        # Call Invoke-RestMethod
         $Response = Invoke-RestMethod @params
         Write-Output -InputObject $Response
     }
     catch {
         Write-Warning -Message "$($MyInvocation.MyCommand): $($_.Exception.Message), with: $Uri."
         Write-Warning -Message "$($MyInvocation.MyCommand): For troubleshooting steps see: $($script:resourceStrings.Uri.Info)."
-        throw $_
+        throw
+    }
+    finally {
+        if ($RestoreCertificatePolicy) {
+            [System.Net.ServicePointManager]::CertificatePolicy = $PreviousCertificatePolicy
+        }
+        if ($RestoreSecurityProtocol) {
+            [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol
+        }
     }
 }
