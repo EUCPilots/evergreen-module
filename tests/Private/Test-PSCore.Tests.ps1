@@ -13,24 +13,30 @@ BeforeAll {
 }
 
 Describe -Name "Test-PSCore" {
-    Context "Tests whether we are running on PowerShell Core" {
-        It "Returns True if running Windows PowerShell" {
-            InModuleScope -ModuleName "Evergreen" {
-                $Version = "6.0.0"
-                If (($PSVersionTable.PSVersion -ge [version]::Parse($Version)) -and ($PSVersionTable.PSEdition -eq "Core")) {
-                    Test-PSCore | Should -Be $True
-                }
-            }
+    It "Reports whether the current edition and version satisfy the default threshold" {
+        InModuleScope -ModuleName "Evergreen" {
+            $expected = ($PSVersionTable.PSEdition -eq "Core") -and ($PSVersionTable.PSVersion -ge [System.Version]"6.0.0")
+            Test-PSCore | Should -Be $expected
         }
     }
-    Context "Tests whether we are running on Windows PowerShell" {
-        It "Returns False if running Windows PowerShell" {
-            InModuleScope -ModuleName "Evergreen" {
-                $Version = "6.0.0"
-                if (($PSVersionTable.PSVersion -lt [version]::Parse($Version)) -and ($PSVersionTable.PSEdition -eq "Desktop")) {
-                    Test-PSCore | Should -Be $false
-                }
-            }
+
+    It "Treats the current version as an inclusive threshold" {
+        InModuleScope -ModuleName "Evergreen" {
+            $expected = $PSVersionTable.PSEdition -eq "Core"
+            Test-PSCore -Version $PSVersionTable.PSVersion | Should -Be $expected
+        }
+    }
+
+    It "Returns False when the requested version is newer than the current version" {
+        InModuleScope -ModuleName "Evergreen" {
+            $version = [System.Version]::new($PSVersionTable.PSVersion.Major + 1, 0)
+            Test-PSCore -Version $version | Should -Be $false
+        }
+    }
+
+    It "Rejects an invalid version" {
+        InModuleScope -ModuleName "Evergreen" {
+            { Test-PSCore -Version "not-a-version" } | Should -Throw
         }
     }
 }

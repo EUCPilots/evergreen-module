@@ -2,13 +2,19 @@ using namespace System.Management.Automation
 function Write-Message {
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
-        [Parameter(Mandatory = $false)]
-        [System.String] $Message,
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [System.Object] $Message,
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("Information", "Warning", "Fail", "Pass")]
         [System.String] $MessageType = "Information"
     )
+
+    if ($null -eq $Message) {
+        throw [System.ArgumentNullException]::new("Message")
+    }
+    $Message = [System.String]$Message
 
     switch ($MessageType) {
         "Information" {
@@ -50,9 +56,14 @@ function Write-Message {
         NoNewline       = $false
     }
     $params = @{
-        MessageData       = $Msg
-        InformationAction = "Continue"
-        Tags              = "Evergreen"
+        MessageData = $Msg
+        Tags        = "Evergreen"
+    }
+    if ($PSBoundParameters.ContainsKey("InformationAction")) {
+        $params.InformationAction = $PSBoundParameters["InformationAction"]
+    }
+    else {
+        $params.InformationAction = "Continue"
     }
     Write-Information @params
 }

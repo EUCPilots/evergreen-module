@@ -21,26 +21,22 @@ Describe -Tag "Private" -Name "ConvertFrom-Base64String" {
             $script:Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($script:PlainText))
         }
 
-        It "Should not throw with valid base64 string" {
+        It "Should convert a Base64-encoded SHA-256 digest to lowercase hexadecimal" {
             InModuleScope -ModuleName "Evergreen" {
-                $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("Hello, Evergreen!"))
-                { ConvertFrom-Base64String -Base64String $Base64 } | Should -Not -Throw
+                $Base64 = "K6fIxnNSlK0jmMNxR5JCiLkc17IqyYBmTZkKCPNH08M="
+                $Result = ConvertFrom-Base64String -Base64String $Base64
+
+                $Result | Should -Be "2ba7c8c6735294ad2398c37147924288b91cd7b22ac980664d990a08f347d3c3"
+                $Result | Should -Match '^[0-9a-f]{64}$'
             }
         }
 
-        # It "Should decode base64 string correctly" {
-        #     InModuleScope -ModuleName "Evergreen" {
-        #         $PlainText = "Hello, Evergreen!"
-        #         $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($PlainText))
-        #         $Result = ConvertFrom-Base64String -Base64String $Base64
-        #         $Result | Should -Be $PlainText
-        #     }
-        # }
-
-        It "Should return a string" {
+        It "Should convert Base64 data to lowercase hexadecimal" {
             InModuleScope -ModuleName "Evergreen" {
                 $Base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("Hello, Evergreen!"))
                 $Result = ConvertFrom-Base64String -Base64String $Base64
+
+                $Result | Should -Be "48656c6c6f2c2045766572677265656e21"
                 $Result | Should -BeOfType [string]
             }
         }

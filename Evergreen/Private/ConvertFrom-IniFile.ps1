@@ -11,47 +11,45 @@ function ConvertFrom-IniFile {
         $InputObject
     )
 
-    process {
-        try {
-            $TempFile = New-TemporaryFile -WhatIf:$WhatIfPreference
-            Out-File -FilePath $TempFile -InputObject $InputObject
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Write INI content to: $TempFile."
-        }
-        catch {
-            throw $_
-        }
+    begin {
+        $Lines = [System.Collections.Generic.List[string]]::new()
+    }
 
-        try {
-            $Ini = @{}
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Convert INI content from: $TempFile."
-            switch -Regex -File $TempFile {
-                "^\[(.+)\]" {
-                    # Section
-                    $Section = $matches[1]
+    process {
+        foreach ($Line in $InputObject) {
+            $null = $Lines.Add([string]$Line)
+        }
+    }
+
+    end {
+        $Ini = @{}
+        $Section = ""
+        $Ini[$Section] = @{}
+        $CommentCount = 0
+
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Convert INI content."
+        switch -Regex ($Lines) {
+            "^\[(.+)\]" {
+                # Section
+                $Section = $matches[1]
+                if (-not $Ini.ContainsKey($Section)) {
                     $Ini[$Section] = @{}
-                    $CommentCount = 0
                 }
-                "^(;.*)$" {
-                    # Comment
-                    $Value = $matches[1]
-                    $CommentCount = $CommentCount + 1
-                    $Name = "Comment" + $CommentCount
-                    $Ini[$Section][$Name] = $Value
-                }
-                "(.+?)\s*=(.*)" {
-                    # Key
-                    $Name, $Value = $matches[1..2]
-                    $Ini[$Section][$Name] = $Value
-                }
+                $CommentCount = 0
             }
-            return $Ini
+            "^(;.*)$" {
+                # Comment
+                $Value = $matches[1]
+                $CommentCount = $CommentCount + 1
+                $Name = "Comment" + $CommentCount
+                $Ini[$Section][$Name] = $Value
+            }
+            "(.+?)\s*=(.*)" {
+                # Key
+                $Name, $Value = $matches[1..2]
+                $Ini[$Section][$Name] = $Value
+            }
         }
-        catch {
-            throw $_
-        }
-        finally {
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Delete $TempFile."
-            Remove-Item -Path $TempFile -ErrorAction "SilentlyContinue" -WarningAction "SilentlyContinue"
-        }
+        return $Ini
     }
 }

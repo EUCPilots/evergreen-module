@@ -34,6 +34,12 @@ Describe -Tag "Private" -Name "Get-Symbol" {
                 $Result | Should -Not -BeNullOrEmpty
             }
         }
+
+        It "Should return the check mark for Tick" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Symbol -Symbol "Tick" | Should -Be ([string][char]0x2713)
+            }
+        }
     }
 
     Context "Validate Get-Symbol with different symbol types" {
@@ -46,6 +52,12 @@ Describe -Tag "Private" -Name "Get-Symbol" {
         It "Should handle Cross symbol" {
             InModuleScope -ModuleName "Evergreen" {
                 { Get-Symbol -Symbol "Cross" } | Should -Not -Throw
+            }
+        }
+
+        It "Should return the ballot X for Cross" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Symbol -Symbol "Cross" | Should -Be ([string][char]0x2717)
             }
         }
     }

@@ -6,41 +6,39 @@ function Set-ProxyEnv {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $false, Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ -not [System.String]::IsNullOrWhiteSpace($_) })]
         [System.String] $Proxy,
 
         [Parameter(Mandatory = $false, Position = 1)]
+        [ValidateNotNull()]
         [System.Management.Automation.PSCredential]
         $ProxyCredential = [System.Management.Automation.PSCredential]::Empty
     )
 
-    begin {}
     process {
-        try {
-            if ($PSBoundParameters.ContainsKey("Proxy")) {
-                if ($PSCmdlet.ShouldProcess("Set proxy server variable", "Proxy")) {
-                    $params = @{
-                        Name  = "EvergreenProxy"
-                        Value = $Proxy
-                        Scope = "Script"
-                        Force = $true
-                    }
-                    New-Variable @params
+        if ($PSBoundParameters.ContainsKey("Proxy")) {
+            if ($PSCmdlet.ShouldProcess("Evergreen proxy configuration", "Set proxy configuration")) {
+                New-Variable -Name "EvergreenProxy" -Value $Proxy -Scope "Script" -Force
+
+                if ($PSBoundParameters.ContainsKey("ProxyCredential") -and
+                    -not [System.String]::IsNullOrEmpty($ProxyCredential.UserName)) {
+                    New-Variable -Name "EvergreenProxyCreds" -Value $ProxyCredential -Scope "Script" -Force
                 }
-            }
-            if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
-                if ($PSCmdlet.ShouldProcess("Set proxy credential variable", "ProxyCredential")) {
-                    $params = @{
-                        Name  = "EvergreenProxyCreds"
-                        Value = $ProxyCredential
-                        Scope = "Script"
-                        Force = $true
-                    }
-                    New-Variable @params
+                else {
+                    Remove-Variable -Name "EvergreenProxyCreds" -Scope "Script" -Force -ErrorAction "SilentlyContinue"
                 }
             }
         }
-        catch [System.Exception] {
-            throw $_
+        elseif ($PSBoundParameters.ContainsKey("ProxyCredential")) {
+            if ($PSCmdlet.ShouldProcess("Evergreen proxy credentials", "Set proxy credentials")) {
+                if (-not [System.String]::IsNullOrEmpty($ProxyCredential.UserName)) {
+                    New-Variable -Name "EvergreenProxyCreds" -Value $ProxyCredential -Scope "Script" -Force
+                }
+                else {
+                    Remove-Variable -Name "EvergreenProxyCreds" -Scope "Script" -Force -ErrorAction "SilentlyContinue"
+                }
+            }
         }
     }
 }

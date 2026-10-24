@@ -21,18 +21,38 @@ Describe -Tag "Private" -Name "Get-ModuleVersion" {
             }
         }
 
-        It "Should return a version object or string" {
+        It "Should return a System.Version for the module containing the function" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Get-ModuleVersion
-                $Result | Should -Not -BeNullOrEmpty
+                $Result | Should -BeOfType [System.Version]
+                $Result | Should -Be $ExecutionContext.SessionState.Module.Version
             }
         }
 
-        It "Should return a valid version format" {
+        It "Should not select another loaded Evergreen module version" {
             InModuleScope -ModuleName "Evergreen" {
+                Mock Get-Module {
+                    [pscustomobject]@{
+                        Version = [System.Version]"1.2.3"
+                    }
+                }
+
                 $Result = Get-ModuleVersion
-                $Result.ToString() | Should -Match "\d+\.\d+\.\d+"
+                $Result | Should -Be $ExecutionContext.SessionState.Module.Version
             }
+        }
+
+        It "Should return the manifest version when called outside a module" {
+            $functionPath = Join-Path -Path $PSScriptRoot -ChildPath "..\..\Evergreen\Private\Get-ModuleVersion.ps1"
+            $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath "..\..\Evergreen\Evergreen.psd1"
+            $expectedVersion = [System.Version](Import-PowerShellDataFile -Path $manifestPath).ModuleVersion
+            $result = & {
+                . $functionPath
+                Get-ModuleVersion
+            }
+
+            $result | Should -BeOfType [System.Version]
+            $result | Should -Be $expectedVersion
         }
     }
 }

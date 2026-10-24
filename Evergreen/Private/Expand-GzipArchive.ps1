@@ -8,56 +8,115 @@ function Expand-GzipArchive {
 
         [Parameter(Mandatory = $false, Position = 1)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript( { if (Test-Path -Path $(Split-Path -Path $_ -Parent) -PathType "Container") { $true } else { throw "Cannot find path $(Split-Path -Path $_ -Parent)." } })]
+        [ValidateScript( {
+                $ResolvedDestination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($_)
+                $DestinationDirectory = [System.IO.Path]::GetDirectoryName($ResolvedDestination)
+                if ([System.IO.Directory]::Exists($DestinationDirectory)) {
+                    $true
+                }
+                else {
+                    throw "Cannot find destination directory $DestinationDirectory."
+                }
+            })]
         [System.String] $DestinationPath = ($Path -replace "\.gz$", ""),
 
         [Parameter()]
+        [ValidateRange(1, [System.Int32]::MaxValue)]
         [System.Int32] $BufferSize = 1024
     )
 
+    if (-not $PSBoundParameters.ContainsKey("DestinationPath") -and $Path -notmatch "\.gz$") {
+        throw "DestinationPath must be specified when Path does not end in .gz."
+    }
+
+    $SourceFullPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).ProviderPath
+    $DestinationFullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DestinationPath)
+    $PathComparison = [System.StringComparison]::Ordinal
+    if (Test-IsWindows) {
+        $PathComparison = [System.StringComparison]::OrdinalIgnoreCase
+    }
+    if ([System.String]::Equals($SourceFullPath, $DestinationFullPath, $PathComparison)) {
+        throw "The destination path must be different from the source path."
+    }
+
+    $DestinationDirectory = [System.IO.Path]::GetDirectoryName($DestinationFullPath)
+    $TemporaryPath = [System.IO.Path]::Combine(
+        $DestinationDirectory,
+        ".$([System.IO.Path]::GetFileName($DestinationFullPath)).$([System.Guid]::NewGuid().ToString('N')).tmp"
+    )
+    $InputStream = $null
+    $OutputStream = $null
+    $GzipStream = $null
+    $Succeeded = $false
+
     try {
-        # Create the input stream to read the archive
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Create input file stream."
-        $InputStream = New-Object -TypeName "System.IO.FileStream" $Path, `
-        ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), `
-        ([System.IO.FileShare]::Read)
-
-        # Create the output stream object
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Create output file stream."
-        $OutputStream = New-Object -TypeName "System.IO.FileStream" $DestinationPath, `
-        ([System.IO.FileMode]::Create), ([System.IO.FileAccess]::Write), `
-        ([System.IO.FileShare]::None)
-
-        # Create the Gzip stream to expand the archive
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Create Gzip stream."
-        $GzipStream = New-Object -TypeName "System.IO.Compression.GzipStream" $InputStream, `
-        ([System.IO.Compression.CompressionMode]::Decompress)
-    }
-    catch {
-        throw $_
-    }
-
-    # Expand the archive
-    if ($null -ne $GzipStream) {
         try {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Create input file stream."
+            $InputStream = [System.IO.File]::Open(
+                $SourceFullPath,
+                [System.IO.FileMode]::Open,
+                [System.IO.FileAccess]::Read,
+                [System.IO.FileShare]::Read
+            )
+
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Create temporary output file stream."
+            $OutputStream = [System.IO.File]::Open(
+                $TemporaryPath,
+                [System.IO.FileMode]::CreateNew,
+                [System.IO.FileAccess]::Write,
+                [System.IO.FileShare]::None
+            )
+
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Create Gzip stream."
+            $GzipStream = New-Object -TypeName "System.IO.Compression.GzipStream" $InputStream, `
+                ([System.IO.Compression.CompressionMode]::Decompress)
+
             Write-Verbose -Message "$($MyInvocation.MyCommand): Attempt expand: $DestinationPath."
-            $buffer = New-Object -TypeName System.Byte[] -ArgumentList $BufferSize
+            $Buffer = New-Object -TypeName System.Byte[] -ArgumentList $BufferSize
             while ($true) {
-                $read = $GzipStream.Read($buffer, 0, $BufferSize)
-                if ($read -le 0) { break }
-                $OutputStream.Write($buffer, 0, $read)
+                $Read = $GzipStream.Read($Buffer, 0, $BufferSize)
+                if ($Read -le 0) {
+                    break
+                }
+                $OutputStream.Write($Buffer, 0, $Read)
             }
         }
-        catch {
-            throw $_
-        }
         finally {
-            # Close the streams
-            $GzipStream.Close()
-            $InputStream.Close()
-            $OutputStream.Close()
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Successfully expanded: $DestinationPath."
-            Write-Output -InputObject $DestinationPath
+            try {
+                if ($null -ne $GzipStream) {
+                    $GzipStream.Dispose()
+                }
+            }
+            finally {
+                try {
+                    if ($null -ne $OutputStream) {
+                        $OutputStream.Dispose()
+                    }
+                }
+                finally {
+                    if ($null -ne $InputStream) {
+                        $InputStream.Dispose()
+                    }
+                }
+            }
+        }
+
+        if ([System.IO.File]::Exists($DestinationFullPath)) {
+            $BackupPath = "$TemporaryPath.bak"
+            [System.IO.File]::Replace($TemporaryPath, $DestinationFullPath, $BackupPath)
+            [System.IO.File]::Delete($BackupPath)
+        }
+        else {
+            [System.IO.File]::Move($TemporaryPath, $DestinationFullPath)
+        }
+
+        $Succeeded = $true
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Successfully expanded: $DestinationPath."
+        Write-Output -InputObject $DestinationPath
+    }
+    finally {
+        if (-not $Succeeded -and [System.IO.File]::Exists($TemporaryPath)) {
+            Remove-Item -LiteralPath $TemporaryPath -Force -ErrorAction Stop
         }
     }
 }

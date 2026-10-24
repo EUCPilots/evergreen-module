@@ -112,11 +112,15 @@ Describe -Tag "Private" -Name "ConvertFrom-Jwt" {
 
     Context "Validate ConvertFrom-Jwt with invalid JWT tokens" {
         It "Should throw when Token parameter is null or empty" {
-            { ConvertFrom-Jwt -Token "" } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { ConvertFrom-Jwt -Token "" } | Should -Throw
+            }
         }
 
         It "Should throw when Token parameter is null" {
-            { ConvertFrom-Jwt -Token $null } | Should -Throw
+            InModuleScope -ModuleName "Evergreen" {
+                { ConvertFrom-Jwt -Token $null } | Should -Throw
+            }
         }
 
         It "Should throw when JWT has only one part" {
@@ -131,22 +135,54 @@ Describe -Tag "Private" -Name "ConvertFrom-Jwt" {
             }
         }
 
-        It "Should handle invalid Base64 encoding gracefully" {
+        It "Should terminate on invalid Base64 encoding in the header" {
             InModuleScope -ModuleName "Evergreen" {
                 # Invalid base64 in header
                 $Token = "invalid!!!.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature"
-                $Result = ConvertFrom-Jwt -Token $Token -WarningAction SilentlyContinue
-                $Result.Header | Should -BeNullOrEmpty
+                { ConvertFrom-Jwt -Token $Token -ErrorAction "Continue" } |
+                    Should -Throw "*ConvertFrom-Jwt: Failed to decode Header:*"
             }
         }
 
-        It "Should handle invalid JSON in payload gracefully" {
+        It "Should terminate on invalid JSON in the payload" {
             InModuleScope -ModuleName "Evergreen" {
                 # Valid base64 but invalid JSON
                 $InvalidJson = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("not valid json"))
                 $Token = "eyJhbGciOiJIUzI1NiJ9.$InvalidJson.signature"
-                $Result = ConvertFrom-Jwt -Token $Token -WarningAction SilentlyContinue
-                $Result.Payload | Should -BeNullOrEmpty
+                { ConvertFrom-Jwt -Token $Token -ErrorAction "Continue" } |
+                    Should -Throw "*ConvertFrom-Jwt: Failed to decode Payload:*"
+            }
+        }
+
+        It "Should reject <Token> with more than three segments" -ForEach @(
+            @{ Token = "e30.e30.signature.extra" }
+            @{ Token = "e30.e30.signature." }
+            @{ Token = "e30.e30.signature.extra.more" }
+        ) {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ Token = $Token } {
+                { ConvertFrom-Jwt -Token $Token } |
+                    Should -Throw "*Invalid JWT: must contain exactly two or three parts*"
+            }
+        }
+
+        It "Should terminate on <Reason> in <Part> without emitting a partial result" -ForEach @(
+            @{ Part = "Header"; Reason = "invalid Base64"; Value = "invalid!!!" }
+            @{ Part = "Payload"; Reason = "invalid Base64"; Value = "invalid!!!" }
+            @{ Part = "Header"; Reason = "invalid JSON"; Value = "bm90IHZhbGlkIGpzb24" }
+            @{ Part = "Payload"; Reason = "invalid JSON"; Value = "bm90IHZhbGlkIGpzb24" }
+            @{ Part = "Header"; Reason = "an empty segment"; Value = "" }
+            @{ Part = "Payload"; Reason = "an empty segment"; Value = "" }
+            @{ Part = "Header"; Reason = "JSON null"; Value = "bnVsbA" }
+            @{ Part = "Payload"; Reason = "JSON null"; Value = "bnVsbA" }
+        ) {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ Part = $Part; Value = $Value } {
+                $Token = if ($Part -eq "Header") { "$Value.e30.signature" } else { "e30.$Value.signature" }
+                $Output = [System.Collections.Generic.List[object]]::new()
+                {
+                    ConvertFrom-Jwt -Token $Token -ErrorAction "Continue" |
+                        ForEach-Object { $Output.Add($_) }
+                } | Should -Throw "*ConvertFrom-Jwt: Failed to decode ${Part}:*"
+                $Output.Count | Should -Be 0
             }
         }
     }
@@ -186,7 +222,16 @@ Describe -Tag "Private" -Name "ConvertFrom-Jwt" {
     }
 
     Context "Validate ConvertFrom-Jwt with minimal JWT" {
-        It "Should handle JWT with only header and payload (no signature)" {
+        It "Should accept exactly two segments and return a null signature" {
+            InModuleScope -ModuleName "Evergreen" {
+                $Result = ConvertFrom-Jwt -Token "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0"
+                $Result.Header.alg | Should -Be "none"
+                $Result.Payload.sub | Should -Be "test"
+                ($null -eq $Result.Signature) | Should -Be $true
+            }
+        }
+
+        It "Should preserve an empty signature in a three-part JWT" {
             InModuleScope -ModuleName "Evergreen" {
                 # JWT with empty signature part
                 $Token = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0."
@@ -194,6 +239,7 @@ Describe -Tag "Private" -Name "ConvertFrom-Jwt" {
                 $Result.Header | Should -Not -BeNullOrEmpty
                 $Result.Payload | Should -Not -BeNullOrEmpty
                 $Result.Signature | Should -Be ""
+                $Result.Signature | Should -BeOfType [System.String]
             }
         }
 
@@ -212,6 +258,60 @@ Describe -Tag "Private" -Name "ConvertFrom-Jwt" {
                 $Token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.sig"
                 $Result = ConvertFrom-Jwt -Token $Token
                 $Result.Payload.sub | Should -Be "test"
+            }
+        }
+    }
+
+    Context "Validate ConvertFrom-Jwt with a production-shaped release manifest" {
+        It "Should preserve the release manifest structure and separate signatures" {
+            InModuleScope -ModuleName "Evergreen" {
+                $HeaderJson = '{"alg":"RS256","cty":"json"}'
+                $PayloadJson = @'
+{
+    "iat": 1792754864,
+    "exp": 1792758464,
+    "iss": "Trimble, Inc.",
+    "versions": [
+        {
+            "operatingSystem": "windows",
+            "versionNumber": "27.0.264",
+            "fileName": "SketchUp-2027-0-264-170.exe",
+            "installerUrl": "https://download.sketchup.com/SketchUp-2027-0-264-170.exe",
+            "title": "SketchUp for Windows",
+            "releaseDate": "2026-10-21",
+            "releaseNotes": {
+                "en": "https://help.sketchup.com/en/current-release-notes"
+            },
+            "generallyAvailable": false,
+            "signature": "5df77bfac25564ce7929974bbb4956de69287cf13ad860ff32774f35f411c213"
+        }
+    ]
+}
+'@
+                $Header = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($HeaderJson)).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+                $Payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($PayloadJson)).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+                # A synthetic signature keeps this fixture focused on decoding, not verification.
+                $Result = ConvertFrom-Jwt -Token "$Header.$Payload.jwt-signature"
+
+                $Result.Header.alg | Should -Be "RS256"
+                $Result.Header.cty | Should -Be "json"
+                $Result.Header.PSObject.Properties.Name | Should -Not -Contain "typ"
+                $Result.Payload.iat | Should -Be 1792754864
+                $Result.Payload.exp | Should -Be 1792758464
+                $Result.Payload.iss | Should -Be "Trimble, Inc."
+                ($Result.Payload.versions -is [System.Array]) | Should -Be $true
+                $Result.Payload.versions.Count | Should -Be 1
+                $Release = $Result.Payload.versions[0]
+                $Release.operatingSystem | Should -Be "windows"
+                $Release.versionNumber | Should -Be "27.0.264"
+                $Release.fileName | Should -Be "SketchUp-2027-0-264-170.exe"
+                $Release.installerUrl | Should -Be "https://download.sketchup.com/SketchUp-2027-0-264-170.exe"
+                $Release.title | Should -Be "SketchUp for Windows"
+                $Release.releaseNotes.en | Should -Be "https://help.sketchup.com/en/current-release-notes"
+                $Release.generallyAvailable | Should -BeOfType [System.Boolean]
+                $Release.generallyAvailable | Should -Be $false
+                $Release.signature | Should -Be "5df77bfac25564ce7929974bbb4956de69287cf13ad860ff32774f35f411c213"
+                $Result.Signature | Should -Be "jwt-signature"
             }
         }
     }

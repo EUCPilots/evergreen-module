@@ -8,13 +8,10 @@ function Get-Symbol {
 
     switch ($Symbol) {
         "Tick" {
-            return [System.Text.Encoding]::UTF32.GetString((19, 39, 0, 0))
+            return [System.String][System.Char]0x2713
         }
         "Cross" {
-            return [System.Text.Encoding]::UTF32.GetString((23, 39, 0, 0))
-        }
-        default {
-            return $null
+            return [System.String][System.Char]0x2717
         }
     }
 }

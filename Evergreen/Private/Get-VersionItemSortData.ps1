@@ -8,12 +8,12 @@ function Get-VersionItemSortData {
         [System.Int32] $Index
     )
 
+    $VersionText = [System.String] $Item.Version
     $ParsedVersion = $null
-    if (-not [System.String]::IsNullOrEmpty($Item.Version)) {
-        try {
-            $ParsedVersion = [System.Version]::Parse([System.String] $Item.Version)
-        }
-        catch {
+    if (-not [System.String]::IsNullOrEmpty($VersionText)) {
+        $Version = [System.Version]::MinValue
+        if ([System.Version]::TryParse($VersionText, [ref] $Version)) {
+            $ParsedVersion = $Version
         }
     }
 
@@ -21,7 +21,7 @@ function Get-VersionItemSortData {
         Item             = $Item
         Index            = $Index
         ParsedVersion    = $ParsedVersion
-        VersionText      = [System.String] $Item.Version
+        VersionText      = $VersionText
         HasParsedVersion = [System.Boolean] ($null -ne $ParsedVersion)
     }
 }

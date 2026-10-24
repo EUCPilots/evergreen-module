@@ -48,7 +48,17 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
                 Set-Content -Path $script:CabPath -Value "test"
                 New-Item -Path $script:CabDestination -ItemType "Directory" -Force | Out-Null
                 Set-Content -Path $script:ExpandStub -Value @'
-param ($CabPath, $Destination)
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   expanded.txt"
+    exit 0
+}
 Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Value "expanded"
 '@
 
@@ -65,7 +75,7 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     param ($Items, $Options)
                     $this.Copied = $true
                     foreach ($Item in $Items) {
-                        Set-Content -Path (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                        Set-Content -LiteralPath (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
                     }
                 }
                 $script:Shell = [PSCustomObject]@{
@@ -82,7 +92,6 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     }
                 }
                 Mock New-Object { $script:Shell } -ParameterFilter { $ComObject -eq "Shell.Application" }
-                Mock Remove-Item {}
             }
         }
 
@@ -126,12 +135,115 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
             }
         }
 
-        It "Should throw when neither extraction approach returns items" {
+        It "Should reject unsafe CAB entry paths without invoking the fallback" {
             InModuleScope -ModuleName "Evergreen" {
-                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "..\escaped.txt" })
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "*expand.exe produced no files*"
+                    Should -Throw "*Refusing to extract unsafe CAB entry*"
+
+                Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+                Test-Path -LiteralPath (Join-Path -Path $script:CabDestination -ChildPath "escaped.txt") | Should -BeFalse
+            }
+        }
+
+        It "Should reject Windows reserved and normalizing file names" -TestCases @(
+            @{ Name = "CON.txt" }
+            @{ Name = "trailing-dot." }
+            @{ Name = "trailing-space " }
+        ) {
+            param ($Name)
+
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ EntryName = $Name } {
+                param ($EntryName)
+
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = $EntryName })
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*Refusing to extract unsafe CAB entry*"
+
+                Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+            }
+        }
+
+        It "Should resolve a relative destination path from the current location" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $OriginalLocation = Get-Location
+                $RelativeDestination = "relative-destination-$([System.Guid]::NewGuid().ToString('N'))"
+                try {
+                    Set-Location -LiteralPath $TestRoot
+                    $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "shell.txt" })
+
+                    $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $RelativeDestination
+
+                    $Items | Should -Be (Join-Path -Path $TestRoot -ChildPath "$RelativeDestination\shell.txt")
+                    Test-Path -LiteralPath $Items -PathType "Leaf" | Should -BeTrue
+                }
+                finally {
+                    $TestDestination = Join-Path -Path $TestRoot -ChildPath $RelativeDestination
+                    if (Test-Path -LiteralPath $TestDestination) {
+                        Remove-Item -LiteralPath $TestDestination -Recurse -Force
+                    }
+                    Set-Location -LiteralPath $OriginalLocation
+                }
+            }
+        }
+
+        It "Should support destination paths containing wildcard characters" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $LiteralDestination = [System.IO.Path]::Combine($TestRoot, "destination[1]")
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "shell.txt" })
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $LiteralDestination
+
+                $Items | Should -Be ([System.IO.Path]::Combine($LiteralDestination, "shell.txt"))
+                Test-Path -LiteralPath $Items -PathType "Leaf" | Should -BeTrue
+            }
+        }
+
+        It "Should roll back promoted files and restore overwritten files when promotion fails" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @(
+                    [PSCustomObject]@{ Name = "first.txt" }
+                    [PSCustomObject]@{ Name = "second.txt" }
+                )
+                $FirstDestination = Join-Path -Path $script:CabDestination -ChildPath "first.txt"
+                $script:SecondDestination = Join-Path -Path $script:CabDestination -ChildPath "second.txt"
+                Set-Content -LiteralPath $FirstDestination -Value "original"
+                Mock Move-Item { throw "Simulated promotion failure" } -ParameterFilter {
+                    $Destination -eq $script:SecondDestination
+                }
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*changes were rolled back*"
+
+                ([System.IO.File]::ReadAllText($FirstDestination)).Trim() | Should -Be "original"
+                Test-Path -LiteralPath $script:SecondDestination | Should -BeFalse
+            }
+        }
+
+        It "Should throw when neither extraction approach returns items" {
+            InModuleScope -ModuleName "Evergreen" {
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   missing.txt"
+    exit 0
+}
+'@
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*expand.exe did not extract all CAB files*"
             }
         }
 
@@ -139,12 +251,46 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
             InModuleScope -ModuleName "Evergreen" {
                 $ExistingFile = Join-Path -Path $script:CabDestination -ChildPath "existing.txt"
                 Set-Content -Path $ExistingFile -Value "keep"
-                Set-Content -Path $script:ExpandStub -Value 'param ($CabPath, $Destination)'
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+if ($D) {
+    Write-Output "   missing.txt"
+    exit 0
+}
+'@
 
                 { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
-                    Should -Throw "*expand.exe produced no files*"
+                    Should -Throw "*expand.exe did not extract all CAB files*"
 
                 ([System.IO.File]::ReadAllText($ExistingFile)).Trim() | Should -Be "keep"
+            }
+        }
+
+        It "Should remove a newly created destination when extraction fails" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $NewDestination = [System.IO.Path]::Combine($TestRoot, "failed-destination")
+                Set-Content -Path $script:ExpandStub -Value @'
+param (
+    [Parameter(Position = 0)]
+    [System.String] $CabPath,
+    [Parameter(Position = 1)]
+    [System.String] $Destination,
+    [System.Management.Automation.SwitchParameter] $D
+)
+'@
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $NewDestination } |
+                    Should -Throw "*verifiable CAB file list*"
+
+                Test-Path -LiteralPath $NewDestination | Should -BeFalse
             }
         }
     }
@@ -153,6 +299,16 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
         It "Should throw when Path parameter is null or empty" {
             InModuleScope -ModuleName "Evergreen" {
                 { Expand-CabArchive -Path "" -DestinationPath "/tmp" } | Should -Throw
+            }
+        }
+
+        It "Should require a destination path" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ TestRoot = $TestDrive } {
+                param ($TestRoot)
+
+                $CabPath = Join-Path -Path $TestRoot -ChildPath "mandatory-parameter.cab"
+                Set-Content -LiteralPath $CabPath -Value "test"
+                { Expand-CabArchive -Path $CabPath } | Should -Throw
             }
         }
 

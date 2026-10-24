@@ -5,7 +5,7 @@ function Get-FilteredData {
 
         .DESCRIPTION
         Get-FilteredData reads a JSON filter configuration from the file specified by -FilterPath and applies the configured filters to the array provided via -InputObject.
-        The JSON file must include a "filters" array of filter objects and may include a top-level "logicalOperator" (defaults to "and").
+        The JSON file must include a non-empty "filters" array of filter objects and may include a top-level "logicalOperator" (defaults to "and").
         Each filter object must specify:
             - property : the name of the property on each input object to evaluate
             - operator : one of the supported comparison operators (see below)
@@ -66,7 +66,7 @@ function Get-FilteredData {
         - The comparison semantics use PowerShell operators; ensure types in filter.value are appropriate (numbers vs strings).
         - For "in", supply an array for filter.value in the JSON.
         - "like" uses PowerShell wildcard patterns; "match" uses regular expressions.
-        - If a referenced property does not exist on an input object, that comparison yields $null behavior according to the operator (typically treated as not matching).
+        - If a referenced property does not exist on an input object, the filter does not match, including for "ne".
     #>
     [CmdletBinding()]
     param(
@@ -78,39 +78,92 @@ function Get-FilteredData {
     )
 
     begin {
-        # Build the filter
-        $filterConfig = Get-Content -Path $FilterPath -Raw | ConvertFrom-Json
+        $filterConfig = Get-Content -LiteralPath $FilterPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($null -eq $filterConfig -or $null -eq $filterConfig.PSObject.Properties["filters"]) {
+            throw "Filter configuration '$FilterPath' must contain a 'filters' array."
+        }
+
+        if ($filterConfig.filters -isnot [System.Array] -or $filterConfig.filters.Count -eq 0) {
+            throw "Filter configuration '$FilterPath' must contain a non-empty 'filters' array."
+        }
+
+        foreach ($filter in $filterConfig.filters) {
+            if ($null -eq $filter -or
+                $null -eq $filter.PSObject.Properties["property"] -or
+                $filter.property -isnot [System.String] -or
+                [System.String]::IsNullOrWhiteSpace($filter.property) -or
+                $null -eq $filter.PSObject.Properties["value"]) {
+                throw "Each filter in '$FilterPath' must include a non-empty string 'property' and a 'value'."
+            }
+        }
+
         $filterConfig.filters | ForEach-Object { Write-Verbose -Message "$($MyInvocation.MyCommand): Filter: $($_.property) $($_.operator) $($_.value)" }
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Logical Operator: $($filterConfig.logicalOperator)"
-        $logicalOp = if ($filterConfig.logicalOperator) { $filterConfig.logicalOperator } else { "and" }
+        $logicalOp = if ($null -eq $filterConfig.PSObject.Properties["logicalOperator"] -or [System.String]::IsNullOrWhiteSpace($filterConfig.logicalOperator)) {
+            "and"
+        }
+        else {
+            $filterConfig.logicalOperator
+        }
+        if ($logicalOp -isnot [System.String] -or $logicalOp -notin @("and", "or")) {
+            throw "Filter configuration '$FilterPath' has an invalid 'logicalOperator'. Use 'and' or 'or'."
+        }
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Logical Operator: $logicalOp"
     }
 
     process {
-        $results = $InputObject | Where-Object {
-            $item = $_
-            $matches = [System.Collections.ArrayList]::new()
-
+        $results = foreach ($item in $InputObject) {
+            $itemMatches = $true
             foreach ($filter in $filterConfig.filters) {
-                $match = switch ($filter.operator) {
-                    "eq" { $item.$($filter.property) -eq $filter.value }
-                    "ne" { $item.$($filter.property) -ne $filter.value }
-                    "like" { $item.$($filter.property) -like $filter.value }
-                    "match" { $item.$($filter.property) -match $filter.value }
-                    "in" { $filter.value -contains $item.$($filter.property) }
-                    "gt" { $item.$($filter.property) -gt $filter.value }
-                    "lt" { $item.$($filter.property) -lt $filter.value }
-                    "ge" { $item.$($filter.property) -ge $filter.value }
-                    "le" { $item.$($filter.property) -le $filter.value }
-                    default { $item.$($filter.property) -eq $filter.value }
+                $hasProperty = $false
+                if ($null -ne $item) {
+                    if ($item -is [System.Collections.IDictionary]) {
+                        if ($item.Contains($filter.property)) {
+                            $hasProperty = $true
+                            $value = $item[$filter.property]
+                        }
+                    }
+                    else {
+                        $property = $item.PSObject.Properties[$filter.property]
+                        if ($null -ne $property) {
+                            $hasProperty = $true
+                            $value = $property.Value
+                        }
+                    }
                 }
-                [void]$matches.Add([bool]$match)
+
+                if (-not $hasProperty) {
+                    $match = $false
+                }
+                else {
+                    $match = switch ($filter.operator) {
+                        "eq" { $value -eq $filter.value }
+                        "ne" { $value -ne $filter.value }
+                        "like" { $value -like $filter.value }
+                        "match" { $value -match $filter.value }
+                        "in" { $filter.value -contains $value }
+                        "gt" { $value -gt $filter.value }
+                        "lt" { $value -lt $filter.value }
+                        "ge" { $value -ge $filter.value }
+                        "le" { $value -le $filter.value }
+                        default { $value -eq $filter.value }
+                    }
+                }
+
+                if ($logicalOp -eq "and" -and -not $match) {
+                    $itemMatches = $false
+                    break
+                }
+                if ($logicalOp -eq "or" -and $match) {
+                    $itemMatches = $true
+                    break
+                }
+                if ($logicalOp -eq "or") {
+                    $itemMatches = $false
+                }
             }
 
-            if ($logicalOp -eq "and") {
-                $matches -notcontains $false
-            }
-            else {
-                $matches -contains $true
+            if ($itemMatches) {
+                $item
             }
         }
 

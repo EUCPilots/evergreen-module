@@ -421,7 +421,7 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
             InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
                 param($FilterFile, $TestData)
                 [System.Object[]]$TestDataArray = $TestData
-                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray -ErrorAction Stop } | Should -Throw
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestDataArray } | Should -Throw
             }
         }
     }
@@ -494,6 +494,82 @@ Describe -Tag "Private" -Name "Get-FilteredData" {
                 $Result | Should -Not -BeNullOrEmpty
                 ($Result | Measure-Object).Count | Should -Be 3
                 $Result.Release | ForEach-Object { $_ | Should -Be "Enterprise" }
+            }
+        }
+    }
+
+    Context "Validate malformed filter configurations" {
+        BeforeAll {
+            $InvalidLogicalOperatorFile = Join-Path -Path $script:TestPath -ChildPath "filter-invalid-logical-operator.json"
+            @{
+                filters = @(@{ property = "Release"; operator = "eq"; value = "Enterprise" })
+                logicalOperator = "xor"
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $InvalidLogicalOperatorFile -Force
+
+            $EmptyFiltersFile = Join-Path -Path $script:TestPath -ChildPath "filter-empty-filters.json"
+            @{
+                filters = @()
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $EmptyFiltersFile -Force
+
+            $MissingValueFile = Join-Path -Path $script:TestPath -ChildPath "filter-missing-value.json"
+            @{
+                filters = @(@{ property = "Release"; operator = "eq" })
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $MissingValueFile -Force
+
+            $NotEqualFile = Join-Path -Path $script:TestPath -ChildPath "filter-missing-property-ne.json"
+            @{
+                filters = @(@{ property = "MissingProperty"; operator = "ne"; value = "anything" })
+            } | ConvertTo-Json -Depth 10 | Set-Content -Path $NotEqualFile -Force
+        }
+
+        It "Should throw for an invalid logical operator" {
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-invalid-logical-operator.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData } | Should -Throw
+            }
+        }
+
+        It "Should throw when the filters array is empty" {
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-empty-filters.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData } | Should -Throw
+            }
+        }
+
+        It "Should throw when a filter does not include a value" {
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-missing-value.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                { Get-FilteredData -FilterPath $FilterFile -InputObject $TestData } | Should -Throw
+            }
+        }
+
+        It "Should not match a missing property with the not-equal operator" {
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-missing-property-ne.json"
+            $TestData = $script:TestData
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; TestData = $TestData } {
+                param($FilterFile, $TestData)
+                $Result = Get-FilteredData -FilterPath $FilterFile -InputObject $TestData
+                $Result | Should -BeNullOrEmpty
+            }
+        }
+
+        It "Should filter dictionary keys as properties" {
+            $FilterFile = Join-Path -Path $script:TestPath -ChildPath "filter-eq.json"
+            $InputData = @(
+                @{ Release = "Enterprise" }
+                @{ Release = "Beta" }
+            )
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ FilterFile = $FilterFile; InputData = $InputData } {
+                param($FilterFile, $InputData)
+                $Result = @(Get-FilteredData -FilterPath $FilterFile -InputObject $InputData)
+                ($Result | Measure-Object).Count | Should -Be 1
+                $Result[0]["Release"] | Should -Be "Enterprise"
             }
         }
     }

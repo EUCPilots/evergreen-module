@@ -45,5 +45,26 @@ Describe -Name "Get-Architecture" {
                 Get-Architecture -String "win-arm64" | Should -Be "ARM64"
             }
         }
+
+        It "Does not match architecture markers embedded in words" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Architecture -String "notx64package" | Should -Be "x86"
+                Get-Architecture -String "farm64tool" | Should -Be "x86"
+            }
+        }
+
+        It "Does not treat version numbers as architecture markers" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Architecture -String "release-64.2" | Should -Be "x86"
+                Get-Architecture -String "version.64.2" | Should -Be "x86"
+            }
+        }
+
+        It "Matches numeric architecture suffixes before file extensions" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Architecture -String "https://example.com/app-64.msi" | Should -Be "x64"
+                Get-Architecture -String "https://example.com/app-32.exe" | Should -Be "x86"
+            }
+        }
     }
 }

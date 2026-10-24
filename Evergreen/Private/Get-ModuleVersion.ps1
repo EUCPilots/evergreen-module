@@ -1,15 +1,10 @@
 function Get-ModuleVersion {
-    try {
-        $ErrorActionPreference = "Stop"
-        $module = (Get-Module -Name "Evergreen" -All)[0]
-        if ($null -ne $module) {
-            return $module.Version
-        }
-        else {
-            return $(Get-Date -Format "yyMM.9999")
-        }
+    $module = $MyInvocation.MyCommand.Module
+    if ($null -ne $module) {
+        return $module.Version
     }
-    catch {
-        return $(Get-Date -Format "yyMM.9999")
-    }
+
+    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath "..\Evergreen.psd1"
+    $manifest = Import-PowerShellDataFile -Path $manifestPath -ErrorAction "Stop"
+    return [System.Version]$manifest.ModuleVersion
 }

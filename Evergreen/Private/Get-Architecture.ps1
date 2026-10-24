@@ -6,35 +6,32 @@ function Get-Architecture {
         [System.String] $String
     )
 
-    switch -Regex ($String.ToLower()) {
-        "aarch64" { $architecture = "ARM64"; break }
-        "amd64" { $architecture = "x64"; break }
-        "anycpu" { $architecture = "any"; break }
-        "arm64" { $architecture = "ARM64"; break }
-        "arm32" { $architecture = "ARM32"; break }
-        "arm" { $architecture = "ARM"; break }
-        "nt64" { $architecture = "x64"; break }
-        "nt32" { $architecture = "x86"; break }
-        "x86_64" { $architecture = "x64"; break }
-        "x64" { $architecture = "x64"; break }
-        "w64" { $architecture = "x64"; break }
-        "-64" { $architecture = "x64"; break }
-        "64-bit" { $architecture = "x64"; break }
-        "64bit" { $architecture = "x64"; break }
-        "32-bit" { $architecture = "x86"; break }
-        "32bit" { $architecture = "x86"; break }
-        "x32" { $architecture = "x86"; break }
-        "w32" { $architecture = "x86"; break }
-        "-32" { $architecture = "x86"; break }
-        "-x86" { $architecture = "x86"; break }
-        "x86" { $architecture = "x86"; break }
-        "e64\." { $architecture = "x64"; break }
-        "64\." { $architecture = "x64"; break }
-        "win64" { $architecture = "x64"; break }
-        "win32" { $architecture = "x86"; break }
-        "win-arm64" { $architecture = "ARM64"; break }
-        "win-x64" { $architecture = "x64"; break }
-        "win-x86" { $architecture = "x86"; break }
+    switch -Regex ($String) {
+        "(?<![a-z0-9])aarch64(?![a-z0-9])" { $architecture = "ARM64"; break }
+        "(?<![a-z0-9])amd64(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])anycpu(?![a-z0-9])" { $architecture = "any"; break }
+        "(?<![a-z0-9])arm64(?![a-z0-9])" { $architecture = "ARM64"; break }
+        "(?<![a-z0-9])arm32(?![a-z0-9])" { $architecture = "ARM32"; break }
+        "(?<![a-z0-9])arm(?=$|[^a-z0-9]|v[0-9])" { $architecture = "ARM"; break }
+        "(?<![a-z0-9])nt64(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])nt32(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])x86_64(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])x64(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])w64(?![a-z0-9])" { $architecture = "x64"; break }
+        "-64(?=(?:\.[a-z]{1,5})*(?:$|[/;?#]))" { $architecture = "x64"; break }
+        "(?<![a-z0-9])64-bit(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])64bit(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])32-bit(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])32bit(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])x32(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])w32(?![a-z0-9])" { $architecture = "x86"; break }
+        "-32(?=(?:\.[a-z]{1,5})*(?:$|[/;?#]))" { $architecture = "x86"; break }
+        "(?<![a-z0-9])-x86(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])x86(?![a-z0-9])" { $architecture = "x86"; break }
+        "(?<![a-z0-9])e64\.(?![0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9.])64\.(?![0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])win64(?![a-z0-9])" { $architecture = "x64"; break }
+        "(?<![a-z0-9])win32(?![a-z0-9])" { $architecture = "x86"; break }
         default {
             Write-Verbose -Message "$($MyInvocation.MyCommand): Architecture not found in $String, defaulting to x86."
             $architecture = "x86"

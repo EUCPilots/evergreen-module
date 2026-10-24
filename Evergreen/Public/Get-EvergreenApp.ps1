@@ -39,16 +39,18 @@ function Get-EvergreenApp {
         }
 
         # Force Invoke-EvergreenRestMethod and Invoke-EvergreenWebRequest to ignore certificate errors
-        if ($PSBoundParameters.ContainsKey("SkipCertificateCheck")) {
+        if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $true
         }
     }
 
     process {
         if ($PSBoundParameters.ContainsKey("Proxy")) {
-            Set-ProxyEnv -Proxy $Proxy
             if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
-                Set-ProxyEnv -ProxyCredential $ProxyCredential
+                Set-ProxyEnv -Proxy $Proxy -ProxyCredential $ProxyCredential
+            }
+            else {
+                Set-ProxyEnv -Proxy $Proxy
             }
         }
 
@@ -133,7 +135,7 @@ function Get-EvergreenApp {
     end {
         # Remove these variables for next run
         Remove-Variable -Name "Output", "function" -ErrorAction "SilentlyContinue"
-        if ($PSBoundParameters.ContainsKey("SkipCertificateCheck")) {
+        if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $false
         }
     }

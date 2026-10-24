@@ -33,7 +33,7 @@ Copyright = '(c) 2026 stealthpuppy, EUC Pilots. All rights reserved.'
 Description = 'Create evergreen Windows image builds with the latest versions of applications. Evergreen is a PowerShell module that retrieves the latest version numbers and download URLs for various software products directly from the vendor source.'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '4.0'
+PowerShellVersion = '5.1'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -76,7 +76,7 @@ FunctionsToExport = @('ConvertTo-DotNetVersionClass', 'Export-EvergreenApp',
                'Get-EvergreenLibrary', 'New-EvergreenLibrary', 
                'Remove-EvergreenLibraryAppVersion', 'Save-EvergreenApp', 
                'Start-EvergreenLibraryUpdate', 'Test-EvergreenApp', 
-               'Update-Evergreen')
+               'Update-Evergreen', 'Get-EvergreenAppsVersion')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -141,4 +141,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
