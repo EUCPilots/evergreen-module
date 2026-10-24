@@ -14,8 +14,7 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Test-IsWindows" {
-    # Ensure $IsWindows is defined across PowerShell editions (Windows PowerShell and PowerShell Core)
-    $IsWindows = [bool]($env:OS -eq 'Windows_NT')
+    $ExpectedIsWindows = [bool]($env:OS -eq 'Windows_NT')
 
     Context "Validate Test-IsWindows basic functionality" {
         It "Should not throw" {
@@ -31,14 +30,20 @@ Describe -Tag "Private" -Name "Test-IsWindows" {
             }
         }
 
-        It "Should return true on Windows platform" -Skip:(-not $IsWindows) {
+        It "Should return true on Windows platform" -Skip:(-not $ExpectedIsWindows) {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Test-IsWindows
                 $Result | Should -Be $true
             }
         }
 
-        It "Should return false on non-Windows platform" -Skip:($IsWindows) {
+        It "Should return true for Windows PowerShell Desktop edition" -Skip:($PSVersionTable.PSEdition -ne "Desktop") {
+            InModuleScope -ModuleName "Evergreen" {
+                Test-IsWindows | Should -Be $true
+            }
+        }
+
+        It "Should return false on non-Windows platform" -Skip:($ExpectedIsWindows) {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = Test-IsWindows
                 $Result | Should -Be $false

@@ -33,7 +33,7 @@ Copyright = '(c) 2026 stealthpuppy, EUC Pilots. All rights reserved.'
 Description = 'Create evergreen Windows image builds with the latest versions of applications. Evergreen is a PowerShell module that retrieves the latest version numbers and download URLs for various software products directly from the vendor source.'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '4.0'
+PowerShellVersion = '5.1'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -141,4 +141,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
