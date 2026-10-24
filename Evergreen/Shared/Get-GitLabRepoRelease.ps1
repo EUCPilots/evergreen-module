@@ -3,22 +3,21 @@ function Get-GitLabRepoRelease {
         .SYNOPSIS
             Calls the GitLab Releases API passed via $Uri, validates the response and returns a formatted object.
             Supported examples:
-            - https://gitlab.com/api/v4/projects/:id/releases/latest
+            - https://gitlab.com/api/v4/projects/:id/releases/permalink/latest
             - https://gitlab.com/api/v4/projects/:id/releases
             - https://gitlab.com/api/v4/projects/:id/repository/tags
-
-            TODO: support Basic or OAuth authentication to GitLab
+            The legacy /releases/latest input is mapped to /releases/permalink/latest.
     #>
     [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript({
-                if ($_ -match "^https://gitlab\.com/api/v4/projects/[^/]+/(releases(?:/latest)?|repository/tags)/?$") {
+                if ($_ -cmatch "^https://gitlab\.com/api/v4/projects/[^/?#]+/(releases(?:/(?:latest|permalink/latest|[^/?#]+))?|repository/tags)/?(?:\?[^#]*)?$") {
                     $true
                 }
                 else {
-                    throw "'$_' must be in the format 'https://gitlab.com/api/v4/projects/:id/releases/latest', '.../releases', or '.../repository/tags'. Replace ':id' with the project ID."
+                    throw "'$_' must be in the format 'https://gitlab.com/api/v4/projects/:id/releases/permalink/latest', '.../releases', or '.../repository/tags'. Replace ':id' with the project ID or URL-encoded project path."
                 }
             })]
         [System.String] $Uri,
@@ -36,6 +35,8 @@ function Get-GitLabRepoRelease {
         [System.String] $Filter = "\.exe$|\.msi$|\.msp$|\.zip$",
 
         [Parameter(Mandatory = $false, Position = 4)]
+        [ValidateNotNull()]
+        [ValidateCount(2, 2)]
         [System.Array] $VersionReplace,
 
         [Parameter()]
@@ -43,6 +44,7 @@ function Get-GitLabRepoRelease {
     )
 
     process {
+        $RequestUri = $Uri -creplace "/releases/latest(?=/?(?:\?|$))", "/releases/permalink/latest"
         try {
             # Retrieve releases/tags from GitLab API
             Write-Verbose -Message "$($MyInvocation.MyCommand): Set TLS to 1.2."
@@ -55,7 +57,7 @@ function Get-GitLabRepoRelease {
                 DisableKeepAlive   = $true
                 UseBasicParsing    = $true
                 UserAgent          = (Get-EvergreenUserAgent)
-                Uri                = $Uri
+                Uri                = $RequestUri
             }
 
             if (Test-ProxyEnv) {
@@ -66,77 +68,39 @@ function Get-GitLabRepoRelease {
                 $params.ProxyCredential = $script:EvergreenProxyCreds
             }
 
-            # GitLab token support (PAT or bearer token)
-            if (Test-Path -Path "env:GITLAB_TOKEN") {
+            # GitLab personal access token support
+            if (-not [System.String]::IsNullOrWhiteSpace($env:GITLAB_TOKEN)) {
                 $params.Headers = @{ "PRIVATE-TOKEN" = $env:GITLAB_TOKEN }
             }
 
-            foreach ($item in $params.GetEnumerator()) {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-RestMethod parameter: $($item.Name): $($item.Value)."
-            }
-
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Get GitLab data from: $Uri."
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Get GitLab data from: $RequestUri."
             $apiResponse = Invoke-RestMethod @params
         }
         catch {
-            throw $_
+            throw
         }
 
-        # Normalize to array for consistent handling
-        $release = if ($apiResponse -is [System.Array]) { $apiResponse } else { @($apiResponse) }
-
-        if ($null -eq $script:resourceStrings.Properties.GitLab) {
-            Write-Warning -Message "$($MyInvocation.MyCommand): Unable to validate release against GitLab releases property object because module resources were not found."
+        $IsTagsEndpoint = ([System.Uri]$Uri).AbsolutePath -match "/repository/tags/?$"
+        $SourceProperty = if ($IsTagsEndpoint) { "name" } else { $VersionTag }
+        $SchemaName = if ($IsTagsEndpoint) { "GitLabTags" } else { "GitLab" }
+        $RequiredProperties = @($script:resourceStrings.Properties.$SchemaName)
+        if ($null -eq $script:resourceStrings.Properties.$SchemaName) {
+            Write-Warning -Message "$($MyInvocation.MyCommand): $SchemaName schema not found; validating only the properties required for this operation."
         }
-        else {
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Validating GitLab release object."
-            foreach ($item in $release) {
-                $compareParams = @{
-                    ReferenceObject  = $script:resourceStrings.Properties.GitLab
-                    DifferenceObject = (Get-Member -InputObject $item -MemberType NoteProperty).Name
-                    PassThru         = $true
-                    ErrorAction      = "Continue"
-                }
-                $missingProperties = Compare-Object @compareParams | Where-Object { $_.SideIndicator -eq "<=" }
-
-                if ($null -eq $missingProperties) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Validated successfully."
-                }
-                else {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Validation failed."
-                    foreach ($missingProperty in $missingProperties) {
-                        throw [System.Management.Automation.ValidationMetadataException]::New("$($MyInvocation.MyCommand): Property '$missingProperty' missing")
-                    }
-                }
-            }
+        $RequiredProperties = @($RequiredProperties | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) + @($SourceProperty)
+        if (-not $ReturnVersionOnly) {
+            $RequiredProperties += "assets"
+        }
+        $release = Get-RepoResponse -Response $apiResponse -RequiredProperties $RequiredProperties
+        $VersionParams = @{ MatchVersion = $MatchVersion }
+        if ($PSBoundParameters.ContainsKey("VersionReplace")) {
+            $VersionParams.VersionReplace = $VersionReplace
         }
 
         Write-Verbose -Message "$($MyInvocation.MyCommand): Found $($release.Count) release/tag item(s)."
 
-        if ($PSBoundParameters.ContainsKey("ReturnVersionOnly")) {
-            $firstItem = $release | Select-Object -First 1
-
-            try {
-                if ($Uri -match "/repository/tags/?$") {
-                    $sourceValue = $firstItem.name
-                }
-                else {
-                    $sourceValue = $firstItem.$VersionTag
-                }
-
-                $Version = [System.Text.RegularExpressions.Regex]::Match($sourceValue, $MatchVersion).Groups[1].Value
-                if ([System.String]::IsNullOrWhiteSpace($Version)) {
-                    $Version = $sourceValue
-                }
-            }
-            catch {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Failed to match version number as-is, returning source value."
-                $Version = $sourceValue
-            }
-
-            if ($PSBoundParameters.ContainsKey("VersionReplace")) {
-                $Version = $Version -replace $VersionReplace[0], $VersionReplace[1]
-            }
+        if ($ReturnVersionOnly) {
+            $Version = Get-RepoReleaseVersion -Source $release[0].$SourceProperty @VersionParams
 
             [PSCustomObject] @{
                 Version = $Version
@@ -167,6 +131,7 @@ function Get-GitLabRepoRelease {
                 $downloadUri = if ($null -ne $asset.direct_asset_url -and -not [System.String]::IsNullOrWhiteSpace($asset.direct_asset_url)) { $asset.direct_asset_url } else { $asset.url }
 
                 if ([System.String]::IsNullOrWhiteSpace($downloadUri)) {
+                    Write-Warning -Message "$($MyInvocation.MyCommand): Skipping an asset with no download URL."
                     continue
                 }
 
@@ -181,34 +146,16 @@ function Get-GitLabRepoRelease {
                     continue
                 }
 
-                try {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Matching version number against: $($item.$VersionTag)."
-                    $Version = [System.Text.RegularExpressions.Regex]::Match($item.$VersionTag, $MatchVersion).Groups[1].Value
-                    if ([System.String]::IsNullOrWhiteSpace($Version)) {
-                        $Version = $item.$VersionTag
-                    }
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Found version number: $Version."
-                }
-                catch {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Failed to match version number, returning: $($item.$VersionTag)."
-                    $Version = $item.$VersionTag
-                }
-
-                if ($PSBoundParameters.ContainsKey("VersionReplace")) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Replace $($VersionReplace[0])."
-                    $Version = $Version -replace $VersionReplace[0], $VersionReplace[1]
-                }
-
+                $Version = Get-RepoReleaseVersion -Source $item.$SourceProperty @VersionParams
                 $dateValue = if ($null -ne $item.released_at) { $item.released_at } else { $item.created_at }
                 $leafName = Split-Path -Path $downloadUri -Leaf
-                $typeValue = [System.IO.Path]::GetExtension($leafName).TrimStart(".")
 
                 [PSCustomObject] @{
                     Version       = $Version
                     Date          = ConvertTo-DateTime -DateTime $dateValue -Pattern "MM/dd/yyyy HH:mm:ss"
                     Architecture  = Get-Architecture -String $leafName
                     InstallerType = Get-InstallerType -String $leafName
-                    Type          = $typeValue
+                    Type          = Get-FileType -File $leafName
                     URI           = $downloadUri
                 } | Write-Output
             }

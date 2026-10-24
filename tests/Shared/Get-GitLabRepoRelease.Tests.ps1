@@ -14,6 +14,14 @@ BeforeAll {
 
 InModuleScope -ModuleName "Evergreen" {
     Describe -Name "Get-GitLabRepoRelease" {
+        BeforeAll {
+            $SavedResources = $script:resourceStrings
+        }
+
+        AfterAll {
+            $script:resourceStrings = $SavedResources
+        }
+
         BeforeEach {
             $script:resourceStrings = [PSCustomObject]@{
                 Properties = [PSCustomObject]@{
@@ -86,6 +94,16 @@ InModuleScope -ModuleName "Evergreen" {
         }
 
         Context "ReturnVersionOnly scenarios" {
+            It "Maps the legacy latest endpoint to GitLab's supported endpoint" {
+                Mock -CommandName Invoke-RestMethod -MockWith {
+                    [PSCustomObject]@{ tag_name = "v1.2.3" }
+                }
+                $null = Get-GitLabRepoRelease -Uri "https://gitlab.com/api/v4/projects/group%2Fproject/releases/latest?per_page=1" -ReturnVersionOnly
+                Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+                    $Uri -eq "https://gitlab.com/api/v4/projects/group%2Fproject/releases/permalink/latest?per_page=1"
+                }
+            }
+
             It "Returns version from releases endpoint" {
                 Mock -CommandName Invoke-RestMethod -MockWith {
                     return [PSCustomObject]@{
@@ -128,6 +146,23 @@ InModuleScope -ModuleName "Evergreen" {
         }
 
         Context "Object output scenarios" {
+            It "Uses the fallback URL and created date when preferred fields are absent" {
+                Mock -CommandName Invoke-RestMethod -MockWith {
+                    [PSCustomObject]@{
+                        tag_name = "v1.2.3"
+                        created_at = "2026-07-01T10:00:00Z"
+                        assets = [PSCustomObject]@{
+                            links = @([PSCustomObject]@{ url = "https://example.com/fallback-x64.msi" })
+                        }
+                    }
+                }
+                $result = Get-GitLabRepoRelease -Uri "https://gitlab.com/api/v4/projects/123/releases"
+                $result.URI | Should -Be "https://example.com/fallback-x64.msi"
+                Should -Invoke ConvertTo-DateTime -Times 1 -Exactly -ParameterFilter {
+                    $DateTime -eq "2026-07-01T10:00:00Z"
+                }
+            }
+
             It "Returns an object with expected properties from assets links" {
                 Mock -CommandName Invoke-RestMethod -MockWith {
                     return [PSCustomObject]@{

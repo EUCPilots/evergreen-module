@@ -55,6 +55,13 @@
             "tarball_url",
             "node_id"
         ],
+        "GitLab": [
+            "tag_name",
+            "assets"
+        ],
+        "GitLabTags": [
+            "name"
+        ],
         "Codeberg": [
             "archive_download_count",
             "assets",
