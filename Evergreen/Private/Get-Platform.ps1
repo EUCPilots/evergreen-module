@@ -35,6 +35,6 @@ function Get-Platform {
         return
     }
 
-    Write-Verbose -Message "$($MyInvocation.MyCommand): Platform not found or ambiguous; returning Unknown."
-    Write-Output -InputObject "Unknown"
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Platform not found or ambiguous; defaulting to Windows."
+    Write-Output -InputObject "Windows"
 }
