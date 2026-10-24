@@ -49,5 +49,30 @@ Describe -Name "Get-InstallerType" {
             }
         }
 
+        It "Returns NoAdmin given a noadmin URL" {
+            InModuleScope -ModuleName "Evergreen" {
+                $Url = "https://example.com/app-noadmin-x64.exe"
+                Get-InstallerType -String $Url | Should -Be "NoAdmin"
+            }
+        }
+
+        It "Does not match installer types inside unrelated words" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-InstallerType -String "FlightSetup.exe" | Should -Be "Default"
+            }
+        }
+
+        It "Preserves installer type precedence when multiple types are present" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-InstallerType -String "app-portable-admin.exe" | Should -Be "Admin"
+            }
+        }
+
+        It "Matches GroupPolicy across camel-case filename tokens" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-InstallerType -String "AppGroupPolicySetup.exe" | Should -Be "GroupPolicy"
+            }
+        }
+
     }
 }
