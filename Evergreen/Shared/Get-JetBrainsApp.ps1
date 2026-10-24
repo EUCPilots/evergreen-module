@@ -11,40 +11,72 @@ function Get-JetBrainsApp {
         [System.Management.Automation.PSObject] $res
     )
 
-    foreach ($Edition in $res.Get.Update.Editions.GetEnumerator()) {
+    $Update = $res.Get.Update
+    if ([System.String]::IsNullOrWhiteSpace($Update.Uri)) {
+        throw "$($MyInvocation.MyCommand): Update URI is missing from the resource."
+    }
+    if ([System.String]::IsNullOrWhiteSpace($Update.ReplaceEdition) -or $Update.Uri.IndexOf($Update.ReplaceEdition, [System.StringComparison]::Ordinal) -lt 0) {
+        throw "$($MyInvocation.MyCommand): Update URI is missing the configured edition placeholder."
+    }
 
-        # Build the update uri based on the edition
+    $Editions = @($Update.Editions.GetEnumerator())
+    if ($Editions.Count -eq 0) {
+        throw "$($MyInvocation.MyCommand): No editions are configured in the resource."
+    }
+
+    $EditionCodes = @($Editions | ForEach-Object { $_.Value })
+    if ($EditionCodes | Where-Object { [System.String]::IsNullOrWhiteSpace($_) }) {
+        throw "$($MyInvocation.MyCommand): An edition code is empty in the resource."
+    }
+
+    # JetBrains accepts comma-separated product codes, so request the release feed once for all editions.
+    $Uri = $Update.Uri.Replace($Update.ReplaceEdition, ($EditionCodes -join ","))
+    $UpdateFeed = Invoke-EvergreenRestMethod -Uri $Uri
+
+    foreach ($Edition in $Editions) {
         Write-Verbose -Message "$($MyInvocation.MyCommand): Get application details for: $($Edition.Key)"
-        $uri = $res.Get.Update.Uri -replace $res.Get.Update.ReplaceEdition, $Edition.Value
-
-        # Query the JetBrains URI to get the JSON
-        $UpdateFeed = Invoke-EvergreenRestMethod -Uri $uri
-        if ([System.String]::IsNullOrWhiteSpace($UpdateFeed.$($Edition.Value).downloads.windows.link)) {
-            Write-Warning -Message "$($MyInvocation.MyCommand): 'downloads.windows.link' property is null; from '$uri'."
+        $ReleaseProperty = $UpdateFeed.PSObject.Properties[$Edition.Value]
+        if ($null -eq $ReleaseProperty) {
+            Write-Warning -Message "$($MyInvocation.MyCommand): No release data was returned for edition '$($Edition.Key)' ($($Edition.Value)) from '$Uri'."
+            continue
         }
-        else {
+        $Release = $ReleaseProperty.Value
+        $WindowsDownload = $Release.downloads.windows
+        if ($null -eq $WindowsDownload -or [System.String]::IsNullOrWhiteSpace($WindowsDownload.link)) {
+            Write-Warning -Message "$($MyInvocation.MyCommand): No Windows download link was returned for edition '$($Edition.Key)' ($($Edition.Value)) from '$Uri'."
+            continue
+        }
+        if ([System.String]::IsNullOrWhiteSpace($Release.version) -or [System.String]::IsNullOrWhiteSpace($Release.date)) {
+            throw "$($MyInvocation.MyCommand): Release data for edition '$($Edition.Key)' ($($Edition.Value)) is missing the version or date."
+        }
 
+        $Sha256 = $null
+        if (-not [System.String]::IsNullOrWhiteSpace($WindowsDownload.checksumLink)) {
             try {
-                $Sha256 = Invoke-EvergreenRestMethod -Uri $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
-                $Sha256 = ($Sha256 -split '\s+')[0]
+                $ChecksumResponse = Invoke-EvergreenRestMethod -Uri $WindowsDownload.checksumLink
+                $ChecksumParts = @("$ChecksumResponse" -split '\s+' | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) })
+                if ($ChecksumParts.Count -gt 0) {
+                    $Sha256 = $ChecksumParts[0]
+                }
+                else {
+                    Write-Warning -Message "$($MyInvocation.MyCommand): The SHA256 checksum response was empty for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'."
+                }
             }
             catch {
-                Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum from '$($UpdateFeed.$($Edition.Value).downloads.windows.checksumLink)'. Error: $_"
-                $Sha256 = $UpdateFeed.$($Edition.Value).downloads.windows.checksumLink
+                Write-Warning -Message "$($MyInvocation.MyCommand): Failed to retrieve the SHA256 checksum for edition '$($Edition.Key)' from '$($WindowsDownload.checksumLink)'. Error: $_"
             }
-
-            # Construct the output; Return the custom object to the pipeline
-            $PSObject = [PSCustomObject] @{
-                Version = $UpdateFeed.$($Edition.Value).version
-                Build   = $UpdateFeed.$($Edition.Value).build
-                Edition = $Edition.Key
-                Sha256  = $Sha256
-                Date    = ConvertTo-DateTime -DateTime $UpdateFeed.$($Edition.Value).date -Pattern $res.Get.Update.DatePattern
-                Size    = $UpdateFeed.$($Edition.Value).downloads.windows.size
-                Type    = Get-FileType -File $UpdateFeed.$($Edition.Value).downloads.windows.link
-                URI     = $UpdateFeed.$($Edition.Value).downloads.windows.link
-            }
-            Write-Output -InputObject $PSObject
         }
+
+        $PSObject = [PSCustomObject] @{
+            Version = $Release.version
+            Build   = $Release.build
+            Edition = $Edition.Key
+            Date    = ConvertTo-DateTime -DateTime $Release.date -Pattern $Update.DatePattern
+            Sha256  = $Sha256
+            Size    = $WindowsDownload.size
+            Type    = Get-FileType -File $WindowsDownload.link
+            URI     = $WindowsDownload.link
+        }
+        Write-Output -InputObject $PSObject
     }
 }
