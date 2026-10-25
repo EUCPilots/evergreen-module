@@ -2,6 +2,7 @@ function Get-AdoptiumTemurin {
     <#
         .NOTES
             Author: Aaron Parker
+            Releases without an installer are skipped.
     #>
     [OutputType([System.Management.Automation.PSObject])]
     [CmdletBinding(SupportsShouldProcess = $false)]
@@ -114,7 +115,9 @@ function Get-AdoptiumTemurin {
         }
 
         if (-not (& $HasProperty $Binary "installer")) {
-            throw "The Adoptium API response is missing 'binary.installer' for matching release at index $ReleaseIndex."
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping release at index $ReleaseIndex without an installer."
+            $ReleaseIndex++
+            continue
         }
         $Installer = & $GetValue $Binary "installer"
         if ($null -eq $Installer) {

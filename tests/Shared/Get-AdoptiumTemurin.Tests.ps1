@@ -75,6 +75,36 @@ InModuleScope -ModuleName "Evergreen" {
             { Get-AdoptiumTemurin -res $res } | Should -Throw "*MatchImage*regular expression is invalid*"
         }
 
+        It "Skips a release with <InstallerState> installer and returns the remaining releases" -TestCases @(
+            @{ InstallerState = "missing" }
+            @{ InstallerState = "null" }
+        ) {
+            param ($InstallerState)
+
+            $WithoutInstaller = [PSCustomObject]@{
+                version = [PSCustomObject]@{ openjdk_version = "jdk-17.0.0+0" }
+                binary  = [PSCustomObject]@{ image_type = "jdk" }
+            }
+            if ($InstallerState -eq "null") {
+                $WithoutInstaller.binary | Add-Member -NotePropertyName "installer" -NotePropertyValue $null
+            }
+            $script:TestAdoptiumReleases = @(
+                $WithoutInstaller
+                $script:TestAdoptiumReleases[0]
+                $WithoutInstaller
+                $script:TestAdoptiumReleases[1]
+                $WithoutInstaller
+            )
+
+            $Results = @(Get-AdoptiumTemurin -res $res)
+
+            $Results.Count | Should -Be 2
+            $Results[0].Version | Should -Be "17.0.1+1"
+            $Results[1].Version | Should -Be "17.0.2+2"
+            $Results[0].URI | Should -Be "https://example.com/temurin.msi"
+            $Results[1].URI | Should -Be "https://example.com/temurin-jdk.msi"
+        }
+
         It "Rejects malformed release data instead of silently skipping it" {
             $script:TestAdoptiumReleases = @([PSCustomObject]@{ version = "17" })
 
