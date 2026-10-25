@@ -2,18 +2,13 @@ function Remove-ProxyEnv {
     <#
         .SYNOPSIS
             Remove proxy server and credentials information from environment variables
+        .DESCRIPTION
+            This function removes the Evergreen proxy server and credentials information
+            from the script-scoped environment variables.
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param ()
-
-    begin {}
-    process {
-        try {
-            Remove-Variable -Name "EvergreenProxy" -Scope "Script" -Force -ErrorAction "SilentlyContinue"
-            Remove-Variable -Name "EvergreenProxyCreds" -Scope "Script" -Force -ErrorAction "SilentlyContinue"
-        }
-        catch [System.Exception] {
-            Write-Warning -Message "$($MyInvocation.MyCommand): Failed to remove proxy variables."
+    foreach ($VariableName in @("EvergreenProxy", "EvergreenProxyCreds")) {
+        if ($null -ne (Get-Variable -Name $VariableName -Scope "Script" -ErrorAction "SilentlyContinue")) {
+            Remove-Variable -Name $VariableName -Scope "Script" -Force -ErrorAction "Stop"
         }
     }
 }

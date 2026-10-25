@@ -9,7 +9,7 @@ function Get-CodebergRepoRelease {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript( {
-                if ($_ -match "^(https://codeberg.org/api/v1/repos/)([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)(/tags|/releases)") {
+                if ($_ -cmatch "^https://codeberg\.org/api/v1/repos/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/(tags|releases(?:/(?:latest|[0-9]+|tags/[^/?#]+))?)/?(?:\?[^#]*)?$") {
                     $true
                 }
                 else {
@@ -31,14 +31,13 @@ function Get-CodebergRepoRelease {
         [System.String] $Filter = "\.exe$|\.msi$|\.msp$|\.zip$",
 
         [Parameter(Mandatory = $false, Position = 4)]
+        [ValidateNotNull()]
+        [ValidateCount(2, 2)]
         [System.Array] $VersionReplace,
 
         [Parameter()]
         [System.Management.Automation.SwitchParameter] $ReturnVersionOnly
     )
-
-    begin {
-    }
 
     process {
         try {
@@ -49,7 +48,7 @@ function Get-CodebergRepoRelease {
 
             # Invoke the Codeberg releases REST API
             # Note that the API performs rate limiting.
-            # https://docs.Codeberg.com/en/free-pro-team@latest/rest/reference/repos#get-the-latest-release
+            # https://codeberg.org/api/swagger
             $params = @{
                 ContentType        = "application/json"
                 ErrorAction        = "Stop"
@@ -65,86 +64,36 @@ function Get-CodebergRepoRelease {
             if (Test-ProxyEnv -Creds) {
                 $params.ProxyCredential = $script:EvergreenProxyCreds
             }
-            # # If Codeberg_TOKEN or GH_TOKEN exists, let's add that to the API request
-            # if (Test-Path -Path "env:Codeberg_TOKEN") {
-            #     $params.Headers = @{ Authorization = "token $env:Codeberg_TOKEN" }
-            # }
-            # elseif (Test-Path -Path "env:GH_TOKEN") {
-            #     $params.Headers = @{ Authorization = "token $env:GH_TOKEN" }
-            # }
-
-            # Output the parameters when using -Verbose
-            foreach ($item in $params.GetEnumerator()) {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Invoke-WebRequest parameter: $($item.name): $($item.value)."
-            }
 
             Write-Verbose -Message "$($MyInvocation.MyCommand): Get Codeberg release from: $Uri."
             $release = Invoke-RestMethod @params
         }
         catch {
-            throw $_
+            throw
         }
 
-        if ($null -eq $script:resourceStrings.Properties.Codeberg) {
-            Write-Warning -Message "$($MyInvocation.MyCommand): Unable to validate release against Codeberg releases property object because we can't find the module resource."
+        $IsTagsEndpoint = ([System.Uri]$Uri).AbsolutePath -match "/repos/[^/]+/[^/]+/tags/?$"
+        $SourceProperty = if ($IsTagsEndpoint) { "name" } else { $VersionTag }
+        $RequiredProperties = if ($IsTagsEndpoint) { @("name") } else { @($script:resourceStrings.Properties.Codeberg) }
+        if (-not $IsTagsEndpoint -and $null -eq $script:resourceStrings.Properties.Codeberg) {
+            Write-Warning -Message "$($MyInvocation.MyCommand): Codeberg schema not found; validating only the properties required for this operation."
         }
-        else {
-            # Validate that $release has the expected properties
-            Write-Verbose -Message "$($MyInvocation.MyCommand): Validating Codeberg release object."
-            foreach ($item in $release) {
-
-                # Compare the Codeberg release object with properties that we expect
-                $params = @{
-                    ReferenceObject  = $script:resourceStrings.Properties.Codeberg
-                    DifferenceObject = (Get-Member -InputObject $item -MemberType NoteProperty)
-                    PassThru         = $true
-                    ErrorAction      = "Continue"
-                }
-                $missingProperties = Compare-Object @params
-
-                # throw an error for missing properties
-                if ($null -ne $missingProperties) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Validated successfully."
-                }
-                else {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Validation failed."
-                    $missingProperties | ForEach-Object {
-                        throw [System.Management.Automation.ValidationMetadataException]::New("$($MyInvocation.MyCommand): Property: '$_' missing")
-                    }
-                }
-            }
+        $RequiredProperties = @($RequiredProperties | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) + @($SourceProperty)
+        if (-not $ReturnVersionOnly) {
+            $RequiredProperties += "assets"
+        }
+        $release = Get-RepoResponse -Response $release -RequiredProperties $RequiredProperties
+        $VersionParams = @{ MatchVersion = $MatchVersion }
+        if ($PSBoundParameters.ContainsKey("VersionReplace")) {
+            $VersionParams.VersionReplace = $VersionReplace
         }
 
         # Build and array of the latest release and download URLs
         Write-Verbose -Message "$($MyInvocation.MyCommand): Found $($release.count) release/s."
         Write-Verbose -Message "$($MyInvocation.MyCommand): Found $($release.assets.count) asset/s."
 
-        if ($PSBoundParameters.ContainsKey("ReturnVersionOnly")) {
-            if ($Uri -match "^*tags$") {
-                try {
-                    # Uri matches tags fo the repo; find the latest tag
-                    $Version = [RegEx]::Match($release[0].name, $MatchVersion).Captures.Groups[1].Value
-                }
-                catch {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Failed to match version number as-is, returning: $($release[0].$VersionTag)."
-                    $Version = $release[0].name
-                }
-            }
-            else {
-                try {
-                    # Uri matches releases for the repo; return just the version string
-                    $Version = [RegEx]::Match($release[0].$VersionTag, $MatchVersion).Captures.Groups[1].Value
-                }
-                catch {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Failed to match version number as-is, returning: $($release[0].$VersionTag)."
-                    $Version = $item.$VersionTag
-                }
-            }
-
-            if ($PSBoundParameters.ContainsKey("VersionReplace")) {
-                # Replace string in version
-                $Version = $Version -replace $res.Get.VersionReplace[0], $res.Get.VersionReplace[1]
-            }
+        if ($ReturnVersionOnly) {
+            $Version = Get-RepoReleaseVersion -Source $release[0].$SourceProperty @VersionParams
 
             # Build the output object
             $PSObject = [PSCustomObject] @{
@@ -161,22 +110,7 @@ function Get-CodebergRepoRelease {
                     if ($asset.browser_download_url -match $Filter) {
                         Write-Verbose -Message "$($MyInvocation.MyCommand): Building Windows release output object with: $($asset.browser_download_url)."
 
-                        # Capture the version string from the specified release tag
-                        try {
-                            Write-Verbose -Message "$($MyInvocation.MyCommand): Matching version number against: $($item.$VersionTag)."
-                            $Version = [RegEx]::Match($item.$VersionTag, $MatchVersion).Captures.Groups[1].Value
-                            Write-Verbose -Message "$($MyInvocation.MyCommand): Found version number: $Version."
-                        }
-                        catch {
-                            Write-Verbose -Message "$($MyInvocation.MyCommand): Failed to match version number, returning: $($item.$VersionTag)."
-                            $Version = $item.$VersionTag
-                        }
-
-                        if ($PSBoundParameters.ContainsKey("VersionReplace")) {
-                            # Replace string in version
-                            Write-Verbose -Message "$($MyInvocation.MyCommand): Replace $($res.Get.VersionReplace[0])."
-                            $Version = $Version -replace $res.Get.VersionReplace[0], $res.Get.VersionReplace[1]
-                        }
+                        $Version = Get-RepoReleaseVersion -Source $item.$SourceProperty @VersionParams
 
                         # Build the output object
                         if ((Get-Platform -String $asset.browser_download_url) -eq "Windows") {
@@ -186,7 +120,7 @@ function Get-CodebergRepoRelease {
                                 Size          = $asset.size
                                 Architecture  = Get-Architecture -String $(Split-Path -Path $asset.browser_download_url -Leaf)
                                 InstallerType = Get-InstallerType -String $(Split-Path -Path $asset.browser_download_url -Leaf)
-                                Type          = [System.IO.Path]::GetExtension($asset.browser_download_url).Split(".")[-1]
+                                Type          = Get-FileType -File $(Split-Path -Path $asset.browser_download_url -Leaf)
                                 URI           = $asset.browser_download_url
                             }
                             Write-Output -InputObject $PSObject

@@ -29,36 +29,39 @@
 
     # Validate that $BestRelease has the expected properties
     Write-Verbose -Message "$($MyInvocation.MyCommand): Validating SourceForge release object."
-    $params = @{
-        ReferenceObject  = $script:resourceStrings.Properties.SourceForge
-        DifferenceObject = (Get-Member -InputObject $BestRelease -MemberType NoteProperty)
-        PassThru         = $true
-        ErrorAction      = "SilentlyContinue"
+    if ($null -eq $BestRelease) {
+        throw "$($MyInvocation.MyCommand): SourceForge returned an empty release response."
     }
-    $missingProperties = Compare-Object @params
-    if ($null -ne $missingProperties) {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Property validation succeeded."
+
+    $RequiredProperties = @($script:resourceStrings.Properties.SourceForge)
+    $MissingProperties = @($RequiredProperties | Where-Object { $_ -notin $BestRelease.PSObject.Properties.Name })
+    if ($MissingProperties.Count -gt 0) {
+        throw "$($MyInvocation.MyCommand): SourceForge release response is missing required properties: $($MissingProperties -join ', ')."
     }
-    else {
-        Write-Warning -Message "$($MyInvocation.MyCommand): Property validation failed."
-        $missingProperties | ForEach-Object {
-            throw [System.Management.Automation.ValidationMetadataException]::New("$($MyInvocation.MyCommand): Property: '$_' missing")
+    if ($null -eq $BestRelease.platform_releases.windows) {
+        throw "$($MyInvocation.MyCommand): SourceForge release response is missing platform_releases.windows."
+    }
+    foreach ($Property in @("filename", "url")) {
+        if ([System.String]::IsNullOrWhiteSpace([System.String]$BestRelease.platform_releases.windows.$Property)) {
+            throw "$($MyInvocation.MyCommand): SourceForge release response is missing platform_releases.windows.$Property."
         }
     }
 
-    # Find version number and the releases folder
-    try {
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Capture version number from: $($BestRelease.platform_releases.windows.filename)."
-        $Filename = Split-Path -Path $BestRelease.platform_releases.windows.filename -Leaf
-        $Folder = ($BestRelease.platform_releases.windows.filename -split $Filename)[0]
-        $Version = [RegEx]::Match($Folder, $MatchVersion).Captures.Groups[1].Value
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Found filename: [$Filename]."
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Found folder:   [$Folder]."
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Found version:  [$Version]."
+    # SourceForge's filename is a path whose final segment is usually "download".
+    $ReleasePath = ([System.String]$BestRelease.platform_releases.windows.filename).Split("?")[0]
+    $LastSeparator = $ReleasePath.LastIndexOf("/")
+    if ($LastSeparator -lt 0 -or $LastSeparator -eq ($ReleasePath.Length - 1)) {
+        throw "$($MyInvocation.MyCommand): Invalid SourceForge release filename path: $($BestRelease.platform_releases.windows.filename)."
     }
-    catch {
-        throw "$($MyInvocation.MyCommand): Failed to find filename, folder, version number from: $($BestRelease.platform_releases.windows.filename)."
+    $Folder = $ReleasePath.Substring(0, $LastSeparator + 1)
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Capture version number from: $Folder."
+    $VersionMatch = [RegEx]::Match($Folder, $MatchVersion)
+    if (-not $VersionMatch.Success -or -not $VersionMatch.Groups[1].Success -or [System.String]::IsNullOrWhiteSpace($VersionMatch.Groups[1].Value)) {
+        throw "$($MyInvocation.MyCommand): Failed to find a version in SourceForge release path: $Folder."
     }
+    $Version = $VersionMatch.Groups[1].Value
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Found folder: [$Folder]."
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Found version: [$Version]."
 
     # Find the mirror for the download
     $params = @{
@@ -77,34 +80,52 @@
     $Content = Invoke-EvergreenRestMethod @params
 
     # Filter items for file types that we've included in the manifest
-    $FileItems = $Content | Where-Object { ($_.link -replace $Download.ReplaceText.Link, "") -match $Download.MatchFileTypes }
-    Write-Verbose -Message "$($MyInvocation.MyCommand): found $($fileItems.Count) items."
+    $FileItems = @($Content | Where-Object {
+        $null -ne $_ -and
+        -not [System.String]::IsNullOrWhiteSpace([System.String]$_.link) -and
+        ($_.link -replace [System.String]$Download.ReplaceText.Link, "") -match [System.String]$Download.MatchFileTypes
+    })
+    Write-Verbose -Message "$($MyInvocation.MyCommand): found $($FileItems.Count) items."
+    if ($FileItems.Count -eq 0) {
+        throw "$($MyInvocation.MyCommand): No SourceForge feed items matched the configured file types '$($Download.MatchFileTypes)'."
+    }
 
     # For each filtered file, build a release object
     foreach ($item in $FileItems) {
+        $FilePath = [System.String]$item.description.'#cdata-section'
+        if ([System.String]::IsNullOrWhiteSpace($FilePath)) {
+            throw "$($MyInvocation.MyCommand): SourceForge feed item '$($item.link)' is missing its file path."
+        }
+        if ($null -eq $item.content -or $null -eq $item.content.PSObject.Properties["filesize"] -or $null -eq $item.content.hash -or $null -eq $item.content.hash.PSObject.Properties["#text"]) {
+            throw "$($MyInvocation.MyCommand): SourceForge feed item '$($item.link)' is missing file size or hash metadata."
+        }
         Write-Verbose -Message "$($MyInvocation.MyCommand): matched: $($item.link)."
-        Write-Verbose -Message "$($MyInvocation.MyCommand): file: $($item.description.'#cdata-section')"
+        Write-Verbose -Message "$($MyInvocation.MyCommand): file: $FilePath"
 
         #region Build the URL to the file using the mirror captured above
-        # Remove the file name from the path segments; # Build the URL path using the mirror and the file name for that specific item
-        $Segments = $Resolved.ResponseUri.Segments | Where-Object { $_ -ne $Resolved.ResponseUri.Segments[-1] }
-        $Url = @(
-            "https://",
-            $Resolved.ResponseUri.Host,
-            ($Segments -join ""),
-            $(Split-Path -Path $item.description.'#cdata-section' -Leaf) -replace " ", "%20"
-        ) -join ""
+        $Segments = $Resolved.ResponseUri.Segments
+        $BasePath = if ($Segments.Count -gt 1) {
+            $Segments[0..($Segments.Count - 2)] -join ""
+        }
+        else {
+            "/"
+        }
+        $FileName = ($FilePath -split "[\\/]")[-1]
+        $UriBuilder = [System.UriBuilder]::new($Resolved.ResponseUri)
+        $UriBuilder.Path = "$BasePath$([System.Uri]::EscapeDataString($FileName))"
+        $UriBuilder.Query = "viasf=1"
+        $Url = $UriBuilder.Uri.AbsoluteUri
         #endregion
 
         # Create the output object
         $PSObject = [PSCustomObject] @{
             Version      = $Version
-            Architecture = Get-Architecture -String $Url
-            Type         = [System.IO.Path]::GetExtension($Url).Split(".")[-1]
+            Architecture = Get-Architecture -String $FileName
+            Type         = [System.IO.Path]::GetExtension($FileName).TrimStart(".")
             Size         = $item.content.filesize
             Md5          = $item.content.hash.'#text'
-            FileName     = Split-Path -Path $Url -Leaf
-            URI          = "$($Url)?viasf=1"
+            FileName     = $FileName
+            URI          = $Url
         }
         Write-Output -InputObject $PSObject
     }

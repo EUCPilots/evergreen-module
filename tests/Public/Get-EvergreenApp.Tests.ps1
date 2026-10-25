@@ -8,14 +8,6 @@
 param ()
 
 BeforeDiscovery {
-    # Get the supported applications and sort randomly
-    # Exclude applications that have issues when run from GitHub or fail randomly due to the source server
-    #$AppsToSkip = "MicrosoftWvdRtcService|MicrosoftWvdRemoteDesktop|MicrosoftWvdMultimediaRedirection|MicrosoftWvdInfraAgent|MicrosoftWvdBootloader|MestrelabMnova|MozillaFirefox|AWSCLI|OBSStudio|ProgressChefInfraClient|MirantisLens|JetBrainsHub|FileZilla|PDFArranger"
-
-    # $AppsToSkip = "MicrosoftWvdRtcService|MicrosoftWvdRemoteDesktop|MicrosoftWvdMultimediaRedirection|MicrosoftWvdInfraAgent|MicrosoftWvdBootloader|FileZilla|PDFArranger|JetBrainsHub"
-    # $Applications = Find-EvergreenApp | `
-    #     Where-Object { $_.Name -notmatch $AppsToSkip } | `
-    #     Sort-Object { Get-Random } | Select-Object -ExpandProperty "Name"
 
     # Select all applications only when explicitly requested; otherwise sample 50.
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
@@ -27,55 +19,91 @@ BeforeDiscovery {
         Write-Host "Get-EvergreenApp: Testing a random sample of applications"
         Get-Random -InputObject $Applications -Count 50
     }
+
+    $ApplicationsToTest = $ApplicationsToTest | ForEach-Object {
+        @{ application = $_ }
+    }
 }
 
 Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $ApplicationsToTest {
     BeforeAll {
-        # Renaming the automatic $_ variable to $application to make it easier to work with
-        $application = $_
-        $Output = Get-EvergreenApp -Name $application -WarningAction "SilentlyContinue"
+        $Output = $null
+        $RetrievalError = $null
+        try {
+            $Output = Get-EvergreenApp -Name $application -WarningAction "SilentlyContinue"
+        }
+        catch {
+            $RetrievalError = $_
+        }
 
-        # RegEx
-        $MatchUrl = "(\s*\[+?\s*(\!?)\s*([a-z]*)\s*\|?\s*([a-z0-9\.\-_]*)\s*\]+?)?\s*([^\s]+)\s*"
         $MatchVersions = "(\d+(\.\d+){1,4}).*|(\d+)|^[0-9]{4}$|insider|Latest|Unknown|Preview|Any|jdk*|RateLimited"
     }
 
-    Context "Application function <application> should return something" -ForEach $Output {
-        BeforeAll {
-            $Item = $_
-        }
+    Context "Application function <application> should return something" {
+        It "Get-EvergreenApp -Name <application> should return non-empty output" {
+            if ($null -ne $RetrievalError) {
+                throw $RetrievalError.Exception
+            }
 
-        It "Output from <application> should not be null" {
-            $Item | Should -Not -BeNullOrEmpty
+            $Output | Should -Not -BeNullOrEmpty
         }
 
         It "Output from <application> should return the expected output type" {
-            $Item | Should -BeOfType "PSCustomObject"
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            foreach ($item in $Output) {
+                $item | Should -BeOfType "PSCustomObject"
+            }
         }
 
         It "Get-EvergreenApp -Name <application> should return a count of 1 or more" {
-            ($Item | Measure-Object).Count | Should -BeGreaterThan 0
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            ($Output | Measure-Object).Count | Should -BeGreaterThan 0
         }
     }
 
-    Context "Output from application function <application> returns expected properties" -ForEach $Output {
-        BeforeAll {
-            $Item = $_
-        }
-
+    Context "Output from application function <application> returns expected properties" {
         # Test that the output has a Version property and that property is a string
         It "Output for <application> should have a Version property that is a string" {
-            $Item.Version | Should -BeOfType [System.String]
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            foreach ($item in $Output) {
+                $item.Version | Should -BeOfType [System.String]
+            }
         }
 
         # Test that output with Version property is valid
         It "Output for <application> should have a valid version number" {
-            $Item.Version | Should -Match $MatchVersions
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            foreach ($item in $Output) {
+                $item.Version | Should -Match $MatchVersions
+            }
         }
 
         # Test that the output has a URI property and that property is a string
         It "Output for <application> should have a URI property that is a string" {
-            $Item.URI | Should -BeOfType [System.String]
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            foreach ($item in $Output) {
+                $item.URI | Should -BeOfType [System.String]
+            }
         }
     }
 }
