@@ -27,23 +27,44 @@ BeforeDiscovery {
 
 Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <application>" -ForEach $ApplicationsToTest {
     BeforeAll {
-        $Output = Get-EvergreenApp -Name $application -WarningAction "SilentlyContinue"
+        $Output = $null
+        $RetrievalError = $null
+        try {
+            $Output = Get-EvergreenApp -Name $application -WarningAction "SilentlyContinue"
+        }
+        catch {
+            $RetrievalError = $_
+        }
 
         $MatchVersions = "(\d+(\.\d+){1,4}).*|(\d+)|^[0-9]{4}$|insider|Latest|Unknown|Preview|Any|jdk*|RateLimited"
     }
 
     Context "Application function <application> should return something" {
-        It "Output from <application> should not be null" {
+        It "Get-EvergreenApp -Name <application> should return non-empty output" {
+            if ($null -ne $RetrievalError) {
+                throw $RetrievalError.Exception
+            }
+
             $Output | Should -Not -BeNullOrEmpty
         }
 
         It "Output from <application> should return the expected output type" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
             foreach ($item in $Output) {
                 $item | Should -BeOfType "PSCustomObject"
             }
         }
 
         It "Get-EvergreenApp -Name <application> should return a count of 1 or more" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
             ($Output | Measure-Object).Count | Should -BeGreaterThan 0
         }
     }
@@ -51,6 +72,11 @@ Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <a
     Context "Output from application function <application> returns expected properties" {
         # Test that the output has a Version property and that property is a string
         It "Output for <application> should have a Version property that is a string" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
             foreach ($item in $Output) {
                 $item.Version | Should -BeOfType [System.String]
             }
@@ -58,6 +84,11 @@ Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <a
 
         # Test that output with Version property is valid
         It "Output for <application> should have a valid version number" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
             foreach ($item in $Output) {
                 $item.Version | Should -Match $MatchVersions
             }
@@ -65,6 +96,11 @@ Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <a
 
         # Test that the output has a URI property and that property is a string
         It "Output for <application> should have a URI property that is a string" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
             foreach ($item in $Output) {
                 $item.URI | Should -BeOfType [System.String]
             }
