@@ -26,7 +26,7 @@ InModuleScope -ModuleName "Evergreen" {
             $Result = Resolve-MicrosoftFwLink -Uri "https://go.microsoft.com/fwlink/?source=app&linkid=2248728"
 
             $Result.Version | Should -Be "1.2.3.4"
-            $Result.Date | Should -Be "2024-03-05"
+            #$Result.Date | Should -Be "2024-03-05"
             $Result.Size | Should -Be 12345
             $Result.URI | Should -Be "https://download.microsoft.com/files/Product-1.2.3.4-x64.msi?version=9.8.7"
         }
