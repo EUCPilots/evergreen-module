@@ -33,7 +33,7 @@ InModuleScope -ModuleName "Evergreen" {
         }
 
         It "Returns versioned download URLs with architecture keys" {
-            $Results = @(Get-HashicorpApp -res $res)
+            $Results = @(Get-HashicorpApp -res $res | Sort-Object -Property Architecture)
 
             $Results.Count | Should -Be 2
             $Results[0].Architecture | Should -Be "x64"
