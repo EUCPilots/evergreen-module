@@ -1,5 +1,56 @@
 # Change log
 
+## VERSION
+
+> [!IMPORTANT]
+> Hardening and optimisation release for Private and Shared functions
+
+### New functionality
+- Add and export `Get-EvergreenAppsVersion` to report the version of the locally available Evergreen apps collection.
+- Add help content for the new cmdlet in both the module help XML and Markdown documentation.
+- Automatically detect GitHub release dates and adjust release synchronization to avoid relying on a scoped token.
+
+### Reliability and security
+- Improve HTTP request handling by validating HTTP/HTTPS URIs, supporting configurable timeouts, preserving proxy authentication, and making origin credentials opt-in.
+- Honor response character sets, improve redirect and certificate-check handling, redact sensitive URI details from diagnostics, and reliably clean up request and response resources.
+- Preserve the original request error when cleanup or response handling also fails.
+- Harden file downloads, DNS resolution, and GitHub rate-limit handling, with clearer error handling.
+- Make CAB extraction validate paths and fallback output, stage changes more safely, and roll back failed promotions. Make gzip extraction clean up safely on failure.
+- Honor explicit false certificate-check switches and restore process-wide certificate and TLS settings after requests. Guard unsupported redirect and TLS options, preserve connection reuse, and respect WhatIf before side effects. Return raw responses as UTF-8 text and always remove temporary files.
+- Validate HTTP(S) URIs, add configurable timeouts, and make origin credentials opt-in while preserving proxy authentication. Honor response charsets, redact sensitive URI details from diagnostics, and ensure resource cleanup without masking request errors. Replace the external-network test with local HTTP coverage for encoding, redirects, authentication, timeouts, and failure cleanup.
+
+### Parsing and data conversion
+- Make date parsing culture-independent and enable automatic date parsing by default.
+- Reject malformed JWTs without returning partial results.
+- Parse INI content in memory and support pipeline input.
+- Preserve arrays in hashtable conversion and improve recursive and empty-array conversion behavior.
+- Clarify Base64-to-hex conversion behavior.
+- Add `Get-RepoReleaseVersion.ps1` for consistent version extraction and optional replacement, and `Get-RepoResponse.ps1` for validating API responses and required properties.
+- Harden GitHub, GitLab, Codeberg, GitHub tag, and SourceForge release handling. This includes clearer validation of responses, assets, URLs, and version data. GitLab handling also supports release and tag endpoint variants, with legacy “latest” URLs mapped to the permalink endpoint.
+- Improve SourceForge download URL construction using the selected mirror and release metadata.
+- Strengthen validation and metadata normalization for Adoptium Temurin, Amazon Corretto, Azul Zulu, BellSoft Liberica JDK, and Oracle Java.
+- Improve HashiCorp URL generation, expand JetBrains Windows download coverage across editions, and make Opera manifest and asset handling more defensive.
+- Make proxy environment cleanup idempotent and add GitLab response-property configuration in `Evergreen.json`.
+- Tighten Microsoft fwlink validation to require a valid HTTPS `go.microsoft.com/fwlink/` URL with a numeric `linkid`. Version parsing now uses the final URL path, while unavailable date and size metadata return null.
+
+### Platform, version, and resource handling
+- Make platform detection explicit and default unknown platforms to Windows.
+- Prevent false architecture-marker matches and improve installer-type matching, including `NoAdmin` detection.
+- Resolve module versions from the owning module, use `TryParse` when sorting library versions, and strengthen .NET version conversion.
+- Harden manifest and module-resource JSON loading, filter validation and property matching, and Evergreen path creation.
+- Improve URL and dot-file handling in file-type detection, and simplify Unicode symbol handling.
+
+### Compatibility and diagnostics
+- Set the module’s minimum PowerShell version to 5.1 and use a typed version parameter in `Test-PSCore`.
+- Improve proxy credential state handling and make `Write-Message` honor `InformationAction`.
+
+### Tests and CI
+- Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
+- Update the validation workflow, including running `Update-Evergreen -Verbose`.
+
+### Compatibility note
+The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
+
 ## 2610.2859.0
 
 * Unify redirect resolution with `HttpClient` without reading response bodies. Support relative redirect locations, fall back to `GET` when `HEAD` is unsupported, enforce redirect limits, and forward authorization only across same-origin redirects.
