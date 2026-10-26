@@ -49,7 +49,9 @@
 - Update the validation workflow, including running `Update-Evergreen -Verbose`.
 
 ### Compatibility note
-The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
+
+> [!WARNING]
+> The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
 
 ## 2610.2859.0
 
