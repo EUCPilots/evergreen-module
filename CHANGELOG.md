@@ -39,6 +39,7 @@
 ### Platform, version, and resource handling
 - Make platform detection explicit and default unknown platforms to Windows.
 - Prevent false architecture-marker matches and improve installer-type matching, including `NoAdmin` detection.
+- Recognize `x64` followed by a numeric version in concatenated installer names such as `AcroRdrDCx642600222031_MUI.exe`.
 - Resolve module versions from the owning module, use `TryParse` when sorting library versions, and strengthen .NET version conversion.
 - Harden manifest and module-resource JSON loading, filter validation and property matching, and Evergreen path creation.
 - Improve URL and dot-file handling in file-type detection, and simplify Unicode symbol handling.

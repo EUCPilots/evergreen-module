@@ -28,6 +28,14 @@ Describe -Name "Get-Architecture" {
             }
         }
 
+        It "Returns x64 when the marker is between a product name and a numeric version" {
+            InModuleScope -ModuleName "Evergreen" {
+                Get-Architecture -String "https://ardownload3.adobe.com/pub/adobe/acrobat/win/AcrobatDC/2600222031/AcroRdrDCx642600222031_MUI.exe" | Should -Be "x64"
+                Get-Architecture -String "ProductX641234.exe" | Should -Be "x64"
+                Get-Architecture -String "x641234" | Should -Be "x64"
+            }
+        }
+
         It "Returns x86 given a string that won't match anything" {
             InModuleScope -ModuleName "Evergreen" {
                 Get-Architecture -String "the quick brown fox" | Should -Be "x86"
@@ -50,6 +58,8 @@ Describe -Name "Get-Architecture" {
             InModuleScope -ModuleName "Evergreen" {
                 Get-Architecture -String "notx64package" | Should -Be "x86"
                 Get-Architecture -String "farm64tool" | Should -Be "x86"
+                Get-Architecture -String "notx64123package" | Should -Be "x86"
+                Get-Architecture -String "123x64123.exe" | Should -Be "x86"
             }
         }
 
