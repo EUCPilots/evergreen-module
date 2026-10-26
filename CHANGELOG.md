@@ -5,6 +5,9 @@
 > [!IMPORTANT]
 > Hardening and optimisation release for Private and Shared functions
 
+> [!WARNING]
+> The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
+
 ### New functionality
 - Add and export `Get-EvergreenAppsVersion` to report the version of the locally available Evergreen apps collection.
 - Add help content for the new cmdlet in both the module help XML and Markdown documentation.
@@ -47,11 +50,6 @@
 ### Tests and CI
 - Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
 - Update the validation workflow, including running `Update-Evergreen -Verbose`.
-
-### Compatibility note
-
-> [!WARNING]
-> The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
 
 ## 2610.2859.0
 
