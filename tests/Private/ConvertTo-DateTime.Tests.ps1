@@ -13,13 +13,13 @@ BeforeAll {
 }
 
 Describe -Name "ConvertTo-DateTime" {
-    Context "Convert a date/time string to a DateTime object" {
-        It "Preserves the date and time from the provided format" {
+    Context "Convert a date/time string to a formatted date string" {
+        It "Formats the parsed date as yyyy-MM-dd" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = ConvertTo-DateTime -DateTime "2000/14/2 16:35:42" -Pattern "yyyy/d/M HH:mm:ss"
 
-                $Result | Should -BeOfType [System.DateTime]
-                $Result | Should -Be ([System.DateTime]::new(2000, 2, 14, 16, 35, 42))
+                $Result | Should -BeOfType [System.String]
+                $Result | Should -Be "2000-02-14"
             }
         }
 
@@ -34,9 +34,8 @@ Describe -Name "ConvertTo-DateTime" {
                     [System.Threading.Thread]::CurrentThread.CurrentUICulture = $LocalCulture
                     $Result = ConvertTo-DateTime -DateTime "12/31/2024 11:45:32 PM" -Pattern "MM/dd/yyyy hh:mm:ss tt"
 
-                    $Result | Should -BeOfType [System.DateTime]
-                    $Result | Should -Be ([System.DateTime]::new(2024, 12, 31, 23, 45, 32))
-                    $Result.ToString("d", $LocalCulture) | Should -Be "31/12/2024"
+                    $Result | Should -BeOfType [System.String]
+                    $Result | Should -Be "2024-12-31"
                 }
                 finally {
                     [System.Threading.Thread]::CurrentThread.CurrentCulture = $OriginalCulture
@@ -58,10 +57,10 @@ Describe -Name "ConvertTo-DateTime" {
             InModuleScope -ModuleName "Evergreen" {
                 $Result = ConvertTo-DateTime -DateTime "12/31/2024"
 
-                $Result | Should -BeOfType [System.DateTime]
-                $Result | Should -Be ([System.DateTime]::new(2024, 12, 31))
+                $Result | Should -BeOfType [System.String]
+                $Result | Should -Be "2024-12-31"
                 ConvertTo-DateTime -DateTime "December 31, 2024 11:45 PM" |
-                    Should -Be ([System.DateTime]::new(2024, 12, 31, 23, 45, 0))
+                    Should -Be "2024-12-31"
             }
         }
     }
@@ -90,9 +89,8 @@ Describe -Name "ConvertTo-DateTime" {
             InModuleScope -ModuleName "Evergreen" -Parameters @{ InputDate = $InputDate; Expected = $Expected } {
                 $Result = ConvertTo-DateTime -DateTime $InputDate
 
-                $Result | Should -BeOfType [System.DateTime]
-                $Result.Ticks | Should -Be $Expected.Ticks
-                $Result.Kind | Should -Be $Expected.Kind
+                $Result | Should -BeOfType [System.String]
+                $Result | Should -Be $Expected.ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
             }
         }
 
@@ -107,14 +105,14 @@ Describe -Name "ConvertTo-DateTime" {
                     foreach ($InputDate in @("December 31, 2024 11:45 PM", "12/31/2024 23:45:00", "2024-12-31T23:45:00")) {
                         $Result = ConvertTo-DateTime -DateTime $InputDate
 
-                        $Result | Should -BeOfType [System.DateTime]
-                        $Result | Should -Be ([System.DateTime]::new(2024, 12, 31, 23, 45, 0))
+                        $Result | Should -BeOfType [System.String]
+                        $Result | Should -Be "2024-12-31"
                     }
                     $AmbiguousResult = ConvertTo-DateTime -DateTime "04/05/2024"
-                    $AmbiguousResult | Should -Be ([System.DateTime]::new(2024, 4, 5))
+                    $AmbiguousResult | Should -Be "2024-04-05"
                     foreach ($InputDate in @("04/05/2024 11:45 PM", "04/05/2024 11:45:00 PM", "04/05/2024 23:45:00")) {
                         ConvertTo-DateTime -DateTime $InputDate |
-                            Should -Be ([System.DateTime]::new(2024, 4, 5, 23, 45, 0))
+                            Should -Be "2024-04-05"
                     }
                 }
                 finally {
@@ -134,21 +132,21 @@ Describe -Name "ConvertTo-DateTime" {
         It "Prefers automatic parsing over an explicit pattern" {
             InModuleScope -ModuleName "Evergreen" {
                 ConvertTo-DateTime -DateTime "04/05/2024" -Pattern "dd/MM/yyyy" |
-                    Should -Be ([System.DateTime]::new(2024, 4, 5))
+                    Should -Be "2024-04-05"
             }
         }
 
         It "Falls back to an explicit pattern when automatic parsing fails" {
             InModuleScope -ModuleName "Evergreen" {
                 ConvertTo-DateTime -DateTime "2024|31|12" -Pattern "yyyy|dd|MM" -AutoDetect |
-                    Should -Be ([System.DateTime]::new(2024, 12, 31))
+                    Should -Be "2024-12-31"
             }
         }
 
         It "Allows automatic parsing to be explicitly disabled" {
             InModuleScope -ModuleName "Evergreen" {
                 ConvertTo-DateTime -DateTime "04/05/2024" -Pattern "dd/MM/yyyy" -AutoDetect:$false |
-                    Should -Be ([System.DateTime]::new(2024, 5, 4))
+                    Should -Be "2024-05-04"
                 { ConvertTo-DateTime -DateTime "December 31, 2024" -AutoDetect:$false } |
                     Should -Throw "*Failed to parse date*"
             }
