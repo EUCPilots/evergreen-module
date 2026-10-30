@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2610.2862.0
 
 > [!IMPORTANT]
 > Hardening and optimisation release for Private and Shared functions
