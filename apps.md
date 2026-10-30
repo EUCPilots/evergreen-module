@@ -1,4 +1,4 @@
-﻿# 599 Supported applications
+﻿# 600 Supported applications
 
 Evergreen supports the following applications:
 
@@ -260,6 +260,7 @@ Evergreen supports the following applications:
 | JetBrainsPyCharm                                | JetBrains PyCharm                                                 | https://www.jetbrains.com/                                                                                                                  |
 | JetBrainsRider                                  | JetBrains Rider                                                   | https://www.jetbrains.com/                                                                                                                  |
 | JetBrainsRubyMine                               | JetBrains RubyMine                                                | https://www.jetbrains.com/rubymine                                                                                                          |
+| JetBrainsRustRover                              | JetBrains RustRover                                               | https://www.jetbrains.com/rustrover                                                                                                         |
 | JetBrainsSpace                                  | JetBrains Space                                                   | https://www.jetbrains.com/space                                                                                                             |
 | JetBrainsTeamCity                               | JetBrains TeamCity                                                | https://www.jetbrains.com/teamcity                                                                                                          |
 | JetBrainsToolbox                                | JetBrains Toolbox App                                             | https://www.jetbrains.com/toolbox-app/                                                                                                      |
@@ -279,9 +280,9 @@ Evergreen supports the following applications:
 | KeePassXCTeamKeePassXC                          | KeePassXC Team KeePassXC                                          | https://keepassxc.org/                                                                                                                      |
 | KeeperSecurityKeeperCommander                   | Keeper Security Keeper Commander                                  | https://www.keepersecurity.com/commander.html                                                                                               |
 | KeeWeb                                          | KeeWeb                                                            | https://github.com/keeweb/keeweb                                                                                                            |
-| KiCad                                           | KiCad KiCad                                                       | https://gitlab.com/kicad/code/kicad                                                                                                         |
+| KiCad                                           | KiCad KiCad                                                       | https://www.kicad.org/                                                                                                                      |
 | KinoveaKinovea                                  | Kinovea                                                           | https://kinovea.org                                                                                                                         |
-| KitwareCMake                                    | Kitware CMake                                                     | https://gitlab.kitware.com/cmake/cmake                                                                                                      |
+| KitwareCMake                                    | Kitware CMake                                                     | https://cmake.org/                                                                                                                          |
 | KongInsomnia                                    | Kong Insomnia                                                     | https://insomnia.rest/                                                                                                                      |
 | KovidGoyalCalibre                               | Kovid Goyal Calibre                                               | https://calibre-ebook.com/                                                                                                                  |
 | ksnip                                           | ksnip ksnip                                                       | https://github.com/ksnip/ksnip                                                                                                              |
