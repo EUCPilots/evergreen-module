@@ -44,7 +44,7 @@ Describe -Tag "Export" -Name "Export-EvergreenApp" {
         }
 
         It "Should write the output file OK" {
-            (Get-Content -Path $File | ConvertFrom-Json).Count | Should -Match $App.Count
+            (Get-Content -Path $File -Raw | ConvertFrom-Json).Count | Should -Be $App.Count
         }
     }
 
@@ -95,10 +95,32 @@ Describe -Tag "Export" -Name "Export-EvergreenApp" {
             }
 
             Export-EvergreenApp -InputObject @($Input) -Path $ExistingPath | Out-Null
-            $Versions = @(Get-Content -LiteralPath $ExistingPath -Raw | ConvertFrom-Json)
+            $Versions = @((Get-Content -LiteralPath $ExistingPath -Raw | ConvertFrom-Json))
 
             $Versions.Count | Should -Be 2
             $Versions.Version | Should -Be @("1.0", "2.0")
+        }
+
+        It "Should merge multiple existing versions without duplicating records on repeated exports" {
+            $ExistingPath = Join-Path -Path $TestDrive -ChildPath "ExistingMultiple.json"
+            @'
+[
+  { "Version": "1.0", "URI": "https://example.com/v1" },
+  { "Version": "2.0", "URI": "https://example.com/v2" }
+]
+'@ | Set-Content -LiteralPath $ExistingPath
+            $Input = [PSCustomObject] @{
+                Version = "3.0"
+                URI     = "https://example.com/v3"
+            }
+
+            foreach ($Attempt in 1..2) {
+                Export-EvergreenApp -InputObject @($Input) -Path $ExistingPath | Out-Null
+                $Versions = @((Get-Content -LiteralPath $ExistingPath -Raw | ConvertFrom-Json))
+
+                $Versions.Count | Should -Be 3
+                $Versions.Version | Should -Be @("1.0", "2.0", "3.0")
+            }
         }
     }
 
@@ -112,7 +134,7 @@ Describe -Tag "Export" -Name "Export-EvergreenApp" {
             )
 
             $Result = @($Input | Export-EvergreenApp -Path $BatchPath)
-            $Versions = @(Get-Content -LiteralPath $BatchPath -Raw | ConvertFrom-Json)
+            $Versions = @((Get-Content -LiteralPath $BatchPath -Raw | ConvertFrom-Json))
 
             $Result.Count | Should -Be 1
             $Versions.Version | Should -Be @("1.0", "2.0", "preview")

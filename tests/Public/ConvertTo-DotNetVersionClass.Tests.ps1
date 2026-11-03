@@ -80,7 +80,8 @@ Describe -Tag "Convert" -Name "ConvertTo-DotNetVersionClass" {
     }
 
     It "Should reject Unicode decimal digits instead of hashing them as text" {
-        { ConvertTo-DotNetVersionClass -Version "١.٢" } |
+        $UnicodeVersion = "{0}.{1}" -f [char]0x0661, [char]0x0662
+        { ConvertTo-DotNetVersionClass -Version $UnicodeVersion } |
             Should -Throw -ExceptionType ([System.ArgumentException])
     }
 
