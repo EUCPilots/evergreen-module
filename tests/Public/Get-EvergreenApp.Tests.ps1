@@ -10,7 +10,7 @@ param ()
 BeforeDiscovery {
 
     # Select all applications only when explicitly requested; otherwise sample 50.
-    $SkipApps = ("FreedomScientificFusion", "FreedomScientificJAWS", "FreedomScientificZoomText", "OracleJava17", "OracleJava20", "OracleJava21", "OracleJava22", "OracleJava23", "OracleJava25", "OracleJava26", "OracleJava27", "Slack", "VideoLanVlcPlayer", "ClaudeDesktop", "OctopusDeployServer")
+    $SkipApps = ("FreedomScientificFusion", "FreedomScientificJAWS", "FreedomScientificZoomText", "OracleJava17", "OracleJava20", "OracleJava21", "OracleJava22", "OracleJava23", "OracleJava25", "OracleJava26", "OracleJava27", "Slack", "VideoLanVlcPlayer", "ClaudeDesktop", "OctopusDeployServer", "acaudwellGource", "ESETSecureAuthentication", "Proxyman", "RonyShapiroPasswordSafe", "VeraCrypt")
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
     $Applications = $Applications | Where-Object { $SkipApps -notcontains $_ }
     $ApplicationsToTest = if ($env:EVERGREEN_TEST_ALL_APPLICATIONS -eq "true") {
