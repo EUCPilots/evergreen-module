@@ -20,6 +20,10 @@ function Save-EvergreenApp {
             ValueFromPipelineByPropertyName,
             HelpMessage = "Specify a top-level directory path where the application installers will be saved into.",
             ParameterSetName = "Path")]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipelineByPropertyName,
+            ParameterSetName = "CustomPath")]
         [System.IO.FileInfo] $Path,
 
         [Parameter(
@@ -28,6 +32,10 @@ function Save-EvergreenApp {
             ValueFromPipelineByPropertyName,
             HelpMessage = "Specify a single directory path where all application installers will be saved into.",
             ParameterSetName = "CustomPath")]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipelineByPropertyName,
+            ParameterSetName = "Path")]
         [Alias("LiteralPath")]
         [System.IO.FileInfo] $CustomPath,
 
@@ -56,42 +64,12 @@ function Save-EvergreenApp {
 
         # Disable the Invoke-WebRequest progress bar for faster downloads
         if ($PSBoundParameters.ContainsKey("Verbose") -and !($PSBoundParameters.ContainsKey("NoProgress"))) {
-            $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
+            $ProgressPreference = [System.Management.Automation.ActionPreference]::continue
         }
         else {
             $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
         }
 
-        # Path variable from parameters set via -Path or -CustomPath
-        switch ($PSCmdlet.ParameterSetName) {
-            "Path" {
-                if ([System.String]::IsNullOrEmpty($Path)) { throw "Cannot bind argument to parameter 'Path' because it is null." }
-                $NewPath = $Path
-            }
-            "CustomPath" {
-                if ([System.String]::IsNullOrEmpty($CustomPath)) { throw "Cannot bind argument to parameter 'CustomPath' because it is null." }
-                $NewPath = $CustomPath
-            }
-        }
-
-        #region Test $Path and attempt to create it if it doesn't exist
-        if (Test-Path -Path $NewPath -PathType "Container") {
-            Write-Verbose -Message "Path exists: $NewPath."
-        }
-        else {
-            Write-Verbose -Message "Path does not exist: $NewPath."
-            Write-Verbose -Message "Create: $NewPath."
-            $params = @{
-                Path        = $NewPath
-                ItemType    = "Container"
-                ErrorAction = "Stop"
-            }
-            New-Item @params | Out-Null
-        }
-        #endregion
-
-        # Enable TLS 1.2
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
     }
 
     process {
@@ -111,89 +89,107 @@ function Save-EvergreenApp {
             else {
                 throw [System.Management.Automation.PropertyNotFoundException] "InputObject does not have valid URI property."
             }
-            #endregion
+
+            if (
+                [System.String]::IsNullOrWhiteSpace([System.String]$OutFile) -or
+                [System.IO.Path]::IsPathRooted($OutFile) -or
+                $OutFile -in @(".", "..") -or
+                $OutFile -match '[/\\]' -or
+                $OutFile.IndexOfAny([System.IO.Path]::GetInvalidFileNameChars()) -ge 0
+            ) {
+                throw [System.ArgumentException]::New("InputObject contains an invalid file name: '$OutFile'.")
+            }
+            if (
+                -not [System.String]::IsNullOrWhiteSpace([System.String]$Path) -and
+                -not [System.String]::IsNullOrWhiteSpace([System.String]$CustomPath)
+            ) {
+                throw [System.ArgumentException]::New("Specify either Path or CustomPath, not both.")
+            }
+            $UseCustomPath = -not [System.String]::IsNullOrWhiteSpace([System.String]$CustomPath)
+            $RequestedPath = if ($UseCustomPath) { $CustomPath } else { $Path }
+            if ([System.String]::IsNullOrWhiteSpace([System.String]$RequestedPath)) {
+                throw [System.ArgumentException]::New("A path must be provided with -Path or -CustomPath.")
+            }
+            $NewPath = [System.IO.Path]::GetFullPath([System.String]$RequestedPath)
+            if (-not (Test-Path -LiteralPath $NewPath -PathType "Container")) {
+                if (Test-Path -LiteralPath $NewPath -PathType "Leaf") {
+                    throw [System.IO.IOException]::New("The destination path is a file: $NewPath.")
+                }
+                if ($PSCmdlet.ShouldProcess($NewPath, "Create directory")) {
+                    [System.IO.Directory]::CreateDirectory($NewPath) | Out-Null
+                }
+            }
 
             # Handle the output path depending on whether -Path or -CustomPath are used
-            switch ($PSCmdlet.ParameterSetName) {
-                "Path" {
-                    # Resolve $Path to build the initial value of $OutPath
-                    $OutPath = Resolve-Path -Path $Path -ErrorAction "SilentlyContinue"
-                    if ($null -ne $OutPath) {
-
-                        #region Validate the Version property
-                        if ([System.Boolean]($Object.Version)) {
-
-                            # Build $OutPath with the "Channel", "Release", "Language", "Architecture" properties
-                            $OutPath = New-EvergreenPath -InputObject $Object -Path $OutPath
-                        }
-                        else {
-                            throw [System.Management.Automation.PropertyNotFoundException] "InputObject does not have valid Version property."
-                        }
-                        #endregion
-                    }
-                    else {
-                        throw [System.IO.DirectoryNotFoundException] "Failed validating $OutPath."
-                    }
-                }
-                "CustomPath" {
-                    $OutPath = Resolve-Path -Path $CustomPath -ErrorAction "Stop"
-                }
-            }
-
-            $DownloadFile = $(Join-Path -Path $OutPath -ChildPath $OutFile)
-            if ($PSBoundParameters.ContainsKey("Force") -or !(Test-Path -Path $DownloadFile -PathType "Leaf")) {
-                #region Download the file
-                # If URL in the catch list, customise the user agent
-                # if ($Object.URI -match $script:resourceStrings.UserAgent.CatchList -and -not($PSBoundParameters.ContainsKey("UserAgent"))) {
-                #     Write-Verbose -Message "URL matches catch list for custom user agent: $($Object.URI)."
-                #     $UserAgent = (Get-EvergreenUserAgent)
-                # }
-
-                # Invoke-WebRequest parameters
-                $params = @{
-                    Uri             = $Object.URI
-                    OutFile         = $DownloadFile
-                    UseBasicParsing = $true
-                    UserAgent       = (Get-EvergreenUserAgent)
-                    ErrorAction     = "Continue"
-                }
-                if ($PSBoundParameters.ContainsKey("Proxy")) {
-                    $params.Proxy = $Proxy
-                }
-                if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
-                    $params.ProxyCredential = $ProxyCredential
-                }
-                # Output the parameters when using -Verbose
-                foreach ($item in $params.GetEnumerator()) {
-                    Write-Verbose -Message "Invoke-WebRequest parameter: $($item.name): $($item.value)."
-                }
-                # Download the file
-                if ($PSCmdlet.ShouldProcess($Object.URI, "Download")) {
-                    Invoke-WebRequest @params
-                }
-                #endregion
-                # Write the downloaded file path to the pipeline
-                if (Test-Path -Path $DownloadFile) {
-                    Write-Verbose -Message "Successfully downloaded: $DownloadFile."
-                    Write-Output -InputObject $(Get-ChildItem -Path $DownloadFile)
-                }
+            if ($UseCustomPath) {
+                $OutPath = $NewPath
             }
             else {
-                #region Write the downloaded file path to the pipeline
-                if (Test-Path -Path $DownloadFile) {
-                    Write-Verbose -Message "File exists: $DownloadFile."
-                    Write-Output -InputObject $(Get-ChildItem -Path $DownloadFile)
+                if ([System.Boolean]($Object.Version)) {
+                    $OutPath = New-EvergreenPath -InputObject $Object -Path $NewPath
                 }
-                #endregion
+                else {
+                    throw [System.Management.Automation.PropertyNotFoundException] "InputObject does not have valid Version property."
+                }
+            }
+
+            $OutPath = [System.IO.Path]::GetFullPath([System.String]$OutPath)
+            $DownloadFile = [System.IO.Path]::GetFullPath((Join-Path -Path $OutPath -ChildPath $OutFile))
+            $OutPathPrefix = $OutPath.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+            $comparison = if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+                [System.StringComparison]::OrdinalIgnoreCase
+            }
+            else {
+                [System.StringComparison]::Ordinal
+            }
+            if (-not $DownloadFile.StartsWith($OutPathPrefix, $comparison)) {
+                throw [System.ArgumentException]::New("The destination file resolves outside the output directory: $DownloadFile.")
+            }
+
+            if ($Force -or -not (Test-Path -LiteralPath $DownloadFile -PathType "Leaf")) {
+                if ($PSCmdlet.ShouldProcess($DownloadFile, "Download")) {
+                    $TemporaryFile = Join-Path -Path $OutPath -ChildPath ".evergreen-$([System.Guid]::NewGuid().ToString('N')).download"
+                    $params = @{
+                        Uri             = $Object.URI
+                        OutFile         = $TemporaryFile
+                        UseBasicParsing = $true
+                        UserAgent       = $UserAgent
+                        ErrorAction     = "Stop"
+                    }
+                    if ($PSBoundParameters.ContainsKey("Proxy")) {
+                        $params.Proxy = $Proxy
+                    }
+                    if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
+                        $params.ProxyCredential = $ProxyCredential
+                    }
+                    Write-Verbose -Message "Downloading to: $DownloadFile."
+                    $securityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+                    try {
+                        [System.Net.ServicePointManager]::SecurityProtocol = $securityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+                        Invoke-WebRequest @params
+                        if (-not (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf")) {
+                            throw [System.IO.IOException]::New("The download completed without creating a file: $TemporaryFile.")
+                        }
+                        Move-Item -LiteralPath $TemporaryFile -Destination $DownloadFile -Force:$Force -ErrorAction "Stop"
+                    }
+                    finally {
+                        [System.Net.ServicePointManager]::SecurityProtocol = $securityProtocol
+                        if (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf") {
+                            Remove-Item -LiteralPath $TemporaryFile -Force -ErrorAction "SilentlyContinue"
+                        }
+                    }
+                    Write-Verbose -Message "Successfully downloaded: $DownloadFile."
+                    Write-Output -InputObject (Get-Item -LiteralPath $DownloadFile)
+                }
+            }
+            elseif (Test-Path -LiteralPath $DownloadFile -PathType "Leaf") {
+                Write-Verbose -Message "File exists: $DownloadFile."
+                Write-Output -InputObject (Get-Item -LiteralPath $DownloadFile)
             }
         }
     }
 
     end {
         Write-Verbose -Message "Complete."
-        if ($PSCmdlet.ShouldProcess("Remove variables")) {
-            if (Test-Path -Path Variable:params) { Remove-Variable -Name "params" -ErrorAction "SilentlyContinue" }
-            Remove-Variable -Name "OutPath", "OutFile" -ErrorAction "SilentlyContinue"
-        }
     }
 }
