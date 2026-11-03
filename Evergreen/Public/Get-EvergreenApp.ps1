@@ -3,7 +3,7 @@ function Get-EvergreenApp {
         .EXTERNALHELP Evergreen-help.xml
     #>
     [OutputType([System.Management.Automation.PSObject])]
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $false)]
     [Alias("gea")]
     param (
         [Parameter(
@@ -12,7 +12,16 @@ function Get-EvergreenApp {
             ValueFromPipeline,
             ValueFromPipelineByPropertyName,
             HelpMessage = "Specify an application name. Use Find-EvergreenApp to list supported applications.")]
-        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+            if ([System.Management.Automation.WildcardPattern]::ContainsWildcardCharacters($_) -or $_ -match '[\\/]' -or [System.IO.Path]::GetFileName($_) -cne $_ -or $_ -in @(".", "..")) {
+                throw "Name must be an application name, not a path or wildcard pattern."
+            }
+            if ($_ -match '[<>:"|\x00-\x1F]') {
+                throw "Name contains characters that are not valid in an application name."
+            }
+            $true
+        })]
         [Alias("ApplicationName")]
         [System.String] $Name = "Microsoft365Apps",
 
@@ -38,13 +47,12 @@ function Get-EvergreenApp {
             throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
         }
 
-        # Force Invoke-EvergreenRestMethod and Invoke-EvergreenWebRequest to ignore certificate errors
-        if ($SkipCertificateCheck.IsPresent) {
-            $script:SkipCertificateCheck = $true
+        # 'res' is reserved for the application manifest passed to the application function
+        if ($PSBoundParameters.ContainsKey("AppParams") -and $AppParams.ContainsKey("res")) {
+            throw [System.ArgumentException]::New("AppParams must not include the reserved key 'res'.")
         }
-    }
 
-    process {
+        # Set the proxy environment once for all pipeline input; removed in the end block or on a terminating error
         if ($PSBoundParameters.ContainsKey("Proxy")) {
             if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
                 Set-ProxyEnv -Proxy $Proxy -ProxyCredential $ProxyCredential
@@ -54,11 +62,19 @@ function Get-EvergreenApp {
             }
         }
 
+        # Force Invoke-EvergreenRestMethod and Invoke-EvergreenWebRequest to ignore certificate errors
+        if ($SkipCertificateCheck.IsPresent) {
+            $script:SkipCertificateCheck = $true
+        }
+    }
+
+    process {
         # Build a path to the application function
         # This will build a path like: %LocalAppData%\Evergreen\Apps\Get-TeamViewer.ps1
         $FunctionPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Apps", "Get-$Name.ps1")
         Write-Verbose -Message "Function path: $FunctionPath"
 
+        $Completed = $false
         try {
             #region Test that the function exists and run it to return output
             if (Test-Path -Path $FunctionPath -PathType "Leaf" -ErrorAction "SilentlyContinue") {
@@ -130,15 +146,25 @@ function Get-EvergreenApp {
                 throw [System.IO.FileNotFoundException]::New($Msg)
             }
             #endregion
+            $Completed = $true
         }
         finally {
-            if ($PSBoundParameters.ContainsKey("Proxy")) {
-                Remove-ProxyEnv
+            # The end block does not run when a terminating error stops the pipeline, so clean up here on failure
+            if (-not $Completed) {
+                if ($PSBoundParameters.ContainsKey("Proxy")) {
+                    Remove-ProxyEnv
+                }
+                if ($SkipCertificateCheck.IsPresent) {
+                    $script:SkipCertificateCheck = $false
+                }
             }
         }
     }
 
     end {
+        if ($PSBoundParameters.ContainsKey("Proxy")) {
+            Remove-ProxyEnv
+        }
         if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $false
         }
