@@ -109,11 +109,11 @@
       <command:verb>Export</command:verb>
       <command:noun>EvergreenApp</command:noun>
       <maml:description>
-        <maml:para>Exports application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file.</maml:para>
+        <maml:para>Exports application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file. Pipeline input is collected and written once per invocation.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Export application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file.</maml:para>
+      <maml:para>Export application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file. Pipeline input is collected and written once per invocation. JSON serialization supports a depth of up to 100 levels.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
