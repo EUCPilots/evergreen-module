@@ -72,7 +72,9 @@ function Get-EvergreenApp {
                     . $FunctionPath
                 }
                 catch {
-                    throw $_
+                    Write-Warning -Message "Failed to dot source application function from: $FunctionPath."
+                    Write-ErrorDetail -ErrorRecord $_ -LastFrame "Get-EvergreenApp"
+                    $PSCmdlet.ThrowTerminatingError($_)
                 }
 
                 try {
@@ -101,9 +103,13 @@ function Get-EvergreenApp {
                     }
                 }
                 catch {
+                    # Display the function name, script file and line number where the error occurred
+                    Write-ErrorDetail -ErrorRecord $_ -LastFrame "Get-EvergreenApp"
                     $Msg = "Run 'Get-EvergreenApp -Name `"$Name`" -Verbose' to review additional details for troubleshooting."
                     Write-Warning -Message $Msg
-                    throw $_
+
+                    # Re-throw the original error record to preserve its origin (InvocationInfo and stack trace)
+                    $PSCmdlet.ThrowTerminatingError($_)
                 }
             }
             else {
@@ -133,8 +139,6 @@ function Get-EvergreenApp {
     }
 
     end {
-        # Remove these variables for next run
-        Remove-Variable -Name "Output", "function" -ErrorAction "SilentlyContinue"
         if ($SkipCertificateCheck.IsPresent) {
             $script:SkipCertificateCheck = $false
         }
