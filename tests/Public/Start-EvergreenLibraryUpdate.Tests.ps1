@@ -69,4 +69,51 @@ Describe -Tag "Start" -Name "Start-EvergreenLibraryUpdate" {
             { Start-EvergreenLibraryUpdate -Path $script:TestLibPath -AppName "MicrosoftEdge" } | Should -Not -Throw
         }
     }
+
+    Context "Validate application state is isolated per library entry" {
+        BeforeAll {
+            $script:TestLibPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "LibraryUpdateStateTest-$([System.Guid]::NewGuid().ToString())"
+            $null = New-Item -Path (Join-Path -Path $script:TestLibPath -ChildPath "FirstApp") -ItemType "Directory" -Force
+            $null = New-Item -Path (Join-Path -Path $script:TestLibPath -ChildPath "SecondApp") -ItemType "Directory" -Force
+            foreach ($Version in @("2.0.0", "3.0.0")) {
+                $VersionPath = Join-Path -Path $script:TestLibPath -ChildPath "FirstApp/$Version"
+                $null = New-Item -Path $VersionPath -ItemType "Directory" -Force
+                $null = New-Item -Path (Join-Path -Path $VersionPath -ChildPath "saved.exe") -ItemType "File" -Force
+            }
+            [PSCustomObject]@{
+                Name = "TestLibrary"
+                Applications = @(
+                    [PSCustomObject]@{ Name = "FirstApp"; EvergreenApp = "FirstApp"; Filter = "" }
+                    [PSCustomObject]@{ Name = "SecondApp"; EvergreenApp = "SecondApp"; Filter = "" }
+                )
+            } | ConvertTo-Json -Depth 5 | Out-File -FilePath (Join-Path -Path $script:TestLibPath -ChildPath "EvergreenLibrary.json") -Encoding "Utf8"
+
+            Mock Get-EvergreenApp -ModuleName Evergreen -MockWith {
+                if ($Name -eq "FirstApp") {
+                    @(
+                        [PSCustomObject]@{ Version = "3.0.0"; URI = "https://example.test/saved.exe" }
+                        [PSCustomObject]@{ Version = "2.0.0"; URI = "https://example.test/saved.exe" }
+                        [PSCustomObject]@{ Version = "1.0.0"; URI = "https://example.test/not-saved.exe" }
+                    )
+                }
+            }
+            Mock Save-EvergreenApp -ModuleName Evergreen -MockWith {
+                Get-ChildItem -LiteralPath $Path -Filter "saved.exe" -File -Recurse
+            }
+        }
+
+        AfterAll {
+            Remove-Item -Path $script:TestLibPath -Recurse -Force -ErrorAction "SilentlyContinue"
+        }
+
+        It "Should export only versions with matching saved installers and not reuse prior application data" {
+            Start-EvergreenLibraryUpdate -Path $script:TestLibPath -Confirm:$false -WarningAction "SilentlyContinue"
+
+            $firstManifest = Get-Content -Path (Join-Path -Path $script:TestLibPath -ChildPath "FirstApp/FirstApp.json") -Raw | ConvertFrom-Json
+            $firstManifest.Count | Should -Be 2
+            $firstManifest[0].Path | Should -Be (Join-Path -Path $script:TestLibPath -ChildPath "FirstApp/2.0.0/saved.exe")
+            $firstManifest[1].Path | Should -Be (Join-Path -Path $script:TestLibPath -ChildPath "FirstApp/3.0.0/saved.exe")
+            Test-Path -LiteralPath (Join-Path -Path $script:TestLibPath -ChildPath "SecondApp/SecondApp.json") | Should -Be $false
+        }
+    }
 }
