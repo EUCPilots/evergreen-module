@@ -84,6 +84,7 @@
         ]
     },
     "Uri": {
+        "Api": "https://evergreen-api.stealthpuppy.com",
         "Project": "https://github.com/eucpilots/evergreen-module/",
         "Docs": "https://eucpilots.com/evergreen/",
         "Issues": "https://eucpilots.com/evergreen/issues/",

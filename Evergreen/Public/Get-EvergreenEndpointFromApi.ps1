@@ -17,14 +17,14 @@ function Get-EvergreenEndpointFromApi {
     begin {
         # Get the endpoints for updates/versions source URLs
         $params = @{
-            Uri         = "https://evergreen-api.stealthpuppy.com/endpoints/versions"
+            Uri         = "$($script:resourceStrings.Uri.Api)/endpoints/versions"
             ErrorAction = "Stop"
         }
         $Versions = Invoke-EvergreenRestMethod @params
 
         # Get the endpoints from the download URLs
         $params = @{
-            Uri         = "https://evergreen-api.stealthpuppy.com/endpoints/downloads"
+            Uri         = "$($script:resourceStrings.Uri.Api)/endpoints/downloads"
             ErrorAction = "Stop"
         }
         $Downloads = Invoke-EvergreenRestMethod @params

@@ -106,17 +106,8 @@ function Get-EvergreenApp {
                     # Run the application function and collect the output
                     Write-Verbose -Message "Calling: Get-$Name."
 
-                    # Sort the output
-                    $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
-                    if (Test-Path -Path $FilterPath -PathType "Leaf") {
-                        Write-Verbose -Message "Applying output filter from path: $FilterPath"
-                        & Get-$Name @params | ForEach-Object {
-                            Get-FilteredData -InputObject $_ -FilterPath $FilterPath
-                        }
-                    }
-                    else {
-                        & Get-$Name @params
-                    }
+                    # Standardise the output via the app's filter, if one exists
+                    & Get-$Name @params | Invoke-OutputFilter -Name $Name
                 }
                 catch {
                     # Display the function name, script file and line number where the error occurred
