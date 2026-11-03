@@ -54,12 +54,38 @@ function Save-EvergreenApp {
         [System.Management.Automation.SwitchParameter] $Force,
 
         [Parameter(Mandatory = $false)]
-        [System.Management.Automation.SwitchParameter] $NoProgress
+        [System.Management.Automation.SwitchParameter] $NoProgress,
+
+        [Parameter()]
+        [ValidateRange(0, 10)]
+        [System.Int32] $RetryCount = 3,
+
+        [Parameter()]
+        [ValidateRange(0, 60)]
+        [System.Int32] $RetryDelaySeconds = 2,
+
+        [Parameter()]
+        [ValidateRange(1, 3600)]
+        [System.Int32] $MaximumRetryDelaySeconds = 300,
+
+        [Parameter()]
+        [ValidateRange(1, 600)]
+        [System.Int32] $ConnectionTimeoutSeconds = 30,
+
+        [Parameter()]
+        [ValidateRange(1, 86400)]
+        [System.Int32] $OperationTimeoutSeconds = 300
     )
 
     begin {
         if ($PSBoundParameters.ContainsKey("ProxyCredential") -and -not($PSBoundParameters.ContainsKey("Proxy"))) {
             throw [System.ArgumentException]::New("ProxyCredential requires Proxy.")
+        }
+        if (
+            $PSVersionTable.PSVersion -lt [System.Version]"7.4" -and
+            $PSBoundParameters.ContainsKey("OperationTimeoutSeconds")
+        ) {
+            Write-Warning -Message "OperationTimeoutSeconds is only supported by Invoke-WebRequest in PowerShell 7.4 and later."
         }
 
         # Disable the Invoke-WebRequest progress bar for faster downloads
@@ -162,13 +188,100 @@ function Save-EvergreenApp {
                     if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
                         $params.ProxyCredential = $ProxyCredential
                     }
+                    if ($PSVersionTable.PSVersion -ge [System.Version]"7.4") {
+                        $params.ConnectionTimeoutSeconds = $ConnectionTimeoutSeconds
+                        $params.OperationTimeoutSeconds = $OperationTimeoutSeconds
+                    }
+                    else {
+                        $params.TimeoutSec = $ConnectionTimeoutSeconds
+                    }
+                    $supportsResume = $PSVersionTable.PSVersion -ge [System.Version]"6.1"
+                    if ($supportsResume) {
+                        $params.Resume = $true
+                    }
                     Write-Verbose -Message "Downloading to: $DownloadFile."
                     $securityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
                     try {
                         [System.Net.ServicePointManager]::SecurityProtocol = $securityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest @params
-                        if (-not (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf")) {
-                            throw [System.IO.IOException]::New("The download completed without creating a file: $TemporaryFile.")
+                        $attempt = 0
+                        $maximumAttempts = $RetryCount + 1
+                        $downloaded = $false
+                        while (-not $downloaded) {
+                            $attempt++
+                            try {
+                                if (-not $supportsResume -and (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf")) {
+                                    Remove-Item -LiteralPath $TemporaryFile -Force -ErrorAction "Stop"
+                                }
+                                Invoke-WebRequest @params
+                                if (-not (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf")) {
+                                    throw [System.IO.IOException]::New("The download completed without creating a file: $TemporaryFile.")
+                                }
+                                $downloaded = $true
+                            }
+                            catch {
+                                $requestError = $_
+                                $response = $requestError.Exception.Response
+                                $statusCode = $null
+                                $retryAfterHeader = $null
+                                if ($null -ne $response) {
+                                    try { $statusCode = [System.Int32]$response.StatusCode } catch { }
+                                    try { $retryAfterHeader = [System.String]$response.Headers["Retry-After"] } catch { }
+                                }
+
+                                $retryableStatusCodes = @(408, 429, 500, 502, 503, 504)
+                                $retryableExceptionTypes = @(
+                                    "System.IO.IOException",
+                                    "System.Net.Http.HttpRequestException",
+                                    "System.Net.Sockets.SocketException",
+                                    "System.Net.WebException",
+                                    "System.Threading.Tasks.TaskCanceledException",
+                                    "System.TimeoutException"
+                                )
+                                $isNetworkFailure = $false
+                                $currentException = $requestError.Exception
+                                while ($null -ne $currentException) {
+                                    if ($currentException.GetType().FullName -in $retryableExceptionTypes) {
+                                        $isNetworkFailure = $true
+                                        break
+                                    }
+                                    $currentException = $currentException.InnerException
+                                }
+                                $isRetryable = $isNetworkFailure -or ($statusCode -in $retryableStatusCodes)
+                                if (-not $isRetryable -or $attempt -ge $maximumAttempts) {
+                                    throw
+                                }
+
+                                if (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf") {
+                                    Remove-Item -LiteralPath $TemporaryFile -Force -ErrorAction "SilentlyContinue"
+                                }
+
+                                $delaySeconds = [System.Int32][System.Math]::Min(
+                                    $MaximumRetryDelaySeconds,
+                                    $RetryDelaySeconds * [System.Math]::Pow(2, $attempt - 1)
+                                )
+                                $retryAfterSeconds = 0
+                                $parsedRetryAfterSeconds = 0
+                                if ([System.Int32]::TryParse($retryAfterHeader, [ref]$parsedRetryAfterSeconds)) {
+                                    $retryAfterSeconds = [System.Math]::Max(0, $parsedRetryAfterSeconds)
+                                }
+                                else {
+                                    $retryAfterDate = [System.DateTimeOffset]::MinValue
+                                    if ([System.DateTimeOffset]::TryParse($retryAfterHeader, [ref]$retryAfterDate)) {
+                                        $retryAfterSeconds = [System.Math]::Max(0, [System.Math]::Ceiling(($retryAfterDate - [System.DateTimeOffset]::UtcNow).TotalSeconds))
+                                    }
+                                }
+                                if ($retryAfterSeconds -gt 0) {
+                                    $delaySeconds = [System.Int32][System.Math]::Min(
+                                        $MaximumRetryDelaySeconds,
+                                        [System.Math]::Max($delaySeconds, $retryAfterSeconds)
+                                    )
+                                }
+
+                                Write-Verbose -Message "Download attempt $attempt failed. Retrying in $delaySeconds second(s). Error: $($requestError.Exception.Message)"
+                                if ($delaySeconds -gt 0) {
+                                    Start-Sleep -Seconds $delaySeconds
+                                }
+                            }
                         }
                         Move-Item -LiteralPath $TemporaryFile -Destination $DownloadFile -Force:$Force -ErrorAction "Stop"
                     }

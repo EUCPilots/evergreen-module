@@ -2084,6 +2084,66 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>RetryCount</maml:name>
+        <maml:description>
+          <maml:para>Maximum number of retries after the initial download attempt. Retries are limited to transient network failures and retryable HTTP responses.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>3</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>RetryDelaySeconds</maml:name>
+        <maml:description>
+          <maml:para>Initial delay before retrying. The delay increases exponentially and is limited by MaximumRetryDelaySeconds. A Retry-After response header is honored up to the same limit.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>2</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>MaximumRetryDelaySeconds</maml:name>
+        <maml:description>
+          <maml:para>Maximum delay between retry attempts, including delays requested by the server.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>300</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ConnectionTimeoutSeconds</maml:name>
+        <maml:description>
+          <maml:para>Connection timeout passed to Invoke-WebRequest. PowerShell 7.4 and later use ConnectionTimeoutSeconds; earlier versions use the legacy TimeoutSec parameter.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>30</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OperationTimeoutSeconds</maml:name>
+        <maml:description>
+          <maml:para>Timeout between data reads during a download. This parameter is passed to Invoke-WebRequest only in PowerShell 7.4 and later. Earlier versions issue a warning when this parameter is explicitly set.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>300</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:inputTypes>
       <command:inputType>

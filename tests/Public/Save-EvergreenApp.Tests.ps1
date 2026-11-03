@@ -122,8 +122,129 @@ InModuleScope -ModuleName "Evergreen" {
                     throw "download failed"
                 }
 
-                { Save-EvergreenApp -InputObject $testApp -CustomPath $testPath } | Should -Throw "*download failed*"
+                { Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -RetryCount 0 } | Should -Throw "*download failed*"
                 @(Get-ChildItem -LiteralPath $testPath -Force) | Should -BeNullOrEmpty
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Retries transient failures with bounded exponential backoff" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $script:downloadAttempts = 0
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    $script:downloadAttempts++
+                    [System.IO.File]::WriteAllText($OutFile, "partial")
+                    if ($script:downloadAttempts -lt 3) {
+                        throw [System.Net.WebException]::new("connection reset")
+                    }
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+                Mock Start-Sleep {}
+
+                $result = Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -RetryCount 2 -RetryDelaySeconds 1
+
+                $result.Name | Should -Be "installer.msi"
+                Get-Content -LiteralPath $result.FullName -Raw | Should -Be "installer"
+                Should -Invoke Invoke-WebRequest -Times 3 -Exactly
+                Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 1 }
+                Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 2 }
+                if ($PSVersionTable.PSVersion -ge [System.Version]"6.1") {
+                    Should -Invoke Invoke-WebRequest -Times 3 -Exactly -ParameterFilter { $Resume }
+                }
+                else {
+                    Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Resume }
+                }
+                if ($PSVersionTable.PSVersion -ge [System.Version]"6.1") {
+                    Should -Invoke Invoke-WebRequest -Times 3 -Exactly -ParameterFilter { $Resume }
+                }
+                else {
+                    Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Resume }
+                }
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name downloadAttempts -Scope Script -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Honors Retry-After on retryable HTTP responses" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $script:downloadAttempts = 0
+            $script:retryException = [System.InvalidOperationException]::new("too many requests")
+            $script:retryException | Add-Member -MemberType NoteProperty -Name Response -Value ([PSCustomObject]@{
+                StatusCode = 429
+                Headers    = @{ "Retry-After" = "5" }
+            })
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    $script:downloadAttempts++
+                    if ($script:downloadAttempts -eq 1) {
+                        throw $script:retryException
+                    }
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+                Mock Start-Sleep {}
+
+                Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -RetryCount 1 -RetryDelaySeconds 1 | Out-Null
+
+                Should -Invoke Invoke-WebRequest -Times 2 -Exactly
+                Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 5 }
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name retryException, downloadAttempts -Scope Script -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Does not retry permanent HTTP errors" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $script:downloadAttempts = 0
+            $script:permanentException = [System.InvalidOperationException]::new("not found")
+            $script:permanentException | Add-Member -MemberType NoteProperty -Name Response -Value ([PSCustomObject]@{
+                StatusCode = 404
+                Headers    = @{}
+            })
+            try {
+                Mock Invoke-WebRequest {
+                    $script:downloadAttempts++
+                    throw $script:permanentException
+                }
+                Mock Start-Sleep {}
+
+                { Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -RetryCount 3 } | Should -Throw "*not found*"
+
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+                Should -Invoke Start-Sleep -Times 0 -Exactly
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name permanentException, downloadAttempts -Scope Script -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Passes timeout settings supported by the current PowerShell version" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+
+                if ($PSVersionTable.PSVersion -ge [System.Version]"7.4") {
+                    Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -ConnectionTimeoutSeconds 17 -OperationTimeoutSeconds 121 | Out-Null
+                    Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                        $ConnectionTimeoutSeconds -eq 17 -and $OperationTimeoutSeconds -eq 121
+                    }
+                }
+                else {
+                    Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -ConnectionTimeoutSeconds 17 | Out-Null
+                    Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $TimeoutSec -eq 17 }
+                }
             }
             finally {
                 Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
