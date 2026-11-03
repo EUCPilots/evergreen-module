@@ -10,13 +10,13 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>The ConvertTo-DotNetVersionClass function takes a version string as input and converts it into a .NET Version class.  It normalizes the segments of the version string, ensuring it has exactly four segments by either summing excess segments  or padding with zeros if there are fewer than four segments.</maml:para>
-      <maml:para>If the conversion to a .NET Version class fails, the function will return the normalized version string as a string.</maml:para>
+      <maml:para>The ConvertTo-DotNetVersionClass function converts a version string to a four-component .NET Version. Periods, underscores, plus signs, and hyphens separate components. Numeric components must use ASCII digits. Text components are mapped to stable SHA-256-derived integers; this allows conversion but does not preserve semantic version ordering, so the resulting .NET Version should not be used to compare prerelease or other text-labeled versions.</maml:para>
+      <maml:para>Components after the third are summed into the fourth component, which saturates at Int32.MaxValue. Versions with fewer than four components are padded with zeros. Invalid or out-of-range numeric components result in an error.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>ConvertTo-DotNetVersionClass</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
           <maml:name>Version</maml:name>
           <maml:description>
             <maml:para>A version string to convert to a standard .NET compliant version class.</maml:para>
@@ -31,7 +31,7 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
         <maml:name>Version</maml:name>
         <maml:description>
           <maml:para>A version string to convert to a standard .NET compliant version class.</maml:para>
@@ -44,8 +44,26 @@
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
     </command:parameters>
-    <command:inputTypes />
-    <command:returnValues />
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>A version string with numeric or text components separated by periods, underscores, plus signs, or hyphens.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Version</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>A four-component .NET Version. Text-derived components are not suitable for semantic version ordering.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
     <maml:alertSet>
       <maml:alert>
         <maml:para>Site: https://eucpilots.com/evergreen</maml:para>
