@@ -26,7 +26,9 @@ The cmdlet validates that `-Path` points to an Evergreen library by checking for
 
 By default, all applications in the library are processed and the latest 3 versions are retained.
 
-The keep limit counts individual manifest entries in both Windows PowerShell 5.1 and PowerShell 7. The retained manifest remains a JSON array, even when `-Keep 1` is used. Only installer files recorded in pruned entries are removed; empty version directories are not removed.
+The keep limit counts individual manifest entries in both Windows PowerShell 5.1 and PowerShell 7. The retained manifest remains a JSON array, even when `-Keep 1` is used. Installer paths can be absolute, relative to the application directory, or arrays of paths recorded by older module versions. Only installer files recorded in pruned entries are removed, and files also referenced by retained entries are preserved. Paths outside the application directory and paths traversing reparse points are skipped. Empty version directories are not removed.
+
+Files left behind by an earlier prune cannot be removed by rerunning this cmdlet if their entries are no longer in the manifest. This cmdlet does not scan for unrecorded installer files.
 
 Use `-Verbose` to troubleshoot library validation, application selection, manifest reads, version sorting, retained and pruned entries, skipped installer files, and manifest updates. Messages distinguish planned pruning from files actually removed and report actions skipped by `-WhatIf` or declined confirmation. Verbose messages do not change the returned objects.
 
@@ -169,8 +171,10 @@ Returns one object per processed application with the following properties:
 - `ApplicationName`
 - `Keep`
 - `KeptCount`
-- `RemovedCount`
-- `RemovedFiles`
+- `PrunedCount`: number of entries selected for pruning.
+- `RemovedCount`: number of entries removed from the manifest.
+- `RemovedFileCount`: number of installer files actually deleted.
+- `RemovedFiles`: paths of installer files actually deleted.
 - `ManifestPath`
 
 ## NOTES

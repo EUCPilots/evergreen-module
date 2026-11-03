@@ -134,6 +134,16 @@ function Remove-EvergreenLibraryAppVersion {
             }
 
             [System.Array] $RetainedObjects = @($RetainedItems | Select-Object -ExpandProperty "Item")
+            $AppPathPrefix = $AppPath.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+            $RetainedInstallerPaths = @(
+                foreach ($Retained in $RetainedObjects) {
+                    foreach ($RecordedPath in $Retained.Path) {
+                        if (-not [System.String]::IsNullOrWhiteSpace($RecordedPath)) {
+                            [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($AppPath, [System.String]$RecordedPath))
+                        }
+                    }
+                }
+            )
             $ManifestUpdated = $false
             if ($PSCmdlet.ShouldProcess($AppManifest, "Update retained versions")) {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Writing $($RetainedObjects.Count) retained entries to '$AppManifest'."
@@ -163,50 +173,60 @@ function Remove-EvergreenLibraryAppVersion {
             if ($ManifestUpdated) {
                 foreach ($Pruned in $PrunedItems) {
                     Write-Verbose -Message "$($MyInvocation.MyCommand): Pruning version '$($Pruned.VersionText)' (manifest index $($Pruned.Index), parsed version: $($Pruned.HasParsedVersion)). Installer: '$($Pruned.Item.Path)'."
-                    if ([System.String]::IsNullOrEmpty($Pruned.Item.Path)) {
+                    $RecordedPaths = @($Pruned.Item.Path | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) })
+                    if ($RecordedPaths.Count -eq 0) {
                         Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal for version '$($Pruned.VersionText)': no installer path is recorded."
                         continue
                     }
 
-                    $InstallerPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($AppPath, [System.String]$Pruned.Item.Path))
-                    $AppPathPrefix = $AppPath.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
-                    if (-not $InstallerPath.StartsWith($AppPathPrefix, $PathComparison)) {
-                        Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$($Pruned.Item.Path)' is outside '$AppPath'."
-                        continue
-                    }
-
-                    if (-not (Test-Path -LiteralPath $InstallerPath -PathType "Leaf")) {
-                        Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal: '$InstallerPath' does not exist or is not a file."
-                        continue
-                    }
-
-                    $CurrentPath = $InstallerPath
-                    $UnsafePath = $false
-                    while ($CurrentPath.StartsWith($AppPathPrefix, $PathComparison) -or
-                        [System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
-                        $PathItem = Get-Item -LiteralPath $CurrentPath -Force -ErrorAction "Stop"
-                        if ($PathItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-                            $UnsafePath = $true
-                            break
+                    foreach ($RecordedPath in $RecordedPaths) {
+                        $InstallerPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($AppPath, [System.String]$RecordedPath))
+                        if (-not $InstallerPath.StartsWith($AppPathPrefix, $PathComparison)) {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$RecordedPath' is outside '$AppPath'."
+                            continue
                         }
-                        if ([System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
-                            break
-                        }
-                        $CurrentPath = Split-Path -Path $CurrentPath -Parent
-                    }
-                    if ($UnsafePath) {
-                        Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$InstallerPath' traverses a reparse point."
-                        continue
-                    }
 
-                    if ($PSCmdlet.ShouldProcess($InstallerPath, "Remove old installer")) {
-                        Write-Verbose -Message "$($MyInvocation.MyCommand): Removing installer '$InstallerPath'."
-                        Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction "Stop"
-                        $RemovedFiles.Add($InstallerPath) | Out-Null
-                        Write-Verbose -Message "$($MyInvocation.MyCommand): Removed installer '$InstallerPath'."
-                    }
-                    else {
-                        Write-Verbose -Message "$($MyInvocation.MyCommand): Installer removal not approved by ShouldProcess (WhatIf or confirmation declined): '$InstallerPath'."
+                        $ReferencedByRetainedEntry = @($RetainedInstallerPaths | Where-Object {
+                                [System.String]::Equals($_, $InstallerPath, $PathComparison)
+                            }).Count -gt 0
+                        if ($ReferencedByRetainedEntry) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$InstallerPath' is referenced by a retained entry."
+                            continue
+                        }
+
+                        if (-not (Test-Path -LiteralPath $InstallerPath -PathType "Leaf")) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal: '$InstallerPath' does not exist or is not a file."
+                            continue
+                        }
+
+                        $CurrentPath = $InstallerPath
+                        $UnsafePath = $false
+                        while ($CurrentPath.StartsWith($AppPathPrefix, $PathComparison) -or
+                            [System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
+                            $PathItem = Get-Item -LiteralPath $CurrentPath -Force -ErrorAction "Stop"
+                            if ($PathItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                                $UnsafePath = $true
+                                break
+                            }
+                            if ([System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
+                                break
+                            }
+                            $CurrentPath = Split-Path -Path $CurrentPath -Parent
+                        }
+                        if ($UnsafePath) {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$InstallerPath' traverses a reparse point."
+                            continue
+                        }
+
+                        if ($PSCmdlet.ShouldProcess($InstallerPath, "Remove old installer")) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Removing installer '$InstallerPath'."
+                            Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction "Stop"
+                            $RemovedFiles.Add($InstallerPath) | Out-Null
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Removed installer '$InstallerPath'."
+                        }
+                        else {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Installer removal not approved by ShouldProcess (WhatIf or confirmation declined): '$InstallerPath'."
+                        }
                     }
                 }
             }

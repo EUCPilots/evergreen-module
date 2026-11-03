@@ -155,6 +155,80 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             ($manifest.Version -join ",") | Should -Be "3.0.0,1.0.0,2.0.0-rc.1"
         }
 
+        It "Should remove nested installers recorded as <PathFormat> paths" -TestCases @(
+            @{ PathFormat = "absolute" }
+            @{ PathFormat = "relative" }
+            @{ PathFormat = "multiple" }
+        ) {
+            param ($PathFormat)
+
+            $appPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp"
+            $manifestPath = Join-Path -Path $appPath -ChildPath "ContosoApp.json"
+            [System.Array] $versions = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $oldPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[old].exe"
+            $null = New-Item -Path (Split-Path -Path $oldPath -Parent) -ItemType "Directory" -Force
+            Set-Content -LiteralPath $oldPath -Value "old"
+            Remove-Item -LiteralPath $versions[0].Path -Force
+            $versions[0].Path = if ($PathFormat -eq "relative") {
+                "Stable/1.0.0/x64/setup[old].exe"
+            }
+            elseif ($PathFormat -eq "multiple") {
+                $secondPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[other].exe"
+                Set-Content -LiteralPath $secondPath -Value "old"
+                @($oldPath, "Stable/1.0.0/x64/setup[other].exe")
+            }
+            else {
+                $oldPath
+            }
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
+
+            Test-Path -LiteralPath $oldPath | Should -Be $false
+            $result.RemovedFiles | Should -Contain $oldPath
+            $result.RemovedCount | Should -Be 1
+            if ($PathFormat -eq "multiple") {
+                Test-Path -LiteralPath $secondPath | Should -Be $false
+                $result.RemovedFiles | Should -Contain $secondPath
+                $result.RemovedFileCount | Should -Be 2
+            }
+            else {
+                $result.RemovedFileCount | Should -Be 1
+            }
+            @(Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json).Count | Should -Be 3
+            foreach ($version in $versions[1..3]) {
+                Test-Path -LiteralPath $version.Path | Should -Be $true
+            }
+        }
+
+        It "Should preserve installers also referenced by retained entries with array paths: <UseArray>" -TestCases @(
+            @{ UseArray = $false }
+            @{ UseArray = $true }
+        ) {
+            param ($UseArray)
+
+            $appPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp"
+            $manifestPath = Join-Path -Path $appPath -ChildPath "ContosoApp.json"
+            [System.Array] $versions = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $oldPath = $versions[0].Path
+            $sharedPath = $versions[3].Path
+            $versions[0].Path = if ($UseArray) { @($oldPath, $sharedPath) } else { $sharedPath }
+            $versions[3].Path = @("Contoso-4.0.0.exe")
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
+
+            Test-Path -LiteralPath $sharedPath | Should -Be $true
+            $result.RemovedFiles | Should -Not -Contain $sharedPath
+            if ($UseArray) {
+                Test-Path -LiteralPath $oldPath | Should -Be $false
+                $result.RemovedFileCount | Should -Be 1
+            }
+            else {
+                $result.RemovedFileCount | Should -Be 0
+            }
+        }
+
         It "Should not prune apps not selected by Name" {
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-1.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-2.0.0.exe") | Should -Be $true
