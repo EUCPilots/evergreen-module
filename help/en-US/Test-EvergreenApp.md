@@ -14,13 +14,13 @@ Validates target URIs passed to this function from `Get-EvergreenApp`.
 ## SYNTAX
 
 ```
-Test-EvergreenApp [-InputObject] <PSObject> [-Proxy <String>] [-ProxyCredential <PSCredential>] [-Force]
- [-NoProgress] [-WhatIf] [-Confirm] [<CommonParameters>]
+Test-EvergreenApp [-InputObject] <PSObject> [-Proxy <String>] [-ProxyCredential <PSCredential>]
+ [-UserAgent <String>] [-ConnectionTimeoutSeconds <Int32>] [-NoProgress] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Evergreen includes the function `Test-EvergreenApp` that can test whether the application installer URLs returned from `Get-EvergreenApp` exist at the URL specified. `Test-EvergreenApp` will enable you to quickly validate whether the application installer exists.
+Evergreen includes the function `Test-EvergreenApp` that validates application installer URLs returned from `Get-EvergreenApp`. It first sends a HEAD request and retries failed requests with a ranged GET. The output includes the result, HTTP status code when available, and URI.
 
 ## EXAMPLES
 
@@ -31,13 +31,13 @@ Get-EvergreenApp -Name "MicrosoftOneDrive" | Test-EvergreenApp
 ```
 
 Description:
-Validates the URI properties for each object returned from `Get-EvergreenApp -Name "MicrosoftOneDrive"` and returns a true or false result if the URI exists or does not exist.
+Validates the URI properties for each object returned from `Get-EvergreenApp -Name "MicrosoftOneDrive"` and returns a result, status code when available, and URI.
 
 ## PARAMETERS
 
 ### -InputObject
 
-`Test-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Test-EvergreenApp` will test for the existence of at least these properties - Version and URI.
+`Test-EvergreenApp` accepts application objects from `Get-EvergreenApp` and requires a non-empty URI property. Invalid objects produce a warning and a false result; processing continues for subsequent objects.
 
 ```yaml
 Type: PSObject
@@ -87,56 +87,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
-
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Confirm
-
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Force
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -NoProgress
 
-`Test-EvergreenApp` uses `Invoke-WebRequest` to validate target application installers. Progress is suppressed by default for faster tests; however, when `-Verbose` is used, progress will be displayed. Use `-NoProgress` with `-Verbose` to suppress download progress while also displaying verbose output.
+Progress is suppressed by default. When `-Verbose` is used, progress is displayed unless `-NoProgress` is also specified.
 
 ```yaml
 Type: SwitchParameter
@@ -174,6 +127,22 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ConnectionTimeoutSeconds
+
+Specifies the maximum number of seconds to wait for each web request. The default is 30 seconds.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 30
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
@@ -188,7 +157,7 @@ Test-EvergreenApp accepts the output from Get-EvergreenApp.
 
 ### System.Management.Automation.PSObject
 
-Provides a list URLs and a true/false result.
+Provides objects containing a Boolean result, an HTTP status code when available, and the URI.
 
 ## NOTES
 

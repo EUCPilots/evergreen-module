@@ -23,7 +23,6 @@ Describe -Tag "Test" -Name "Test-EvergreenApp" {
         $params = @{
             InputObject = $App
             UserAgent   = [Microsoft.PowerShell.Commands.PSUserAgent]::Firefox
-            Force       = $true
             NoProgress  = $true
         }
         { Test-EvergreenApp @params } | Should -Not -Throw
@@ -37,11 +36,101 @@ Describe -Tag "Test" -Name "Test-EvergreenApp" {
         $Result[0].URI | Should -BeOfType [System.String]
     }
 
+    It "Should return an HTTP status code" {
+        $Result[0].StatusCode | Should -BeOfType [System.Int32]
+    }
+
     It "Should throw if ProxyCredential is provided without Proxy" {
         $Creds = [System.Management.Automation.PSCredential]::new(
             "proxy-user",
             (ConvertTo-SecureString -String "proxy-pass" -AsPlainText -Force)
         )
         { Test-EvergreenApp -InputObject $App -ProxyCredential $Creds -NoProgress } | Should -Throw
+    }
+}
+
+InModuleScope -ModuleName "Evergreen" {
+    Describe -Tag "Test" -Name "Test-EvergreenApp request handling" {
+        BeforeAll {
+            $testApp = [PSCustomObject]@{
+                URI = "https://example.com/installer.msi"
+            }
+        }
+
+        It "Uses HEAD first and returns its status code" {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ StatusCode = 200 }
+            }
+
+            $result = Test-EvergreenApp -InputObject $testApp -ConnectionTimeoutSeconds 15
+
+            $result.Result | Should -BeTrue
+            $result.StatusCode | Should -Be 200
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                $Method -eq "HEAD" -and $TimeoutSec -eq 15 -and $ErrorAction -eq "Stop"
+            }
+        }
+
+        It "Falls back to a ranged GET when HEAD fails" {
+            Mock Invoke-WebRequest {
+                param ($Method)
+                if ($Method -eq "HEAD") {
+                    throw "HEAD is not supported."
+                }
+                [PSCustomObject]@{ StatusCode = 206 }
+            }
+
+            $result = Test-EvergreenApp -InputObject $testApp
+
+            $result.Result | Should -BeTrue
+            $result.StatusCode | Should -Be 206
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                $Method -eq "Get" -and $Headers["Range"] -eq "bytes=0-0"
+            }
+        }
+
+        It "Returns false and the fallback HTTP status when both requests fail" {
+            Mock Invoke-WebRequest {
+                param ($Method)
+                $statusCode = if ($Method -eq "HEAD") { 405 } else { 404 }
+                $exception = [System.Exception]::new("HTTP $statusCode")
+                $exception | Add-Member -MemberType NoteProperty -Name "Response" -Value ([PSCustomObject]@{ StatusCode = $statusCode })
+                throw $exception
+            }
+
+            $result = Test-EvergreenApp -InputObject $testApp
+
+            $result.Result | Should -BeFalse
+            $result.StatusCode | Should -Be 404
+        }
+
+        It "Leaves the status code empty when the request fails before receiving an HTTP response" {
+            Mock Invoke-WebRequest {
+                throw "Connection failed."
+            }
+
+            $result = Test-EvergreenApp -InputObject $testApp
+
+            $result.Result | Should -BeFalse
+            $result.StatusCode | Should -BeNullOrEmpty
+        }
+
+        It "Warns and continues when an input object has no URI" {
+            $objects = @(
+                [PSCustomObject]@{ Name = "missing URI" }
+                $testApp
+            )
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ StatusCode = 200 }
+            }
+
+            $results = $objects | Test-EvergreenApp -WarningVariable warnings
+
+            $results[0].Result | Should -BeFalse
+            $results[0].URI | Should -BeNullOrEmpty
+            $warnings | Should -Not -BeNullOrEmpty
+            $results[1].Result | Should -BeTrue
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+        }
     }
 }
