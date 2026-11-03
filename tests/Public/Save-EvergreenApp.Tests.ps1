@@ -158,12 +158,6 @@ InModuleScope -ModuleName "Evergreen" {
                 else {
                     Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Resume }
                 }
-                if ($PSVersionTable.PSVersion -ge [System.Version]"6.1") {
-                    Should -Invoke Invoke-WebRequest -Times 3 -Exactly -ParameterFilter { $Resume }
-                }
-                else {
-                    Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Resume }
-                }
             }
             finally {
                 Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
@@ -316,6 +310,115 @@ InModuleScope -ModuleName "Evergreen" {
                 $expectedPath = Join-Path -Path $testPath -ChildPath "installer.msi"
                 $result.FullName | Should -Be $expectedPath
                 Test-Path -LiteralPath $result.FullName -PathType Leaf | Should -BeTrue
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Verifies all supplied checksum algorithms before publishing a download" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $hashSource = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Hash-$([guid]::NewGuid().ToString('N'))"
+            [System.IO.File]::WriteAllText($hashSource, "installer")
+            $checksumApp = $testApp | Select-Object *
+            $checksumApp | Add-Member -NotePropertyName sha1 -NotePropertyValue (Get-FileHash -LiteralPath $hashSource -Algorithm SHA1).Hash.ToLowerInvariant()
+            $checksumApp | Add-Member -NotePropertyName sha256 -NotePropertyValue (Get-FileHash -LiteralPath $hashSource -Algorithm SHA256).Hash
+            $checksumApp | Add-Member -NotePropertyName sha512 -NotePropertyValue (Get-FileHash -LiteralPath $hashSource -Algorithm SHA512).Hash
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+
+                $capturedOutput = @(Save-EvergreenApp -InputObject $checksumApp -CustomPath $testPath -VerifyChecksum -Verbose 4>&1)
+
+                $downloadedFile = $capturedOutput | Where-Object { $_ -is [System.IO.FileInfo] }
+                $downloadedFile.Name | Should -Be "installer.msi"
+                ($capturedOutput | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] } | ForEach-Object Message) -join "`n" | Should -Match "Checksum verification passed.*SHA1, SHA256, SHA512"
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath, $hashSource -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Warns and does not publish a download with a mismatched checksum" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $checksumApp = $testApp | Select-Object *
+            $checksumApp | Add-Member -NotePropertyName Sha256 -NotePropertyValue ([System.String]::new('0', 64))
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+
+                $warnings = @()
+                $result = @(Save-EvergreenApp -InputObject $checksumApp -CustomPath $testPath -VerifyChecksum -WarningVariable warnings -WarningAction SilentlyContinue)
+
+                $result | Should -BeNullOrEmpty
+                ($warnings -join "`n") | Should -Match "Checksum verification failed.*SHA256"
+                Test-Path -LiteralPath (Join-Path -Path $testPath -ChildPath "installer.msi") | Should -BeFalse
+                @(Get-ChildItem -LiteralPath $testPath -Force) | Should -BeNullOrEmpty
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Skips checksum verification when no checksum properties are present" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+
+                $result = Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -VerifyChecksum
+
+                $result.Name | Should -Be "installer.msi"
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Verifies cached files when checksum validation is requested" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $cachedFile = Join-Path -Path $testPath -ChildPath "installer.msi"
+            $hashSource = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Hash-$([guid]::NewGuid().ToString('N'))"
+            [System.IO.Directory]::CreateDirectory($testPath) | Out-Null
+            [System.IO.File]::WriteAllText($cachedFile, "installer")
+            [System.IO.File]::WriteAllText($hashSource, "installer")
+            $checksumApp = $testApp | Select-Object *
+            $checksumApp | Add-Member -NotePropertyName Sha256 -NotePropertyValue (Get-FileHash -LiteralPath $hashSource -Algorithm SHA256).Hash
+            try {
+                Mock Invoke-WebRequest {}
+
+                $result = Save-EvergreenApp -InputObject $checksumApp -CustomPath $testPath -VerifyChecksum
+
+                $result.FullName | Should -Be $cachedFile
+                Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath, $hashSource -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Warns and does not return a cached file with a mismatched checksum" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $cachedFile = Join-Path -Path $testPath -ChildPath "installer.msi"
+            [System.IO.Directory]::CreateDirectory($testPath) | Out-Null
+            [System.IO.File]::WriteAllText($cachedFile, "installer")
+            $checksumApp = $testApp | Select-Object *
+            $checksumApp | Add-Member -NotePropertyName Sha1 -NotePropertyValue ([System.String]::new('0', 40))
+            try {
+                Mock Invoke-WebRequest {}
+
+                $warnings = @()
+                $result = @(Save-EvergreenApp -InputObject $checksumApp -CustomPath $testPath -VerifyChecksum -WarningVariable warnings -WarningAction SilentlyContinue)
+
+                $result | Should -BeNullOrEmpty
+                ($warnings -join "`n") | Should -Match "Checksum verification failed.*SHA1"
+                Should -Invoke Invoke-WebRequest -Times 0 -Exactly
             }
             finally {
                 Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"

@@ -57,6 +57,9 @@ function Save-EvergreenApp {
         [System.Management.Automation.SwitchParameter] $NoProgress,
 
         [Parameter()]
+        [System.Management.Automation.SwitchParameter] $VerifyChecksum,
+
+        [Parameter()]
         [ValidateRange(0, 10)]
         [System.Int32] $RetryCount = 3,
 
@@ -125,6 +128,41 @@ function Save-EvergreenApp {
             ) {
                 throw [System.ArgumentException]::New("InputObject contains an invalid file name: '$OutFile'.")
             }
+
+            $ExpectedHashes = @()
+            if ($VerifyChecksum) {
+                foreach ($algorithm in @("SHA1", "SHA256", "SHA512")) {
+                    $hashProperty = $Object.PSObject.Properties[$algorithm]
+                    if ($null -ne $hashProperty -and -not [System.String]::IsNullOrWhiteSpace([System.String]$hashProperty.Value)) {
+                        $ExpectedHashes += [PSCustomObject]@{
+                            Algorithm = $algorithm
+                            Value     = ([System.String]$hashProperty.Value).Trim()
+                        }
+                    }
+                }
+            }
+            $TestFileChecksums = {
+                param ([System.String] $FilePath, [PSObject[]] $Hashes)
+                $mismatchedAlgorithms = @()
+                foreach ($expectedHash in $Hashes) {
+                    try {
+                        $actualHash = (Get-FileHash -LiteralPath $FilePath -Algorithm $expectedHash.Algorithm -ErrorAction "Stop").Hash
+                    }
+                    catch {
+                        $actualHash = $null
+                    }
+                    if ($actualHash -ine $expectedHash.Value) {
+                        $mismatchedAlgorithms += $expectedHash.Algorithm
+                    }
+                }
+                if ($mismatchedAlgorithms.Count -gt 0) {
+                    Write-Warning -Message "Checksum verification failed for '$FilePath' using: $($mismatchedAlgorithms -join ', ')."
+                    return $false
+                }
+                Write-Verbose -Message "Checksum verification passed for '$FilePath' using: $(($Hashes.Algorithm) -join ', ')."
+                return $true
+            }
+
             if (
                 -not [System.String]::IsNullOrWhiteSpace([System.String]$Path) -and
                 -not [System.String]::IsNullOrWhiteSpace([System.String]$CustomPath)
@@ -206,6 +244,7 @@ function Save-EvergreenApp {
                         $attempt = 0
                         $maximumAttempts = $RetryCount + 1
                         $downloaded = $false
+                        $checksumFailed = $false
                         while (-not $downloaded) {
                             $attempt++
                             try {
@@ -215,6 +254,13 @@ function Save-EvergreenApp {
                                 Invoke-WebRequest @params
                                 if (-not (Test-Path -LiteralPath $TemporaryFile -PathType "Leaf")) {
                                     throw [System.IO.IOException]::New("The download completed without creating a file: $TemporaryFile.")
+                                }
+                                if ($VerifyChecksum -and $ExpectedHashes.Count -gt 0 -and -not (& $TestFileChecksums -FilePath $TemporaryFile -Hashes $ExpectedHashes)) {
+                                    $checksumFailed = $true
+                                    break
+                                }
+                                if ($VerifyChecksum -and $ExpectedHashes.Count -eq 0) {
+                                    Write-Verbose -Message "No supported checksum properties found for '$DownloadFile'; skipping checksum verification."
                                 }
                                 $downloaded = $true
                             }
@@ -283,7 +329,9 @@ function Save-EvergreenApp {
                                 }
                             }
                         }
-                        Move-Item -LiteralPath $TemporaryFile -Destination $DownloadFile -Force:$Force -ErrorAction "Stop"
+                        if (-not $checksumFailed) {
+                            Move-Item -LiteralPath $TemporaryFile -Destination $DownloadFile -Force:$Force -ErrorAction "Stop"
+                        }
                     }
                     finally {
                         [System.Net.ServicePointManager]::SecurityProtocol = $securityProtocol
@@ -291,11 +339,20 @@ function Save-EvergreenApp {
                             Remove-Item -LiteralPath $TemporaryFile -Force -ErrorAction "SilentlyContinue"
                         }
                     }
+                    if ($checksumFailed) {
+                        continue
+                    }
                     Write-Verbose -Message "Successfully downloaded: $DownloadFile."
                     Write-Output -InputObject (Get-Item -LiteralPath $DownloadFile)
                 }
             }
             elseif (Test-Path -LiteralPath $DownloadFile -PathType "Leaf") {
+                if ($VerifyChecksum -and $ExpectedHashes.Count -gt 0 -and -not (& $TestFileChecksums -FilePath $DownloadFile -Hashes $ExpectedHashes)) {
+                    continue
+                }
+                if ($VerifyChecksum -and $ExpectedHashes.Count -eq 0) {
+                    Write-Verbose -Message "No supported checksum properties found for '$DownloadFile'; skipping checksum verification."
+                }
                 Write-Verbose -Message "File exists: $DownloadFile."
                 Write-Output -InputObject (Get-Item -LiteralPath $DownloadFile)
             }
