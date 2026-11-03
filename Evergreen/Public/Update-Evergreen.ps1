@@ -64,6 +64,11 @@ function Update-Evergreen {
         $EvergreenAppsRelease = $null
     }
 
+    # Stop if the GitHub API is rate limited
+    if (@($EvergreenAppsRelease.Version) -contains "RateLimited") {
+        throw "GitHub API rate limit exceeded. Wait for the rate limit to reset, or set the GITHUB_TOKEN or GH_TOKEN environment variable to authenticate requests."
+    }
+
     # Check whether the AppsPath exists and create it if not
     if (Test-Path -Path $script:AppsPath -PathType "Container") {
 
@@ -122,6 +127,9 @@ function Update-Evergreen {
     }
 
     $DoUpdate = $false
+    $RemoteVersionObject = $null; $LocalVersionObject = $null
+    $VersionsParsed = [System.Version]::TryParse([System.String]$EvergreenAppsZip.Version, [ref]$RemoteVersionObject) -and `
+        [System.Version]::TryParse([System.String]$LocalVersion, [ref]$LocalVersionObject)
     if ($null -eq $EvergreenAppsRelease) {
         throw "Could not retrieve remote version. Please check internet connection, the repository URL, or GitHub access token."
     }
@@ -133,11 +141,11 @@ function Update-Evergreen {
         Write-Message -Message "Unable to find Evergreen apps cached version. Downloading latest release."
         $DoUpdate = $true
     }
-    elseif ([System.Version]$EvergreenAppsZip.Version -gt [System.Version]$LocalVersion) {
+    elseif ($VersionsParsed -and $RemoteVersionObject -gt $LocalVersionObject) {
         Write-Message -Message "Evergreen apps cache is out of date. Downloading latest release."
         $DoUpdate = $true
     }
-    elseif ([System.Version]$EvergreenAppsZip.Version -le [System.Version]$LocalVersion) {
+    elseif ($VersionsParsed -and $RemoteVersionObject -le $LocalVersionObject) {
         Write-Message -Message "Local cache matches release version. Evergreen apps are up to date."
         $DoUpdate = $false
         if ($PSBoundParameters['Force']) {
