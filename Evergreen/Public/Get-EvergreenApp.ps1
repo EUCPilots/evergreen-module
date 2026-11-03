@@ -129,19 +129,7 @@ function Get-EvergreenApp {
                 }
             }
             else {
-                Write-Warning -Message "Run 'Update-Evergreen' to update the list of supported applications."
-                Write-Information -MessageData "`nPlease list supported application names with Find-EvergreenApp." -InformationAction "Continue"
-                Write-Information -MessageData "Find out how to contribute a new application to the Evergreen project at: $($script:resourceStrings.Uri.Docs)." -InformationAction "Continue"
-                try {
-                    $List = Find-EvergreenApp -Name $Name -ErrorAction "SilentlyContinue" -WarningAction "SilentlyContinue"
-                    $AppList = ($List | Select-Object -ExpandProperty "Name") -join "`n"
-                }
-                catch {
-                    $AppList = "No applications match '$Name'"
-                }
-                Write-Information -MessageData "`n'$Name' not found. Evergreen supports these similar applications:" -InformationAction "Continue"
-                Write-Information -MessageData $AppList -InformationAction "Continue"
-                Write-Information -MessageData "" -InformationAction "Continue"
+                Write-AppNotFoundHelp -Name $Name
                 $Msg = "Failed to retrieve manifest for application: $Name at '$FunctionPath'."
                 throw [System.IO.FileNotFoundException]::New($Msg)
             }
