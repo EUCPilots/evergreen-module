@@ -1,5 +1,23 @@
 # Change log
 
+## 2611.2868.0
+
+> [!WARNING]
+> The module now requires Windows PowerShell 5.1 or PowerShell 7.4 or later on Windows, macOS, or Linux; PowerShell 4.0 or PowerShell 6/7.0-7.3 are no longer supported.
+
+This version strengthens download and library reliability, improves validation and error reporting across public cmdlets, and refreshes help documentation.
+
+- **Supported runtimes:** Raise the minimum supported PowerShell 7 version to 7.4 while retaining Windows PowerShell 5.1 support. Update the CI runtime matrix, syntax checks, test setup, and support documentation.
+- **Downloads - `Save-EvergreenApp`:** Add optional `-VerifyChecksum` support for SHA-1, SHA-256, and SHA-512 hashes. Add bounded retries with exponential backoff and `Retry-After` handling, plus configurable connection and operation timeouts. Validate destination paths and filenames, support pipeline-bound paths, honor `-WhatIf` and custom user agents, publish only completed downloads, clean up partial files, and restore TLS settings.
+- **App lookup and API queries - `Get-EvergreenApp`, `Find-EvergreenApp`, `Get-EvergreenAppFromApi`, `Get-EvergreenEndpointFromApi`:** Validate app names and API inputs, encode names for requests, preserve API error details, and reuse output filtering for local and API results. Improve literal-name matching and not-found diagnostics; clean up proxy and certificate state on completion or terminating errors. `Get-EvergreenApp` diagnostics now include exception and location details while preserving the original error.
+- **Exports - `Export-EvergreenApp`, `Export-EvergreenManifest`:** Support pipeline input and improve validation and error reporting. `Export-EvergreenApp` batches pipeline records into a single write, respects `-WhatIf`, and preserves arrays, nested data, and nonstandard versions when merging and sorting.
+- **Library operations - `Start-EvergreenLibraryUpdate`, `Get-EvergreenLibrary`, `Get-EvergreenAppFromLibrary`, `Remove-EvergreenLibraryAppVersion`:** Improve mixed-version sorting and isolate per-app state. Export only entries with matching installer files; stage manifest updates before deleting files; and reject unsafe paths and reparse points. Clarify pruning behavior and correct installer-path handling for retained entries.
+- **Validation and compatibility - `Test-EvergreenApp`, `ConvertTo-DotNetVersionClass`, `Convert-Segment`, `Expand-CabArchive`:** Add HEAD-to-ranged-GET fallback, configurable timeouts, and HTTP status results to `Test-EvergreenApp`. Harden version conversion and make CAB extraction preserve original filenames and extensions. Support the insecure-redirect option on Windows PowerShell 5.1 while retaining compatibility checks for PowerShell Core.
+- **Module initialization and help:** Handle GitHub rate limits and invalid cache versions in `Evergreen.psm1`; update `Import.ps1`; and refresh cmdlet and module help, including German, Spanish, French, and Japanese documentation.
+- **Confirmation and preview - `Update-Evergreen`, `Remove-ProxyEnv`:** Add `-WhatIf` and `-Confirm` support. Guard the entire cache update before downloads or cache changes, and guard each proxy variable removal. Add regression coverage and document cache update confirmation behavior.
+- **Analyzer compliance and compatibility:** Resolve configured PSScriptAnalyzer findings with targeted compatibility suppressions for platform-guarded code, naming and keyword corrections, and encoding fixes. Preserve default automatic date detection without a default-enabled switch parameter, and use Unicode escapes in CAB path validation.
+- **Diagnostics - `Save-EvergreenApp`, `Update-Evergreen`:** Warn when retry-response status codes or `Retry-After` headers cannot be parsed, and route cache hash-validation failures through `Write-Message` with the appropriate message type.
+
 ## 2610.2862.0
 
 > [!IMPORTANT]
@@ -47,10 +65,13 @@
 ### Compatibility and diagnostics
 - Set the module’s minimum PowerShell version to 5.1 and use a typed version parameter in `Test-PSCore`.
 - Improve proxy credential state handling and make `Write-Message` honor `InformationAction`.
+- Allow the insecure-redirect opt-in on Windows PowerShell 5.1, which permits these redirects natively; retain the unsupported-option guard on older PowerShell Core versions.
+- Preserve CAB entry extensions hidden by Shell display names, parse native CAB listings, and explicitly extract all files with their original names using `expand.exe`.
 
 ### Tests and CI
 - Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
 - Update the validation workflow, including running `Update-Evergreen -Verbose`.
+- Fix the library retention count assertion for Windows PowerShell 5.1 JSON arrays and cover redirect-option compatibility, hidden CAB extensions, and extraction of Microsoft's published Power Automate Desktop update CAB.
 
 ## 2610.2859.0
 
@@ -1526,3 +1547,5 @@ BREAKING CHANGES
 * Initial functions are:
 
 `Export-EvergreenResourceStrings`, `Get-AdobeAcrobatReaderDC`, `Get-CitrixAppLayeringFeed`, `Get-CitrixApplicationDeliveryManagementFeed`, `Get-CitrixEndpointManagementFeed`, `Get-CitrixGatewayFeed`, `Get-CitrixHypervisorFeed`, `Get-CitrixLicensingFeed`, `Get-CitrixReceiverFeed`, `Get-CitrixSdwanFeed`, `Get-CitrixVirtualAppsDesktopsFeed`, `Get-CitrixWorkspaceApp`, `Get-CitrixWorkspaceAppFeed`, `Get-CitrixXenServerTools`, `Get-ControlUpAgent`, `Get-FileZilla`, `Get-GoogleChrome`, `Get-Greenshot`, `Get-LibreOffice`, `Get-MicrosoftPowerShellCore`, `Get-MicrosoftSsms`, `Get-MicrosoftVisualStudioCode`, `Get-MozillaFirefox`, `Get-NotepadPlusPlus`, `Get-OracleVirtualBox`, `Get-PaintDotNet`, `Get-VideoLanVlcPlayer`, `Get-VMwareTools`, `Get-Zoom`
+
+

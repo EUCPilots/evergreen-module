@@ -14,7 +14,7 @@ Returns the latest version and download URL/s for an application supported by th
 ## SYNTAX
 
 ```
-Get-EvergreenAppFromApi [-Name] <String> [<CommonParameters>]
+Get-EvergreenAppFromApi [[-Name] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -60,11 +60,11 @@ The list of supported applications can be found with `Find-EvergreenApp`.
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ApplicationName
 
-Required: True
+Required: False
 Position: 0
-Default value: None
+Default value: "Microsoft365Apps"
 Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```

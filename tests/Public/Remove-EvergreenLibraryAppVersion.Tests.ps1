@@ -97,6 +97,8 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
             $result.ApplicationName | Should -Be "ContosoApp"
             $result.RemovedCount | Should -Be 1
+            $result.PrunedCount | Should -Be 1
+            $result.RemovedFileCount | Should -Be 1
             $result.KeptCount | Should -Be 3
 
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "ContosoApp/Contoso-1.0.0.exe") | Should -Be $false
@@ -153,7 +155,86 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             ($manifest.Version -join ",") | Should -Be "3.0.0,1.0.0,2.0.0-rc.1"
         }
 
+        It "Should remove nested installers recorded as <PathFormat> paths" -TestCases @(
+            @{ PathFormat = "absolute" }
+            @{ PathFormat = "relative" }
+            @{ PathFormat = "multiple" }
+        ) {
+            param ($PathFormat)
+
+            $appPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp"
+            $manifestPath = Join-Path -Path $appPath -ChildPath "ContosoApp.json"
+            [System.Array] $versions = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $oldPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[old].exe"
+            $null = New-Item -Path (Split-Path -Path $oldPath -Parent) -ItemType "Directory" -Force
+            Set-Content -LiteralPath $oldPath -Value "old"
+            # Windows PowerShell expands short directory names; normalize while the file exists.
+            $expectedOldPath = [System.IO.Path]::GetFullPath($oldPath)
+            Remove-Item -LiteralPath $versions[0].Path -Force
+            $versions[0].Path = if ($PathFormat -eq "relative") {
+                "Stable/1.0.0/x64/setup[old].exe"
+            }
+            elseif ($PathFormat -eq "multiple") {
+                $secondPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[other].exe"
+                Set-Content -LiteralPath $secondPath -Value "old"
+                $expectedSecondPath = [System.IO.Path]::GetFullPath($secondPath)
+                @($oldPath, "Stable/1.0.0/x64/setup[other].exe")
+            }
+            else {
+                $oldPath
+            }
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
+
+            Test-Path -LiteralPath $oldPath | Should -Be $false
+            $result.RemovedFiles | Should -Contain $expectedOldPath
+            $result.RemovedCount | Should -Be 1
+            if ($PathFormat -eq "multiple") {
+                Test-Path -LiteralPath $secondPath | Should -Be $false
+                $result.RemovedFiles | Should -Contain $expectedSecondPath
+                $result.RemovedFileCount | Should -Be 2
+            }
+            else {
+                $result.RemovedFileCount | Should -Be 1
+            }
+            [System.Array] $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $manifest.Count | Should -Be 3
+            foreach ($version in $versions[1..3]) {
+                Test-Path -LiteralPath $version.Path | Should -Be $true
+            }
+        }
+
+        It "Should preserve installers also referenced by retained entries with array paths: <UseArray>" -TestCases @(
+            @{ UseArray = $false }
+            @{ UseArray = $true }
+        ) {
+            param ($UseArray)
+
+            $appPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp"
+            $manifestPath = Join-Path -Path $appPath -ChildPath "ContosoApp.json"
+            [System.Array] $versions = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $oldPath = $versions[0].Path
+            $sharedPath = $versions[3].Path
+            $versions[0].Path = if ($UseArray) { @($oldPath, $sharedPath) } else { $sharedPath }
+            $versions[3].Path = @("Contoso-4.0.0.exe")
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
+
+            Test-Path -LiteralPath $sharedPath | Should -Be $true
+            $result.RemovedFiles | Should -Not -Contain $sharedPath
+            if ($UseArray) {
+                Test-Path -LiteralPath $oldPath | Should -Be $false
+                $result.RemovedFileCount | Should -Be 1
+            }
+            else {
+                $result.RemovedFileCount | Should -Be 0
+            }
+        }
+
         It "Should not prune apps not selected by Name" {
+            $null = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 1 -Name "ContosoApp" -Confirm:$false
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-1.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-2.0.0.exe") | Should -Be $true
         }
@@ -203,6 +284,22 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             $result.RemovedCount | Should -Be 2
         }
 
+        It "Should not remove installer files outside the selected application directory" {
+            $outsidePath = Join-Path -Path $script:LibPath -ChildPath "outside.exe"
+            Set-Content -Path $outsidePath -Value "keep"
+            $manifestPath = Join-Path -Path $script:LibPath -ChildPath "ContosoApp/ContosoApp.json"
+            [System.Array] $versions = Get-Content -Path $manifestPath -Raw | ConvertFrom-Json
+            $versions[0].Path = $outsidePath
+            ConvertTo-Json -InputObject $versions | Out-File -FilePath $manifestPath -Encoding "Utf8" -NoNewline
+
+            $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false -WarningAction "SilentlyContinue"
+
+            Test-Path -LiteralPath $outsidePath | Should -Be $true
+            $result.PrunedCount | Should -Be 1
+            $result.RemovedCount | Should -Be 1
+            $result.RemovedFileCount | Should -Be 0
+        }
+
         It "Should report when no applications match the requested name" {
             $records = @(Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name "UnknownApp" -Verbose 4>&1)
             $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
@@ -210,6 +307,66 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
 
             $messages | Should -Match "Selected 0 of 2 applications"
             $results.Count | Should -Be 0
+        }
+
+        It "Should reject a missing library directory" {
+            { Remove-EvergreenLibraryAppVersion -Path (Join-Path $script:LibPath "Missing") -Confirm:$false } |
+                Should -Throw "*does not exist or is not a directory*"
+        }
+
+        It "Should reject a missing library manifest" {
+            Remove-Item (Join-Path $script:LibPath "EvergreenLibrary.json")
+            { Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Confirm:$false } | Should -Throw "*Cannot find EvergreenLibrary.json*"
+        }
+
+        It "Should warn and skip unsafe library application names" -TestCases @(
+            @{ AppName = "../Outside" }
+            @{ AppName = "." }
+        ) {
+            param ($AppName)
+            [PSCustomObject]@{ Applications = @([PSCustomObject]@{ Name = $AppName }) } |
+                ConvertTo-Json -Depth 5 | Set-Content (Join-Path $script:LibPath "EvergreenLibrary.json")
+
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match "Skipping"
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
+        }
+
+        It "Should warn and skip a <Failure> application manifest" -TestCases @(
+            @{ Failure = "missing" }
+            @{ Failure = "malformed" }
+        ) {
+            param ($Failure)
+            $ManifestPath = Join-Path $script:LibPath "ContosoApp/ContosoApp.json"
+            if ($Failure -eq "missing") {
+                Remove-Item $ManifestPath
+            }
+            else {
+                "{invalid" | Set-Content $ManifestPath
+            }
+
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name ContosoApp -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match $(if ($Failure -eq "missing") { "App manifest missing" } else { "Failed reading" })
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
+        }
+
+        It "Should preserve installers when the app directory is a reparse point" {
+            Mock Get-Item -ModuleName Evergreen {
+                [PSCustomObject]@{ Attributes = [System.IO.FileAttributes]::ReparsePoint }
+            } -ParameterFilter { $LiteralPath -like "*/ContosoApp" -or $LiteralPath -like "*\ContosoApp" }
+
+            $ManifestPath = Join-Path $script:LibPath "ContosoApp/ContosoApp.json"
+            $Before = Get-Content $ManifestPath -Raw
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name ContosoApp -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match "reparse point"
+            (Get-Content $ManifestPath -Raw) | Should -Be $Before
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
         }
     }
 
@@ -228,10 +385,14 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
         It "Should only report actions when using WhatIf" {
             $records = @(Remove-EvergreenLibraryAppVersion -Path $script:WhatIfLibPath -Keep 3 -Name "ContosoApp" -WhatIf -Verbose 4>&1)
             $messages = ($records | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }).Message -join "`n"
+            $result = $records | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] }
 
-            $messages | Should -Match "Installer removal not approved by ShouldProcess"
             $messages | Should -Match "Manifest update not approved by ShouldProcess"
+            $messages | Should -Not -Match "Removing installer"
             $messages | Should -Match "0 installer files removed"
+            $result.PrunedCount | Should -Be 1
+            $result.RemovedCount | Should -Be 0
+            $result.RemovedFileCount | Should -Be 0
             $messages | Should -Not -Match ": Removed installer "
             $messages | Should -Not -Match ": Updated app manifest "
 

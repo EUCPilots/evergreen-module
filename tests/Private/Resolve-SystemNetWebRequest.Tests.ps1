@@ -26,7 +26,14 @@ BeforeAll {
         param ($Listener, $Requests, $ReleaseBody)
 
         while ($Listener.IsListening) {
-            $Context = $Listener.GetContext()
+            $PendingContext = $Listener.GetContextAsync()
+            while ($Listener.IsListening -and -not $PendingContext.IsCompleted) {
+                Start-Sleep -Milliseconds 10
+            }
+            if (-not $Listener.IsListening) {
+                break
+            }
+            $Context = $PendingContext.GetAwaiter().GetResult()
             $Requests.Enqueue("$($Context.Request.HttpMethod) $($Context.Request.Url.AbsolutePath)")
             $Response = $Context.Response
             $Response.Headers.Add("X-Request-Method", $Context.Request.HttpMethod)

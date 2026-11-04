@@ -22,7 +22,7 @@ Get-EvergreenLibrary [-Path] <FileInfo> [-ProgressAction <ActionPreference>] [<C
 ### URI
 
 ```
-Get-EvergreenLibrary -Uri <Uri> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-EvergreenLibrary [[-Uri] <Uri>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -74,7 +74,7 @@ Parameter Sets: URI
 Aliases:
 
 Required: True
-Position: Named
+Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False

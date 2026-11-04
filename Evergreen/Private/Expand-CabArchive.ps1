@@ -1,5 +1,6 @@
 function Expand-CabArchive {
     [CmdletBinding(SupportsShouldProcess = $false)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on Ubuntu: New-Object -ComObject")]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
@@ -66,7 +67,7 @@ function Expand-CabArchive {
             if ($Segment.IndexOfAny($InvalidCharacters) -ge 0 -or
                 $Segment -match '[<>:"/\\|?*\x00-\x1F]' -or
                 $Segment -match '[ .]$' -or
-                $Segment -match '^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)') {
+                $Segment -match '^(CON|PRN|AUX|NUL|COM[1-9\u00B9\u00B2\u00B3]|LPT[1-9\u00B9\u00B2\u00B3])(?:\.|$)') {
                 throw "CAB item path '$Name' contains an invalid file name."
             }
         }
@@ -126,6 +127,11 @@ function Expand-CabArchive {
                     continue
                 }
                 $ItemName = [System.String]$CabItem.Name
+                # Shell display names can hide extensions; Path retains the CAB entry's filename.
+                $ItemPath = [System.String]$CabItem.Path
+                if ($ItemPath.StartsWith("$Path\", [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $ItemName = $ItemPath.Substring($Path.Length + 1)
+                }
                 if ([System.String]::IsNullOrWhiteSpace($ItemName)) {
                     continue
                 }
@@ -219,8 +225,9 @@ function Expand-CabArchive {
                     if ($LASTEXITCODE -ne 0) {
                         throw "expand.exe could not list CAB contents (exit code $LASTEXITCODE)."
                     }
+                    $ListingPattern = "^$([System.Text.RegularExpressions.Regex]::Escape($Path)):\s+(.+?)\s*$"
                     foreach ($ListingLine in $CabListing) {
-                        if ($ListingLine -match '^\s{3,}(.+?)\s*$') {
+                        if ($ListingLine -match $ListingPattern) {
                             $RelativePath = & $NormalizeRelativePath $Matches[1]
                             $ExpectedFiles += [PSCustomObject]@{ RelativePath = $RelativePath }
                         }
@@ -233,7 +240,7 @@ function Expand-CabArchive {
                 $null = [System.IO.Directory]::CreateDirectory($FallbackStage)
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Expanding CAB file '$Path' with expand.exe to staging directory '$FallbackStage'."
                 $LASTEXITCODE = 0
-                & $ExpandExe $Path $FallbackStage | Out-Null
+                & $ExpandExe $Path "-F:*" "-R" $FallbackStage | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     throw "expand.exe exited with code $LASTEXITCODE."
                 }

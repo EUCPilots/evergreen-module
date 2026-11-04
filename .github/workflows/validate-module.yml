@@ -10,16 +10,26 @@ on:
     paths:
       - 'Evergreen/**'
       - 'tests/**'
+      - 'ci/**'
       - '.rules/**'
       - '.github/workflows/validate-module.yml'
+      - '.github/workflows/test-runtimes.yml'
+      - '.github/workflows/validate-release.yml'
+      - '.github/workflows/psscriptanalyzer.yml'
+      - '.github/workflows/update-module.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'Evergreen/**'
       - 'tests/**'
+      - 'ci/**'
       - '.rules/**'
       - '.github/workflows/validate-module.yml'
+      - '.github/workflows/test-runtimes.yml'
+      - '.github/workflows/validate-release.yml'
+      - '.github/workflows/psscriptanalyzer.yml'
+      - '.github/workflows/update-module.yml'
   workflow_dispatch:
     inputs:
       test_all_applications:
@@ -29,8 +39,20 @@ on:
         default: false
 
 jobs:
+  release-gates:
+    uses: ./.github/workflows/validate-release.yml
+    permissions:
+      contents: read
+    with:
+      coverage_base_ref: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+
+  runtime-matrix:
+    uses: ./.github/workflows/test-runtimes.yml
+    permissions:
+      contents: read
+
   pestertest5:
-    name: "Run Pester tests on Windows PowerShell"
+    name: "Run live Pester tests on Windows PowerShell"
     runs-on: windows-latest
     permissions:
       contents: read
@@ -43,42 +65,28 @@ jobs:
         env:
           EVERGREEN_TEST_ALL_APPLICATIONS: ${{ github.event_name == 'workflow_dispatch' && inputs.test_all_applications == true }}
         run: |
-          .\tests\Install-Pester.ps1
-          Import-Module -Name "Pester" -Force -ErrorAction "Stop"
-          Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
-          Update-Evergreen -Verbose
-
-          $Config = [PesterConfiguration]::Default
-          $Config.Run.Path = "$env:GITHUB_WORKSPACE\tests"
-          $Config.Run.PassThru = $true
-          $Config.CodeCoverage.Enabled = $true
-          $Config.CodeCoverage.Path = "$env:GITHUB_WORKSPACE\Evergreen"
-          $Config.CodeCoverage.OutputFormat = "JaCoCo"
-          $Config.CodeCoverage.OutputPath = "$env:GITHUB_WORKSPACE\CodeCoverage.xml"
-          $Config.Output.Verbosity = "Detailed"
-          $Config.TestResult.Enabled = $true
-          $Config.TestResult.OutputFormat = "NUnitXml"
-          $Config.TestResult.OutputPath = "$env:GITHUB_WORKSPACE\tests\TestResults.xml"
-          Invoke-Pester -Configuration $Config
+          .\tests\Invoke-Tests.ps1 -IncludeIntegration
 
       # Upload test results
       - name: Upload Pester test results
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: test-results
-          path: "${{ github.workspace }}\\tests\\TestResults.xml"
+          name: test-results-live-windows-powershell-5.1
+          path: "${{ github.workspace }}/tests/Results/TestResults.xml"
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: codecov-results
-          path: "${{ github.workspace }}\\CodeCoverage.xml"
+          name: codecov-results-live-windows-powershell-5.1
+          path: "${{ github.workspace }}/tests/Results/CodeCoverage.xml"
+          if-no-files-found: error
 
   publish-test-results:
     name: "Publish Tests Results"
-    needs: [ "pestertest5"]
+    needs: [ "runtime-matrix", "pestertest5"]
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -91,7 +99,7 @@ jobs:
       - name: Download Pester Test Result Artifacts
         uses: actions/download-artifact@v8
         with:
-          name: test-results
+          pattern: test-results-*
           path: test-results
 
       - name: Publish Pester Test Results

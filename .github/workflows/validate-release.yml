@@ -1,0 +1,57 @@
+name: 'Validate release gates'
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ''
+      coverage_base_ref:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  workflows:
+    name: Validate workflows and CI scripts
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Validate workflows
+        shell: pwsh
+        run: .\ci\Test-Workflows.ps1
+
+  coverage:
+    name: Enforce deterministic coverage
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - name: Run deterministic tests with coverage
+        shell: powershell
+        run: .\tests\Invoke-Tests.ps1 -CollectCoverage
+      - name: Enforce coverage policy
+        shell: powershell
+        env:
+          COVERAGE_BASE_REF: ${{ inputs.coverage_base_ref }}
+        run: |
+          . .\ci\Test-Coverage.ps1
+          Test-Coverage -ReportPath .\tests\Results\CodeCoverage.xml -BaseRef $env:COVERAGE_BASE_REF
+      - name: Upload deterministic coverage and tests
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: deterministic-coverage
+          path: |
+            tests/Results/CodeCoverage.xml
+            tests/Results/TestResults.xml
+          if-no-files-found: error

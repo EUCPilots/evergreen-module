@@ -47,7 +47,7 @@ function Invoke-EvergreenWebRequest {
 
     # Disable the Invoke-WebRequest progress bar for faster downloads
     if ($PSBoundParameters.ContainsKey("Verbose")) {
-        $ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
+        $ProgressPreference = [System.Management.Automation.ActionPreference]::continue
     }
     else {
         $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue

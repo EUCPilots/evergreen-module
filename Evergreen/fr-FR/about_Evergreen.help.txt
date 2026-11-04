@@ -1,0 +1,39 @@
+﻿TOPIC
+    about_evergreen
+
+    SHORT DESCRIPTION
+    Renvoie la dernière version et les URL de téléchargement d'un ensemble
+    d'applications Windows courantes.
+
+    LONG DESCRIPTION
+    Evergreen est un module PowerShell qui renvoie la dernière version et les
+    URL de téléchargement d'un ensemble d'applications Windows courantes. Le
+    module comprend des fonctions simples à utiliser dans des scripts pour
+    effectuer différentes tâches, notamment :
+    - Récupérer la dernière version d'une application afin de la comparer à une
+    version déjà installée ou téléchargée
+    - Renvoyer l'URL de la dernière version de l'application afin de la
+    télécharger pour une installation locale ou un déploiement sur des machines cibles
+    Evergreen est destiné aux solutions d'automatisation du déploiement de
+    logiciels. Ces solutions peuvent notamment servir à :
+    - Créer des images avec Hashicorp Packer : les images peuvent intégrer les
+    dernières versions d'un ensemble d'applications
+    - Importer des applications dans Microsoft Endpoint Manager : maintenir
+    Configuration Manager ou Microsoft Intune à jour avec les dernières versions
+    des applications
+    - Créer une bibliothèque de programmes d'installation : en exécutant
+    régulièrement les fonctions Evergreen, vous pouvez récupérer et télécharger
+    la version actuelle d'une application, puis la stocker dans une arborescence
+    de répertoires pour une utilisation ultérieure
+    - Soumettre des manifestes à `Winget`, `Chocolatey` ou à des outils
+    similaires : Evergreen peut renvoyer un objet contenant un numéro de version
+    et une URL de téléchargement, qui peuvent servir à créer des manifestes pour
+    les versions les plus récentes
+    Les principales fonctions d'Evergreen sont :
+    - `Get-EvergreenApp` : renvoie des détails sur la dernière version d'une
+    application, notamment son numéro de version et son URL de téléchargement
+    - `Save-EvergreenApp` : simplifie le téléchargement des URL d'application
+    renvoyées par `Get-EvergreenApp`
+    - `Find-EvergreenApp` : répertorie les applications prises en charge par le
+    module
+

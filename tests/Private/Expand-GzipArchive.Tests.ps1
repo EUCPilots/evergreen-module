@@ -96,20 +96,24 @@ Describe -Name "Expand-GzipArchive" {
         }
 
         It "Should not throw when expanding a .gz file" {
-            InModuleScope -ModuleName "Evergreen" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ DestinationPath = (Join-Path -Path $TestDrive -ChildPath "TestFile.ini") } {
+                param ($DestinationPath)
+
                 $params = @{
                     Path            = $([System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "tests", "TestFile.ini.gz"))
-                    DestinationPath = $([System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "tests", "TestFile.ini"))
+                    DestinationPath = $DestinationPath
                 }
                 { Expand-GzipArchive @params } | Should -Not -Throw
             }
         }
 
         It "Should return an object of type string" {
-            InModuleScope -ModuleName "Evergreen" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ DestinationPath = (Join-Path -Path $TestDrive -ChildPath "TestFile.ini") } {
+                param ($DestinationPath)
+
                 $params = @{
                     Path            = $([System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "tests", "TestFile.ini.gz"))
-                    DestinationPath = $([System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "tests", "TestFile.ini"))
+                    DestinationPath = $DestinationPath
                 }
                 $File = Expand-GzipArchive @params
                 $File | Should -BeOfType [System.String]
@@ -117,7 +121,7 @@ Describe -Name "Expand-GzipArchive" {
         }
 
         It "Should have expanded the file successfully" {
-            $([System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "tests", "TestFile.ini")) | Should -Exist
+            (Join-Path -Path $TestDrive -ChildPath "TestFile.ini") | Should -Exist
         }
     }
 }

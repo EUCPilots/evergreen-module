@@ -36,6 +36,32 @@ Describe -Name "Remove-ProxyEnv" {
                 { Remove-ProxyEnv } | Should -Not -Throw
             }
         }
+
+        It "Preserves proxy and credential state when WhatIf is specified" {
+            InModuleScope -ModuleName "Evergreen" {
+                $Credential = [System.Management.Automation.PSCredential]::new(
+                    "proxy-user",
+                    [System.Security.SecureString]::new()
+                )
+                Set-ProxyEnv -Proxy "proxyserver" -ProxyCredential $Credential
+
+                Remove-ProxyEnv -WhatIf
+
+                $script:EvergreenProxy | Should -Be "proxyserver"
+                $script:EvergreenProxyCreds | Should -Be $Credential
+            }
+        }
+
+        It "Removes proxy state when confirmation is explicitly disabled" {
+            InModuleScope -ModuleName "Evergreen" {
+                Set-ProxyEnv -Proxy "proxyserver"
+
+                Remove-ProxyEnv -Confirm:$false
+
+                Test-ProxyEnv | Should -BeFalse
+                Test-ProxyEnv -Creds | Should -BeFalse
+            }
+        }
     }
 
     AfterAll {

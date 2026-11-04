@@ -40,6 +40,13 @@ function Remove-EvergreenLibraryAppVersion {
 
         Write-Verbose -Message "$($MyInvocation.MyCommand): Reading library manifest '$LibraryFile'."
         $Library = Get-Content -Path $LibraryFile -ErrorAction "Stop" | ConvertFrom-Json -ErrorAction "Stop"
+        $LibraryRoot = [System.IO.Path]::GetFullPath($Path.FullName)
+        $PathComparison = if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+            [System.StringComparison]::OrdinalIgnoreCase
+        }
+        else {
+            [System.StringComparison]::Ordinal
+        }
 
         $TargetApplications = $Library.Applications
         if ($PSBoundParameters.ContainsKey("Name")) {
@@ -49,13 +56,36 @@ function Remove-EvergreenLibraryAppVersion {
         Write-Verbose -Message "$($MyInvocation.MyCommand): Selected $(@($TargetApplications).Count) of $(@($Library.Applications).Count) applications."
 
         foreach ($Application in $TargetApplications) {
-            $AppPath = Join-Path -Path $Path -ChildPath $Application.Name
+            if ([System.String]::IsNullOrWhiteSpace($Application.Name) -or
+                [System.IO.Path]::IsPathRooted($Application.Name) -or
+                $Application.Name -match "[\\/]" -or
+                [System.IO.Path]::GetFileName($Application.Name) -ne $Application.Name) {
+                Write-Warning -Message "$($MyInvocation.MyCommand): Skipping application with unsafe library name '$($Application.Name)'."
+                continue
+            }
+
+            $AppPath = [System.IO.Path]::GetFullPath((Join-Path -Path $LibraryRoot -ChildPath $Application.Name))
+            $LibraryRootPrefix = $LibraryRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+            if (-not $AppPath.StartsWith($LibraryRootPrefix, $PathComparison)) {
+                Write-Warning -Message "$($MyInvocation.MyCommand): Skipping '$($Application.Name)' because its path is outside the library."
+                continue
+            }
+
             $AppManifest = Join-Path -Path $AppPath -ChildPath "$($Application.Name).json"
             Write-Verbose -Message "$($MyInvocation.MyCommand): Processing '$($Application.Name)'. App manifest: '$AppManifest'."
 
-            if (-not (Test-Path -Path $AppManifest -PathType "Leaf")) {
+            if (-not (Test-Path -LiteralPath $AppPath -PathType "Container") -or
+                -not (Test-Path -LiteralPath $AppManifest -PathType "Leaf")) {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping '$($Application.Name)' because its app manifest is missing."
                 Write-Warning -Message "$($MyInvocation.MyCommand): App manifest missing: $AppManifest"
+                continue
+            }
+
+            $AppDirectoryItem = Get-Item -LiteralPath $AppPath -Force -ErrorAction "Stop"
+            $ManifestItem = Get-Item -LiteralPath $AppManifest -Force -ErrorAction "Stop"
+            if (($AppDirectoryItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -or
+                ($ManifestItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
+                Write-Warning -Message "$($MyInvocation.MyCommand): Skipping '$($Application.Name)' because its app directory or manifest is a reparse point."
                 continue
             }
 
@@ -76,7 +106,9 @@ function Remove-EvergreenLibraryAppVersion {
                         ApplicationName = $Application.Name
                         Keep            = $Keep
                         KeptCount       = $AppVersions.Count
+                        PrunedCount     = 0
                         RemovedCount    = 0
+                        RemovedFileCount = 0
                         RemovedFiles    = @()
                         ManifestPath    = $AppManifest
                     })
@@ -101,46 +133,113 @@ function Remove-EvergreenLibraryAppVersion {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Retaining version '$($Retained.VersionText)' (manifest index $($Retained.Index), parsed version: $($Retained.HasParsedVersion)). Installer: '$($Retained.Item.Path)'."
             }
 
-            $RemovedFiles = New-Object -TypeName "System.Collections.ArrayList"
-            foreach ($Pruned in $PrunedItems) {
-                Write-Verbose -Message "$($MyInvocation.MyCommand): Pruning version '$($Pruned.VersionText)' (manifest index $($Pruned.Index), parsed version: $($Pruned.HasParsedVersion)). Installer: '$($Pruned.Item.Path)'."
-                if ([System.String]::IsNullOrEmpty($Pruned.Item.Path)) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal for version '$($Pruned.VersionText)': no installer path is recorded."
-                    continue
-                }
-
-                if (-not (Test-Path -Path $Pruned.Item.Path -PathType "Leaf")) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal: '$($Pruned.Item.Path)' does not exist or is not a file."
-                    continue
-                }
-
-                if ($PSCmdlet.ShouldProcess($Pruned.Item.Path, "Remove old installer")) {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Removing installer '$($Pruned.Item.Path)'."
-                    Remove-Item -Path $Pruned.Item.Path -Force -ErrorAction "Stop"
-                    $RemovedFiles.Add($Pruned.Item.Path) | Out-Null
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Removed installer '$($Pruned.Item.Path)'."
-                }
-                else {
-                    Write-Verbose -Message "$($MyInvocation.MyCommand): Installer removal not approved by ShouldProcess (WhatIf or confirmation declined): '$($Pruned.Item.Path)'."
-                }
-            }
-
             [System.Array] $RetainedObjects = @($RetainedItems | Select-Object -ExpandProperty "Item")
+            $AppPathPrefix = $AppPath.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+            $RetainedInstallerPaths = @(
+                foreach ($Retained in $RetainedObjects) {
+                    foreach ($RecordedPath in $Retained.Path) {
+                        if (-not [System.String]::IsNullOrWhiteSpace($RecordedPath)) {
+                            [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($AppPath, [System.String]$RecordedPath))
+                        }
+                    }
+                }
+            )
+            $ManifestUpdated = $false
             if ($PSCmdlet.ShouldProcess($AppManifest, "Update retained versions")) {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Writing $($RetainedObjects.Count) retained entries to '$AppManifest'."
-                ConvertTo-Json -InputObject $RetainedObjects -ErrorAction "Stop" | Out-File -FilePath $AppManifest -Encoding "Utf8" -NoNewline -ErrorAction "Stop"
+                $TemporaryManifest = Join-Path -Path $AppPath -ChildPath ".$($Application.Name).$([System.Guid]::NewGuid().ToString('N')).tmp"
+                $BackupManifest = "$TemporaryManifest.bak"
+                try {
+                    ConvertTo-Json -InputObject $RetainedObjects -ErrorAction "Stop" |
+                        Out-File -FilePath $TemporaryManifest -Encoding "Utf8" -NoNewline -ErrorAction "Stop"
+                    [System.IO.File]::Replace($TemporaryManifest, $AppManifest, $BackupManifest)
+                }
+                finally {
+                    if (Test-Path -LiteralPath $TemporaryManifest -PathType "Leaf") {
+                        Remove-Item -LiteralPath $TemporaryManifest -Force -ErrorAction "Stop"
+                    }
+                    if (Test-Path -LiteralPath $BackupManifest -PathType "Leaf") {
+                        Remove-Item -LiteralPath $BackupManifest -Force -ErrorAction "Stop"
+                    }
+                }
+                $ManifestUpdated = $true
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Updated app manifest '$AppManifest'."
             }
             else {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Manifest update not approved by ShouldProcess (WhatIf or confirmation declined): '$AppManifest'."
             }
 
+            $RemovedFiles = New-Object -TypeName "System.Collections.ArrayList"
+            if ($ManifestUpdated) {
+                foreach ($Pruned in $PrunedItems) {
+                    Write-Verbose -Message "$($MyInvocation.MyCommand): Pruning version '$($Pruned.VersionText)' (manifest index $($Pruned.Index), parsed version: $($Pruned.HasParsedVersion)). Installer: '$($Pruned.Item.Path)'."
+                    $RecordedPaths = @($Pruned.Item.Path | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) })
+                    if ($RecordedPaths.Count -eq 0) {
+                        Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal for version '$($Pruned.VersionText)': no installer path is recorded."
+                        continue
+                    }
+
+                    foreach ($RecordedPath in $RecordedPaths) {
+                        $InstallerPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($AppPath, [System.String]$RecordedPath))
+                        if (-not $InstallerPath.StartsWith($AppPathPrefix, $PathComparison)) {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$RecordedPath' is outside '$AppPath'."
+                            continue
+                        }
+
+                        $ReferencedByRetainedEntry = @($RetainedInstallerPaths | Where-Object {
+                                [System.String]::Equals($_, $InstallerPath, $PathComparison)
+                            }).Count -gt 0
+                        if ($ReferencedByRetainedEntry) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$InstallerPath' is referenced by a retained entry."
+                            continue
+                        }
+
+                        if (-not (Test-Path -LiteralPath $InstallerPath -PathType "Leaf")) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Skipping installer removal: '$InstallerPath' does not exist or is not a file."
+                            continue
+                        }
+
+                        $CurrentPath = $InstallerPath
+                        $UnsafePath = $false
+                        while ($CurrentPath.StartsWith($AppPathPrefix, $PathComparison) -or
+                            [System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
+                            $PathItem = Get-Item -LiteralPath $CurrentPath -Force -ErrorAction "Stop"
+                            if ($PathItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                                $UnsafePath = $true
+                                break
+                            }
+                            if ([System.String]::Equals($CurrentPath, $AppPath, $PathComparison)) {
+                                break
+                            }
+                            $CurrentPath = Split-Path -Path $CurrentPath -Parent
+                        }
+                        if ($UnsafePath) {
+                            Write-Warning -Message "$($MyInvocation.MyCommand): Skipping installer removal because '$InstallerPath' traverses a reparse point."
+                            continue
+                        }
+
+                        if ($PSCmdlet.ShouldProcess($InstallerPath, "Remove old installer")) {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Removing installer '$InstallerPath'."
+                            Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction "Stop"
+                            $RemovedFiles.Add($InstallerPath) | Out-Null
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Removed installer '$InstallerPath'."
+                        }
+                        else {
+                            Write-Verbose -Message "$($MyInvocation.MyCommand): Installer removal not approved by ShouldProcess (WhatIf or confirmation declined): '$InstallerPath'."
+                        }
+                    }
+                }
+            }
+
+            $RemovedCount = if ($ManifestUpdated) { $PrunedItems.Count } else { 0 }
             Write-Verbose -Message "$($MyInvocation.MyCommand): Completed '$($Application.Name)': $($RetainedObjects.Count) entries selected for retention, $($PrunedItems.Count) entries selected for pruning, $($RemovedFiles.Count) installer files removed."
             Write-Output -InputObject ([PSCustomObject] @{
                     ApplicationName = $Application.Name
                     Keep            = $Keep
                     KeptCount       = $RetainedObjects.Count
-                    RemovedCount    = $PrunedItems.Count
+                    PrunedCount     = $PrunedItems.Count
+                    RemovedCount    = $RemovedCount
+                    RemovedFileCount = $RemovedFiles.Count
                     RemovedFiles    = $RemovedFiles
                     ManifestPath    = $AppManifest
                 })

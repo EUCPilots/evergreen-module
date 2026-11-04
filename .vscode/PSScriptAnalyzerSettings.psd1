@@ -12,7 +12,7 @@
         }
         PSUseCompatibleSyntax  = @{
             TargetedVersions = @(
-                '7.0'
+                '7.4'
                 '6.0'
                 '5.1'
             )

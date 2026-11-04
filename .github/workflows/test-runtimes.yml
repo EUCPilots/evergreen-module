@@ -1,0 +1,80 @@
+name: 'Test supported runtimes'
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Commit or tag to validate; defaults to the calling workflow checkout'
+        type: string
+        required: false
+        default: ''
+
+jobs:
+  runtime-matrix:
+    name: "Pester (${{ matrix.name }})"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-powershell-5.1
+            os: windows-latest
+            shell: powershell
+            version: '5.1'
+          - name: windows-powershell-7.4
+            os: windows-latest
+            shell: pwsh
+            version: '7.4'
+          - name: windows-powershell-7
+            os: windows-latest
+            shell: pwsh
+            version: '7'
+          - name: linux-powershell-7
+            os: ubuntu-latest
+            shell: pwsh
+            version: '7'
+          - name: macos-powershell-7
+            os: macos-latest
+            shell: pwsh
+            version: '7'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install minimum supported PowerShell
+        if: matrix.version == '7.4'
+        shell: pwsh
+        run: |
+          $Path = Join-Path -Path $env:RUNNER_TEMP -ChildPath "powershell-7.4.0"
+          $Archive = "$Path.zip"
+          Invoke-WebRequest -Uri "https://github.com/PowerShell/PowerShell/releases/download/v7.4.0/PowerShell-7.4.0-win-x64.zip" -OutFile $Archive -ErrorAction Stop
+          Expand-Archive -LiteralPath $Archive -DestinationPath $Path
+          $Path | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Verify runtime
+        env:
+          EXPECTED_VERSION: ${{ matrix.version }}
+        run: |
+          $PSVersionTable | Format-Table
+          if ($PSVersionTable.PSVersion.ToString() -notlike "$env:EXPECTED_VERSION.*") {
+              throw "Expected PowerShell $env:EXPECTED_VERSION, got $($PSVersionTable.PSVersion)."
+          }
+
+      - name: Deterministic Pester tests
+        run: |
+          & (Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath "tests/Invoke-Tests.ps1")
+
+      - name: Upload Pester test results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: test-results-${{ matrix.name }}
+          path: "${{ github.workspace }}/tests/Results/TestResults.xml"
+          if-no-files-found: error

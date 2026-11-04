@@ -11,8 +11,9 @@ BeforeDiscovery {
     $ManifestPath = [System.IO.Path]::Combine($ModulePath, "Evergreen.psd1")
 
     # TestCases are splatted to the script so we need hashtables
-    $Scripts = Get-ChildItem -Path $ModulePath -Recurse -Include *.ps1, *.psm1
-    $TestCase = $Scripts | ForEach-Object { @{file = $_ } }
+    $Scripts = Get-ChildItem -Path $ModulePath -Recurse -Include *.ps1, *.psm1, *.psd1
+    $Scripts += Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE "ci") -Recurse -Include *.ps1, *.psm1, *.psd1
+    $SyntaxCases = $Scripts | ForEach-Object { @{file = $_ } }
 
     # Find module scripts to create the test cases
     $Scripts = Get-ChildItem -Path $ModulePath -Recurse -Include *.ps1
@@ -25,16 +26,16 @@ BeforeAll {
 }
 
 Describe "General project validation" {
-    It "Script <file.Name> should exist" -TestCases $TestCase {
+    It "Script <file.Name> should exist" -TestCases $SyntaxCases {
         param ($file)
         $file.FullName | Should -Exist
     }
 
-    It "Script <file.Name> should be valid PowerShell" -TestCases $TestCase {
+    It "Script <file.Name> should be valid PowerShell" -TestCases $SyntaxCases {
         param ($file)
-        $contents = Get-Content -Path $file.FullName -ErrorAction "Stop"
+        $tokens = $null
         $errors = $null
-        $null = [System.Management.Automation.PSParser]::Tokenize($contents, [ref]$errors)
+        $null = [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors)
         $errors.Count | Should -Be 0
     }
 }

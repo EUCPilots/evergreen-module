@@ -1,6 +1,7 @@
 function Convert-Segment {
     param (
-        [System.Object] $Segment
+        [System.Object] $Segment,
+        [System.Security.Cryptography.SHA256] $HashAlgorithm
     )
 
     if ($null -eq $Segment) {
@@ -10,7 +11,14 @@ function Convert-Segment {
         throw [System.ArgumentException]::new("Segment must be a string.", "Segment")
     }
 
-    if ($Segment -match '^\d+$') {
+    if ($Segment -match '^\p{Nd}+$' -and $Segment -notmatch '^[0-9]+$') {
+        throw [System.ArgumentException]::new(
+            "Numeric segment '$Segment' must contain only ASCII digits.",
+            "Segment"
+        )
+    }
+
+    if ($Segment -match '^[0-9]+$') {
         $NumericSegment = 0
         if (-not [System.Int32]::TryParse(
                 $Segment,
@@ -28,7 +36,12 @@ function Convert-Segment {
         return 0
     }
 
-    $HashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
+    $DisposeHashAlgorithm = $false
+    if ($null -eq $HashAlgorithm) {
+        $HashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
+        $DisposeHashAlgorithm = $true
+    }
+
     try {
         # Hashing is bounded and stable, but distinct text segments can collide.
         $Hash = $HashAlgorithm.ComputeHash([System.Text.Encoding]::Unicode.GetBytes($Segment))
@@ -40,6 +53,8 @@ function Convert-Segment {
         return [System.Int32]($Normalized -band [System.Int32]::MaxValue)
     }
     finally {
-        $HashAlgorithm.Dispose()
+        if ($DisposeHashAlgorithm) {
+            $HashAlgorithm.Dispose()
+        }
     }
 }

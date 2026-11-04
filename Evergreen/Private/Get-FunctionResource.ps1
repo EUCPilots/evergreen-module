@@ -4,6 +4,7 @@ function Get-FunctionResource {
             Reads an application manifest from JSON and returns a hashtable.
     #>
     [OutputType([System.Collections.IDictionary])]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on PS5.1: ConvertFrom-Json -AsHashtable")]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]

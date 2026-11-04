@@ -49,12 +49,12 @@ function Invoke-EvergreenRestMethod {
         $ErrorActionPreference = $ErrorAction
     }
     else {
-        $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Continue
+        $ErrorActionPreference = [System.Management.Automation.ActionPreference]::continue
     }
 
     $SkipCertificateCheckEnabled = ($script:SkipCertificateCheck -eq $true -or $SkipCertificateCheck.IsPresent)
     $IsPSCore = Test-PSCore
-    if ($AllowInsecureRedirect.IsPresent) {
+    if ($AllowInsecureRedirect.IsPresent -and $IsPSCore) {
         $RestMethodCommand = Get-Command -Name Invoke-RestMethod -ErrorAction Stop
         if (-not $RestMethodCommand.Parameters.ContainsKey("AllowInsecureRedirect")) {
             throw [System.NotSupportedException]::New("AllowInsecureRedirect is not supported by this PowerShell version.")
@@ -129,7 +129,8 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
             Write-Verbose -Message "$($MyInvocation.MyCommand): Adding SslProtocol."
             $params.SslProtocol = $SslProtocol
         }
-        if ($AllowInsecureRedirect.IsPresent) {
+        # Windows PowerShell's HttpWebRequest already permits HTTPS-to-HTTP redirects.
+        if ($AllowInsecureRedirect.IsPresent -and $IsPSCore) {
             Write-Verbose -Message "$($MyInvocation.MyCommand): Adding AllowInsecureRedirect."
             $params.AllowInsecureRedirect = $true
         }

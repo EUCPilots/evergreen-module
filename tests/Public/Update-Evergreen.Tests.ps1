@@ -26,6 +26,108 @@ BeforeAll {
     }
 }
 
+Describe -Tag "Update" -Name "Update-Evergreen ShouldProcess" {
+    It "Leaves cache state unchanged with WhatIf (existing: <CacheExists>, force: <Force>, release: <Release>)" -TestCases @(
+        @{ CacheExists = $false; Force = $false; Release = $null }
+        @{ CacheExists = $true; Force = $false; Release = $null }
+        @{ CacheExists = $false; Force = $true; Release = $null }
+        @{ CacheExists = $true; Force = $true; Release = $null }
+        @{ CacheExists = $false; Force = $true; Release = "v26.11.04.1" }
+        @{ CacheExists = $true; Force = $true; Release = "v26.11.04.1" }
+    ) {
+        param ($CacheExists, $Force, $Release)
+
+        $CachePath = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString())
+        if ($CacheExists) {
+            New-Item -Path (Join-Path -Path $CachePath -ChildPath "Apps") -ItemType "Directory" -Force | Out-Null
+            Set-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Value "26.11.03.1"
+        }
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            CachePath = $CachePath; CacheExists = $CacheExists; Force = $Force; Release = $Release
+        } {
+            Mock Get-EvergreenAppsPath { $CachePath }
+            Mock Get-GitHubRepoRelease { throw "Unexpected network request." }
+            Mock Save-EvergreenApp { throw "Unexpected download." }
+            $OriginalAppsPath = $script:AppsPath
+            $OriginalVersionFile = $script:VersionFile
+            $Options = @{ WhatIf = $true; Force = $Force }
+            if ($Release) { $Options.Release = $Release }
+
+            Update-Evergreen @Options
+
+            $script:AppsPath | Should -Be $OriginalAppsPath
+            $script:VersionFile | Should -Be $OriginalVersionFile
+            Test-Path -Path $CachePath | Should -Be $CacheExists
+            if ($CacheExists) {
+                @(Get-ChildItem -Path $CachePath -Recurse -Force).Count | Should -Be 2
+                (Get-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Raw).Trim() |
+                    Should -Be "26.11.03.1"
+            }
+            Should -Invoke Get-GitHubRepoRelease -Times 0 -Exactly
+            Should -Invoke Save-EvergreenApp -Times 0 -Exactly
+        }
+    }
+
+    It "Validates the Release and Force requirement even with WhatIf" {
+        { Update-Evergreen -Release "v26.11.04.1" -WhatIf } | Should -Throw "*Force parameter required*"
+    }
+
+    It "Completes an update using a local release archive (explicit confirmation disabled: <SuppressConfirmation>)" -TestCases @(
+        @{ SuppressConfirmation = $false }
+        @{ SuppressConfirmation = $true }
+    ) {
+        param ($SuppressConfirmation)
+
+        $RootPath = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString())
+        $SourcePath = Join-Path -Path $RootPath -ChildPath "Source"
+        New-Item -Path (Join-Path -Path $SourcePath -ChildPath "Apps") -ItemType "Directory" -Force | Out-Null
+        New-Item -Path (Join-Path -Path $SourcePath -ChildPath "Manifests") -ItemType "Directory" -Force | Out-Null
+        Set-Content -Path (Join-Path -Path $SourcePath -ChildPath "Apps\Get-TestApp.ps1") -Value "function Get-TestApp {}"
+        Set-Content -Path (Join-Path -Path $SourcePath -ChildPath "Manifests\TestApp.json") -Value "{}"
+        $ZipPath = Join-Path -Path $RootPath -ChildPath "Release.zip"
+        Compress-Archive -Path (Join-Path -Path $SourcePath -ChildPath "*") -DestinationPath $ZipPath
+        $CachePath = Join-Path -Path $RootPath -ChildPath "ApprovedCache"
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            CachePath = $CachePath; ZipPath = $ZipPath; SuppressConfirmation = $SuppressConfirmation
+        } {
+            Mock Get-EvergreenAppsPath { $CachePath }
+            Mock Get-GitHubRepoRelease {
+                [PSCustomObject]@{
+                    Type = "zip"
+                    Version = "26.11.04.1"
+                    Uri = "https://example.invalid/release.zip"
+                    Sha256 = (Get-FileHash -Path $ZipPath -Algorithm "SHA256").Hash
+                }
+            }
+            Mock Save-EvergreenApp { $ZipPath }
+            $OriginalAppsPath = $script:AppsPath
+            $OriginalVersionFile = $script:VersionFile
+            $OriginalProgressPreference = $global:ProgressPreference
+            try {
+                if ($SuppressConfirmation) {
+                    Update-Evergreen -Force -Confirm:$false
+                }
+                else {
+                    Update-Evergreen
+                }
+
+                Test-Path -Path (Join-Path -Path $CachePath -ChildPath "Apps\Get-TestApp.ps1") | Should -BeTrue
+                Test-Path -Path (Join-Path -Path $CachePath -ChildPath "Manifests\TestApp.json") | Should -BeTrue
+                (Get-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Raw).Trim() |
+                    Should -Be "26.11.04.1"
+                Should -Invoke Save-EvergreenApp -Times 1 -Exactly
+            }
+            finally {
+                $script:AppsPath = $OriginalAppsPath
+                $script:VersionFile = $OriginalVersionFile
+                $global:ProgressPreference = $OriginalProgressPreference
+            }
+        }
+    }
+}
+
 Describe -Tag "Update" -Name "Update-Evergreen Parameter Validation" {
     Context "Validate Release parameter format" {
         It "Should throw with invalid Release format - missing 'v' prefix" {
@@ -55,135 +157,293 @@ Describe -Tag "Update" -Name "Update-Evergreen Parameter Validation" {
         }
 
         It "Should not throw parameter validation error when Release is specified with Force" {
-            # Note: This may throw other errors related to network/file operations, 
-            # but should not throw the Force parameter validation error
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ CachePath = $TestDrive } {
+                param ($CachePath)
+
+                Mock Get-EvergreenAppsPath { $CachePath }
+                Mock Get-GitHubRepoRelease { throw "offline test" }
+
+                { Update-Evergreen -Release "v24.01.01.12345" -Force } |
+                    Should -Throw "*Could not retrieve remote version*"
+            }
+        }
+    }
+}
+
+Describe -Tag "Update" -Name "Update-Evergreen deterministic cache behavior" {
+    BeforeAll {
+        $script:CreateFixture = {
+            param ($Root)
+
+            $zipPath = Join-Path -Path $Root -ChildPath "release.zip"
+            $csvPath = Join-Path -Path $Root -ChildPath "hashes.csv"
+            $appSource = Join-Path -Path $Root -ChildPath "Get-TestApp.ps1"
+            [System.IO.File]::WriteAllText($appSource, "function Get-TestApp {}")
+            $appHash = (Get-FileHash -LiteralPath $appSource -Algorithm SHA256).Hash
+            [System.IO.File]::WriteAllText($zipPath, "release archive")
+            [System.IO.File]::WriteAllText($csvPath, "file_path,sha256`nApps/Get-TestApp.ps1,$appHash`n")
+
+            [PSCustomObject]@{
+                CachePath = Join-Path -Path $Root -ChildPath "cache"
+                ZipPath   = $zipPath
+                CsvPath   = $csvPath
+                Zip       = [PSCustomObject]@{
+                    Type    = "zip"
+                    Version = "26.11.04.1"
+                    Uri     = "https://example.invalid/release.zip"
+                    Sha256  = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash
+                }
+                Csv       = [PSCustomObject]@{
+                    Type   = "csv"
+                    Uri    = "https://example.invalid/hashes.csv"
+                    Sha256 = (Get-FileHash -LiteralPath $csvPath -Algorithm SHA256).Hash
+                }
+            }
+        }
+    }
+
+    BeforeEach {
+        $script:FixtureRoot = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString("N"))
+        $null = New-Item -Path $script:FixtureRoot -ItemType Directory -Force
+        $script:Fixture = & $script:CreateFixture $script:FixtureRoot
+    }
+
+    It "Fails clearly when the GitHub request fails or returns no release" {
+        $fixture = $script:Fixture
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { throw "offline test" }
+
+            { Update-Evergreen } | Should -Throw "*Could not retrieve remote version*"
+        }
+    }
+
+    It "Stops immediately when the GitHub API reports a rate limit" {
+        $fixture = $script:Fixture
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease {
+                [PSCustomObject]@{ Type = "zip"; Version = "RateLimited" }
+            }
+
+            { Update-Evergreen } | Should -Throw "*GitHub API rate limit exceeded*"
+            Test-Path -LiteralPath $Fixture.CachePath | Should -BeFalse
+        }
+    }
+
+    It "Uses the specified release URL and synchronizes a verified archive" {
+        $fixture = $script:Fixture
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp {
+                if ($InputObject.Type -eq "csv") {
+                    Get-Item -LiteralPath $Fixture.CsvPath
+                }
+                else {
+                    $Fixture.ZipPath
+                }
+            }
+            Mock Expand-Archive {
+                $appsPath = Join-Path -Path $DestinationPath -ChildPath "Apps"
+                $manifestsPath = Join-Path -Path $DestinationPath -ChildPath "Manifests"
+                $null = New-Item -Path $appsPath -ItemType Directory -Force
+                $null = New-Item -Path $manifestsPath -ItemType Directory -Force
+                [System.IO.File]::WriteAllText((Join-Path $appsPath "Get-TestApp.ps1"), "function Get-TestApp {}")
+                [System.IO.File]::WriteAllText((Join-Path $manifestsPath "TestApp.json"), "{}")
+            }
+            $previousProgressPreference = $global:ProgressPreference
             try {
-                Update-Evergreen -Release "v24.01.01.12345" -Force -ErrorAction Stop
+                Update-Evergreen -Force -Release "v26.11.04.1"
+
+                Test-Path -LiteralPath (Join-Path $Fixture.CachePath "Apps\Get-TestApp.ps1") | Should -BeTrue
+                Test-Path -LiteralPath (Join-Path $Fixture.CachePath "Manifests\TestApp.json") | Should -BeTrue
+                (Get-Content -LiteralPath (Join-Path $Fixture.CachePath ".evergreen_version") -Raw).Trim() |
+                    Should -Be "26.11.04.1"
+                Should -Invoke Get-GitHubRepoRelease -Times 1 -Exactly -ParameterFilter {
+                    $Uri -like "*/releases/tags/v26.11.04.1"
+                }
+                Should -Invoke Save-EvergreenApp -Times 1 -Exactly
             }
-            catch {
-                $_.Exception.Message | Should -Not -Match "Force parameter required"
-            }
-        }
-    }
-}
-
-Describe -Tag "Update" -Name "Update-Evergreen Function Behavior" {
-    BeforeAll {
-        # Set custom test path for this test suite
-        $env:EVERGREEN_APPS_PATH = $script:TestPath
-        New-Item -Path $script:TestPath -ItemType "Directory" -Force -ErrorAction "SilentlyContinue" | Out-Null
-    }
-
-    AfterAll {
-        # Clean up test directory
-        if (Test-Path -Path $script:TestPath) {
-            Remove-Item -Path $script:TestPath -Recurse -Force -ErrorAction "SilentlyContinue"
-        }
-        # Restore original EVERGREEN_APPS_PATH
-        if ($script:OriginalAppsPath) {
-            $env:EVERGREEN_APPS_PATH = $script:OriginalAppsPath
-        }
-        else {
-            Remove-Item Env:\EVERGREEN_APPS_PATH -ErrorAction "SilentlyContinue"
-        }
-    }
-
-    Context "Validate Update-Evergreen basic execution" {
-        It "Should not throw when called without parameters" {
-            { Update-Evergreen -ErrorAction Stop } | Should -Not -Throw
-        }
-
-        It "Should not throw when called with -Force parameter" {
-            { Update-Evergreen -Force -ErrorAction Stop } | Should -Not -Throw
-        }
-
-        It "Should create Apps directory after successful update" {
-            $AppsDir = Join-Path -Path $script:TestPath -ChildPath "Apps"
-            Test-Path -Path $AppsDir -PathType "Container" | Should -Be $true
-        }
-
-        It "Should create Manifests directory after successful update" {
-            $ManifestsDir = Join-Path -Path $script:TestPath -ChildPath "Manifests"
-            Test-Path -Path $ManifestsDir -PathType "Container" | Should -Be $true
-        }
-
-        It "Should create version file after successful update" {
-            $VersionFile = Join-Path -Path $script:TestPath -ChildPath ".evergreen_version"
-            Test-Path -Path $VersionFile -PathType "Leaf" | Should -Be $true
-        }
-
-        It "Version file should contain valid version format" {
-            $VersionFile = Join-Path -Path $script:TestPath -ChildPath ".evergreen_version"
-            if (Test-Path -Path $VersionFile) {
-                $Version = Get-Content -Path $VersionFile -Raw -ErrorAction "SilentlyContinue"
-                $Version = $Version.Trim()
-                $Version | Should -Match "^v?\d{2}\.\d{2}\.\d{2}\.\d+"
+            finally {
+                $global:ProgressPreference = $previousProgressPreference
             }
         }
     }
 
-    Context "Validate Update-Evergreen with custom path" {
-        BeforeAll {
-            $script:CustomTestPath = Join-Path -Path $script:TestPath -ChildPath "CustomCache"
-            $env:EVERGREEN_APPS_PATH = $script:CustomTestPath
-        }
+    It "Skips downloading when cache versions match and every local hash matches" {
+        $fixture = $script:Fixture
+        New-Item -Path (Join-Path $fixture.CachePath "Apps") -ItemType Directory -Force | Out-Null
+        New-Item -Path (Join-Path $fixture.CachePath "Manifests") -ItemType Directory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath "Apps\Get-TestApp.ps1") -Value "function Get-TestApp {}"
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath ".evergreen_version") -Value $fixture.Zip.Version
 
-        It "Should use custom EVERGREEN_APPS_PATH when set" {
-            Update-Evergreen -ErrorAction Stop
-            Test-Path -Path $script:CustomTestPath -PathType "Container" | Should -Be $true
-        }
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
 
-        It "Should create Apps directory in custom path" {
-            $AppsDir = Join-Path -Path $script:CustomTestPath -ChildPath "Apps"
-            Test-Path -Path $AppsDir -PathType "Container" | Should -Be $true
-        }
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp { Get-Item -LiteralPath $Fixture.CsvPath }
+            Mock Expand-Archive { throw "Unexpected archive extraction." }
 
-        AfterAll {
-            if (Test-Path -Path $script:CustomTestPath) {
-                Remove-Item -Path $script:CustomTestPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            Update-Evergreen
+
+            Should -Invoke Save-EvergreenApp -Times 1 -Exactly
+            Should -Invoke Expand-Archive -Times 0 -Exactly
+        }
+    }
+
+    It "Reports local hash mismatches and leaves the current cache in place" {
+        $fixture = $script:Fixture
+        New-Item -Path (Join-Path $fixture.CachePath "Apps") -ItemType Directory -Force | Out-Null
+        New-Item -Path (Join-Path $fixture.CachePath "Manifests") -ItemType Directory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath "Apps\Get-TestApp.ps1") -Value "modified"
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath ".evergreen_version") -Value $fixture.Zip.Version
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp { Get-Item -LiteralPath $Fixture.CsvPath }
+            Mock Expand-Archive { throw "Unexpected archive extraction." }
+
+            $messages = @(Update-Evergreen 6>&1)
+
+            Should -Invoke Expand-Archive -Times 0 -Exactly
+            ($messages | ForEach-Object MessageData | Out-String) | Should -Match "SHA256 mismatch found"
+        }
+    }
+
+    It "Rejects a downloaded release zip with an invalid SHA256" {
+        $fixture = $script:Fixture
+        $fixture.Zip.Sha256 = [System.String]::new("0", 64)
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp { $Fixture.ZipPath }
+            Mock Expand-Archive {}
+
+            { Update-Evergreen -Force } | Should -Throw "*SHA256 mismatch for downloaded release zip file*"
+            Should -Invoke Expand-Archive -Times 0 -Exactly
+        }
+    }
+
+    It "Does not replace the cache when extracted content fails hash validation" {
+        $fixture = $script:Fixture
+        New-Item -Path (Join-Path $fixture.CachePath "Apps") -ItemType Directory -Force | Out-Null
+        New-Item -Path (Join-Path $fixture.CachePath "Manifests") -ItemType Directory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath "Apps\Get-TestApp.ps1") -Value "old version"
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath ".evergreen_version") -Value "26.11.03.1"
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp {
+                if ($InputObject.Type -eq "csv") {
+                    Get-Item -LiteralPath $Fixture.CsvPath
+                }
+                else {
+                    $Fixture.ZipPath
+                }
             }
-        }
-    }
-}
+            Mock Expand-Archive {
+                $appsPath = Join-Path -Path $DestinationPath -ChildPath "Apps"
+                $manifestsPath = Join-Path -Path $DestinationPath -ChildPath "Manifests"
+                $null = New-Item -Path $appsPath -ItemType Directory -Force
+                $null = New-Item -Path $manifestsPath -ItemType Directory -Force
+                [System.IO.File]::WriteAllText((Join-Path $appsPath "Get-TestApp.ps1"), "bad content")
+            }
 
-Describe -Tag "Update" -Name "Update-Evergreen Idempotency" {
-    BeforeAll {
-        # Set custom test path for this test suite
-        $script:IdempotencyTestPath = Join-Path -Path $script:TestPath -ChildPath "IdempotencyTest"
-        $env:EVERGREEN_APPS_PATH = $script:IdempotencyTestPath
-        New-Item -Path $script:IdempotencyTestPath -ItemType "Directory" -Force -ErrorAction "SilentlyContinue" | Out-Null
-    }
+            Update-Evergreen -Force -WarningAction SilentlyContinue
 
-    AfterAll {
-        # Clean up test directory
-        if (Test-Path -Path $script:IdempotencyTestPath) {
-            Remove-Item -Path $script:IdempotencyTestPath -Recurse -Force -ErrorAction "SilentlyContinue"
-        }
-        # Restore original EVERGREEN_APPS_PATH
-        if ($script:OriginalAppsPath) {
-            $env:EVERGREEN_APPS_PATH = $script:OriginalAppsPath
-        }
-        else {
-            Remove-Item Env:\EVERGREEN_APPS_PATH -ErrorAction "SilentlyContinue"
+            (Get-Content -LiteralPath (Join-Path $Fixture.CachePath "Apps\Get-TestApp.ps1") -Raw).Trim() |
+                Should -Be "old version"
+            (Get-Content -LiteralPath (Join-Path $Fixture.CachePath ".evergreen_version") -Raw).Trim() |
+                Should -Be "26.11.03.1"
         }
     }
 
-    Context "Validate multiple runs of Update-Evergreen" {
-        It "First run should not throw" {
-            { Update-Evergreen -ErrorAction Stop } | Should -Not -Throw
-        }
+    It "Leaves the cache unchanged when a listed extracted file is missing" {
+        $fixture = $script:Fixture
+        $missingHash = [System.String]::new("0", 64)
+        [System.IO.File]::WriteAllText($fixture.CsvPath, "file_path,sha256`nApps/Missing.ps1,$missingHash`n")
+        $fixture.Csv.Sha256 = (Get-FileHash -LiteralPath $fixture.CsvPath -Algorithm SHA256).Hash
+        New-Item -Path (Join-Path $fixture.CachePath "Apps") -ItemType Directory -Force | Out-Null
+        New-Item -Path (Join-Path $fixture.CachePath "Manifests") -ItemType Directory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath "Apps\Get-TestApp.ps1") -Value "old version"
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath ".evergreen_version") -Value "26.11.03.1"
 
-        It "Second run without Force should not throw" {
-            { Update-Evergreen -ErrorAction Stop } | Should -Not -Throw
-        }
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
 
-        It "Run with Force should not throw" {
-            { Update-Evergreen -Force -ErrorAction Stop } | Should -Not -Throw
-        }
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp {
+                if ($InputObject.Type -eq "csv") {
+                    Get-Item -LiteralPath $Fixture.CsvPath
+                }
+                else {
+                    $Fixture.ZipPath
+                }
+            }
+            Mock Expand-Archive {
+                $appsPath = Join-Path -Path $DestinationPath -ChildPath "Apps"
+                $manifestsPath = Join-Path -Path $DestinationPath -ChildPath "Manifests"
+                $null = New-Item -Path $appsPath -ItemType Directory -Force
+                $null = New-Item -Path $manifestsPath -ItemType Directory -Force
+                [System.IO.File]::WriteAllText((Join-Path $appsPath "Get-TestApp.ps1"), "function Get-TestApp {}")
+            }
 
-        It "Version file should still exist after multiple runs" {
-            $VersionFile = Join-Path -Path $script:IdempotencyTestPath -ChildPath ".evergreen_version"
-            Test-Path -Path $VersionFile -PathType "Leaf" | Should -Be $true
+            Update-Evergreen -Force -WarningAction SilentlyContinue
+
+            (Get-Content -LiteralPath (Join-Path $Fixture.CachePath "Apps\Get-TestApp.ps1") -Raw).Trim() |
+                Should -Be "old version"
+            (Get-Content -LiteralPath (Join-Path $Fixture.CachePath ".evergreen_version") -Raw).Trim() |
+                Should -Be "26.11.03.1"
+        }
+    }
+
+    It "Continues without hash verification when the downloaded hashes file is invalid" {
+        $fixture = $script:Fixture
+        $fixture.Csv.Sha256 = [System.String]::new("0", 64)
+        New-Item -Path (Join-Path $fixture.CachePath "Apps") -ItemType Directory -Force | Out-Null
+        New-Item -Path (Join-Path $fixture.CachePath "Manifests") -ItemType Directory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $fixture.CachePath ".evergreen_version") -Value $fixture.Zip.Version
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { @($Fixture.Zip, $Fixture.Csv) }
+            Mock Save-EvergreenApp { Get-Item -LiteralPath $Fixture.CsvPath }
+            Mock Expand-Archive { throw "Unexpected archive extraction." }
+
+            { Update-Evergreen -WarningAction SilentlyContinue } | Should -Not -Throw
+            Should -Invoke Expand-Archive -Times 0 -Exactly
+        }
+    }
+
+    It "Fails when a requested download does not produce an archive" {
+        $fixture = $script:Fixture
+        InModuleScope -ModuleName "Evergreen" -Parameters @{ Fixture = $fixture } {
+            param ($Fixture)
+
+            Mock Get-EvergreenAppsPath { $Fixture.CachePath }
+            Mock Get-GitHubRepoRelease { $Fixture.Zip }
+            Mock Save-EvergreenApp { Join-Path $Fixture.CachePath "missing.zip" }
+
+            { Update-Evergreen -Force } | Should -Throw "*Failed to download Evergreen apps release*"
         }
     }
 }

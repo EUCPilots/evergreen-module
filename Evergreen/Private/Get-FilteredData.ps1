@@ -35,7 +35,7 @@ function Get-FilteredData {
         System.Object[] (an array of PSObjects or any objects with properties)
 
         .OUTPUTS
-        System.Object[] — the subset of InputObject that match the provided filter configuration.
+        System.Object[] - the subset of InputObject that match the provided filter configuration.
 
         .EXAMPLE
         # filters.json (example)

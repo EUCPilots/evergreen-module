@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repository Is
 
-This repository contains the **Evergreen PowerShell module** — the module framework itself. Application-specific functions (e.g., `Get-MicrosoftEdge.ps1`) and their JSON manifests live in the companion repository [eucpilots/evergreen-apps](https://github.com/EUCPilots/evergreen-apps) and are downloaded locally via `Update-Evergreen`.
+This repository contains the **Evergreen PowerShell module** - the module framework itself. Application-specific functions (e.g., `Get-MicrosoftEdge.ps1`) and their JSON manifests live in the companion repository [eucpilots/evergreen-apps](https://github.com/EUCPilots/evergreen-apps) and are downloaded locally via `Update-Evergreen`.
 
 ## Common Commands
 
@@ -75,11 +75,11 @@ The apps cache path defaults to `%LOCALAPPDATA%\Evergreen` (Windows) or `~/.ever
 
 ### Key Private Helpers
 
-- `Get-ModuleResource` — reads `Evergreen.json` into `$script:resourceStrings` at module load
-- `Get-FunctionResource` — reads a per-app JSON manifest from the apps cache
-- `Invoke-EvergreenRestMethod` / `Invoke-EvergreenWebRequest` — wrapper HTTP helpers with proxy/cert support
-- `Write-Message` — consistent console output (replaces `Write-Host`)
-- `Get-FilteredData` — applies a JSON filter file to standardize/restrict app output
+- `Get-ModuleResource` - reads `Evergreen.json` into `$script:resourceStrings` at module load
+- `Get-FunctionResource` - reads a per-app JSON manifest from the apps cache
+- `Invoke-EvergreenRestMethod` / `Invoke-EvergreenWebRequest` - wrapper HTTP helpers with proxy/cert support
+- `Write-Message` - consistent console output (replaces `Write-Host`)
+- `Get-FilteredData` - applies a JSON filter file to standardize/restrict app output
 
 ### Shared Functions
 
@@ -92,13 +92,13 @@ Module version follows `YYmm.Build` (e.g., `2511.2826.0`). The `update-module.ym
 ## Code Conventions
 
 - **One function per file**, filename must exactly match the function name (enforced by `Main.Tests.ps1`).
-- Supports Windows PowerShell 5.1 and PowerShell 7.0+. Avoid PS6-only APIs.
+- Supports Windows PowerShell 5.1 and PowerShell 7.4+. Avoid PS6-only APIs.
 - PSScriptAnalyzer is run at `Error` and `Warning` severity. `PSAvoidUsingWriteHost` is excluded (use `Write-Message` instead).
 - GitHub API calls check for `GITHUB_TOKEN` or `GH_TOKEN` environment variables to avoid rate limits.
 - App functions are dot-sourced lazily (at invocation time, not module import) to reduce memory footprint.
 
 ## CI Workflows
 
-- **validate-module.yml** — runs PSScriptAnalyzer and Pester on PRs/pushes to non-main branches
-- **update-module.yml** — manually triggered; bumps version, updates CHANGELOG and apps.md, commits and tags
-- **publish-module.yml** — triggers after `update-module.yml` completes; publishes to PowerShell Gallery
+- **validate-module.yml** - runs PSScriptAnalyzer and Pester on PRs/pushes to non-main branches
+- **update-module.yml** - manually triggered; bumps version, updates CHANGELOG and apps.md, commits and tags
+- **publish-module.yml** - triggers after `update-module.yml` completes; publishes to PowerShell Gallery

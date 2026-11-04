@@ -53,6 +53,7 @@ function Get-EvergreenLibrary {
             foreach ($Application in $Library.Applications) {
 
                 # Add details for the application to the output object
+                $Versions = $null
                 try {
                     $AppUri = "$($ParentUri)/$($Application.Name)/$($Application.Name).json"
                     $Versions = Invoke-EvergreenRestMethod -Uri $AppUri
@@ -107,9 +108,10 @@ function Get-EvergreenLibrary {
                                 $AppManifest = $(Join-Path -Path $AppPath -ChildPath "$($Application.Name).json")
                                 if (Test-Path -Path $AppManifest) {
 
+                                    $Versions = $null
                                     try {
                                         Write-Verbose -Message "Read: $AppManifest."
-                                        $Versions = Get-Content -Path $AppManifest | ConvertFrom-Json
+                                        $Versions = Get-Content -Path $AppManifest -Raw -ErrorAction "Stop" | ConvertFrom-Json -ErrorAction "Stop"
                                     }
                                     catch {
                                         Write-Warning -Message "Encountered an error reading $AppManifest with: $($_.Exception.Message)"
