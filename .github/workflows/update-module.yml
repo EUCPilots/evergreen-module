@@ -190,10 +190,20 @@ jobs:
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:COMMIT_OUTCOME) Commit changes: $($env:COMMIT_OUTCOME)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:TAG_OUTCOME) Create and push tag: $($env:TAG_OUTCOME)"
 
+  validate-runtimes:
+    name: Validate release runtimes
+    needs: update-module
+    if: needs.update-module.outputs.changes_detected == 'true'
+    uses: ./.github/workflows/test-runtimes.yml
+    permissions:
+      contents: read
+    with:
+      ref: refs/tags/v${{ needs.update-module.outputs.new_version }}
+
   publish-module:
     name: Publish module
     runs-on: ubuntu-latest
-    needs: update-module
+    needs: [update-module, validate-runtimes]
     steps:
       - uses: actions/checkout@v7
         id: checkout
