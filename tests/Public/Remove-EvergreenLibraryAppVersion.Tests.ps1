@@ -198,7 +198,8 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             else {
                 $result.RemovedFileCount | Should -Be 1
             }
-            @(Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json).Count | Should -Be 3
+            [System.Array] $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $manifest.Count | Should -Be 3
             foreach ($version in $versions[1..3]) {
                 Test-Path -LiteralPath $version.Path | Should -Be $true
             }

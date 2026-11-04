@@ -15,6 +15,50 @@ BeforeAll {
 InModuleScope -ModuleName "Evergreen" {
     Describe -Name "Invoke-EvergreenRestMethod" {
         Context "Ensure Invoke-EvergreenRestMethod works as expected" {
+            It "Allows insecure redirects on Windows PowerShell without an unsupported parameter" {
+                Mock Test-PSCore { $false }
+                Mock Invoke-RestMethod { "mock response" }
+
+                Invoke-EvergreenRestMethod -Uri "https://example.com" -AllowInsecureRedirect |
+                    Should -Be "mock response"
+                Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+                    -not $PSBoundParameters.ContainsKey("AllowInsecureRedirect")
+                }
+            }
+
+            It "Rejects insecure redirects on PowerShell Core when the parameter is unavailable" {
+                Mock Test-PSCore { $true }
+                Mock Get-Command { [PSCustomObject]@{ Parameters = @{} } } -ParameterFilter {
+                    $Name -eq "Invoke-RestMethod"
+                }
+                Mock Invoke-RestMethod { "mock response" }
+
+                { Invoke-EvergreenRestMethod -Uri "https://example.com" -AllowInsecureRedirect } |
+                    Should -Throw "*AllowInsecureRedirect is not supported*"
+                Should -Invoke Invoke-RestMethod -Times 0 -Exactly
+            }
+
+            It "Passes insecure redirect opt-in to PowerShell Core when supported" -Skip:(-not (Get-Command Invoke-RestMethod).Parameters.ContainsKey("AllowInsecureRedirect")) {
+                Mock Test-PSCore { $true }
+                Mock Invoke-RestMethod { "mock response" }
+
+                Invoke-EvergreenRestMethod -Uri "https://example.com" -AllowInsecureRedirect |
+                    Should -Be "mock response"
+                Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+                    $AllowInsecureRedirect -eq $true
+                }
+            }
+
+            It "Does not enable insecure redirects when explicitly passed false" {
+                Mock Invoke-RestMethod { "mock response" }
+
+                Invoke-EvergreenRestMethod -Uri "https://example.com" -AllowInsecureRedirect:$false |
+                    Should -Be "mock response"
+                Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+                    -not $PSBoundParameters.ContainsKey("AllowInsecureRedirect")
+                }
+            }
+
             It "Does not disable certificate validation when explicitly passed false" {
                 Mock Invoke-RestMethod { "mock response" }
 

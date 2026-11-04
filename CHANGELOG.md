@@ -47,10 +47,13 @@
 ### Compatibility and diagnostics
 - Set the module’s minimum PowerShell version to 5.1 and use a typed version parameter in `Test-PSCore`.
 - Improve proxy credential state handling and make `Write-Message` honor `InformationAction`.
+- Allow the insecure-redirect opt-in on Windows PowerShell 5.1, which permits these redirects natively; retain the unsupported-option guard on older PowerShell Core versions.
+- Preserve CAB entry extensions hidden by Shell display names, parse native CAB listings, and explicitly extract all files with their original names using `expand.exe`.
 
 ### Tests and CI
 - Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
 - Update the validation workflow, including running `Update-Evergreen -Verbose`.
+- Fix the library retention count assertion for Windows PowerShell 5.1 JSON arrays and cover redirect-option compatibility, hidden CAB extensions, and extraction of Microsoft's published Power Automate Desktop update CAB.
 
 ## 2610.2859.0
 
