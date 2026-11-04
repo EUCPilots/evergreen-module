@@ -14,12 +14,14 @@ Downloads and synchronizes the Evergreen Apps functions and Manifests from the e
 ## SYNTAX
 
 ```
-Update-Evergreen [-Force] [-Release <String>] [<CommonParameters>]
+Update-Evergreen [-Force] [-Release <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
 Enables separation of the core Evergreen module from app-specific code and manifests. Downloads the latest versions of /Apps and /Manifests from a specified GitHub repository to a user-writable location (no admin required). By default, the local cache is downloaded to %LocalAppData%\Evergreen on Windows, and ~/.evergreen on macOS and Linux.
+
+Use `-WhatIf` to show the intended cache operation without contacting GitHub, downloading files, or changing the cache. Use `-Confirm` to approve the entire operation before it starts, including hash-file downloads and cache synchronization. `-Force` does not bypass confirmation or `-WhatIf`.
 
 ## EXAMPLES
 
@@ -76,6 +78,38 @@ Aliases:
 Required: False
 Position: Named
 Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows the intended cache operation without downloading files or changing the cache.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+
+Prompts for confirmation before starting the entire cache operation.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

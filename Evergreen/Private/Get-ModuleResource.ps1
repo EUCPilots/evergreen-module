@@ -4,6 +4,7 @@ function Get-ModuleResource {
             Reads the module strings from the JSON file and returns a hashtable.
     #>
     [OutputType([System.Collections.IDictionary])]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on PS5.1: ConvertFrom-Json -AsHashtable")]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $false, Position = 0)]

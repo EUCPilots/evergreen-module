@@ -1,5 +1,6 @@
 function Expand-CabArchive {
     [CmdletBinding(SupportsShouldProcess = $false)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on Ubuntu: New-Object -ComObject")]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]

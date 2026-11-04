@@ -270,8 +270,8 @@ function Save-EvergreenApp {
                                 $statusCode = $null
                                 $retryAfterHeader = $null
                                 if ($null -ne $response) {
-                                    try { $statusCode = [System.Int32]$response.StatusCode } catch { }
-                                    try { $retryAfterHeader = [System.String]$response.Headers["Retry-After"] } catch { }
+                                    try { $statusCode = [System.Int32]$response.StatusCode } catch { Write-Warning -Message "Failed to parse status code from response." }
+                                    try { $retryAfterHeader = [System.String]$response.Headers["Retry-After"] } catch { Write-Warning -Message "Failed to parse Retry-After header from response." }
                                 }
 
                                 $retryableStatusCodes = @(408, 429, 500, 502, 503, 504)

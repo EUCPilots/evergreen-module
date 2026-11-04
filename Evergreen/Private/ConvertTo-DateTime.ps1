@@ -28,12 +28,13 @@ function ConvertTo-DateTime {
         [System.String] $Pattern = "M/d/yyyy",
 
         [Parameter()]
-        [System.Management.Automation.SwitchParameter] $AutoDetect = $true
+        [System.Management.Automation.SwitchParameter] $AutoDetect
     )
 
     Write-Verbose -Message "$($MyInvocation.MyCommand): Converting: [$DateTime]."
     $Parsed = $false
-    if ($AutoDetect) {
+    $UseAutoDetect = -not $PSBoundParameters.ContainsKey('AutoDetect') -or $AutoDetect
+    if ($UseAutoDetect) {
         [System.String[]] $KnownFormats = @(
             "M/d/yyyy"
             "MM/dd/yyyy HH:mm:ss"

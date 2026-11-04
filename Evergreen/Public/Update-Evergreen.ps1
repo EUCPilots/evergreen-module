@@ -1,8 +1,8 @@
 function Update-Evergreen {
     <#
-        .EXTERNALHELP Evergreen-help.xml     
+        .EXTERNALHELP Evergreen-help.xml
     #>
-    [CmdletBinding(SupportsShouldProcess = $false)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter()]
         [System.Management.Automation.SwitchParameter] $Force,
@@ -20,8 +20,21 @@ function Update-Evergreen {
         [System.String] $Release
     )
 
+    # Validate Force parameter requirement when Release is specified
+    if ($PSBoundParameters['Release'] -and -not $PSBoundParameters['Force']) {
+        throw "-Force parameter required when specifying a release version."
+    }
+
+    $AppsPath = Get-EvergreenAppsPath
+    if (-not $PSCmdlet.ShouldProcess($AppsPath, "Download, validate, and synchronize Evergreen apps cache")) {
+        return
+    }
+
+    # Approval covers the entire cache operation, including nested commands.
+    $ConfirmPreference = [System.Management.Automation.ConfirmImpact]::None
+
     # Account for changing the EVERGREEN_APPS_PATH variable at runtime
-    $Script:AppsPath = Get-EvergreenAppsPath
+    $Script:AppsPath = $AppsPath
     $script:VersionFile = Join-Path -Path $script:AppsPath -ChildPath ".evergreen_version"
     Write-Message -Message "Evergreen apps cache path: $($script:AppsPath)."
 
@@ -36,11 +49,6 @@ function Update-Evergreen {
     }
     catch {
         $LocalVersion = $null
-    }
-
-    # Validate Force parameter requirement when Release is specified
-    if ($PSBoundParameters['Release'] -and -not $PSBoundParameters['Force']) {
-        throw "-Force parameter required when specifying a release version."
     }
 
     try {
@@ -190,7 +198,7 @@ function Update-Evergreen {
             if (Test-Path -Path $ExtractPath) { Remove-Item -Path $ExtractPath -Recurse -Force -ErrorAction "SilentlyContinue" }
             $global:ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
             Expand-Archive -Path $ZipFile -DestinationPath $ExtractPath -Force
-            $global:ProgressPreference = [System.Management.Automation.ActionPreference]::Continue
+            $global:ProgressPreference = [System.Management.Automation.ActionPreference]::continue
             Remove-Item -Path $ZipFile -Force -ErrorAction "SilentlyContinue"
 
             Write-Message -Message "Validating extracted files against SHA256 hashes."
@@ -200,7 +208,7 @@ function Update-Evergreen {
                 if (Test-Path -Path $FilePath) {
                     $LocalHash = (Get-FileHash -Path $FilePath -Algorithm "SHA256").Hash.ToLower()
                     if ($LocalHash -ne $File.sha256.ToLower()) {
-                        Write-Warning -Message "SHA256 mismatch for file '$($File.file_path)'." -MessageType "Fail"
+                        Write-Message -Message "SHA256 mismatch for file '$($File.file_path)'." -MessageType "Fail"
                         $DoReplace = $false
                     }
                     else {
@@ -208,7 +216,7 @@ function Update-Evergreen {
                     }
                 }
                 else {
-                    Write-Warning -Message "Expected file '$($File.file_path)' not found in extracted release." -MessageType "Fail"
+                    Write-Message -Message "Expected file '$($File.file_path)' not found in extracted release." -MessageType "Fail"
                     $DoReplace = $false
                 }
             }

@@ -19,7 +19,7 @@ function ConvertFrom-Jwt {
     }
 
     # Helper: Convert Base64URL to Base64 and decode to JSON
-    function Decode-Part([System.String]$Part, [System.String]$Name) {
+    function Convert-Part ([System.String]$Part, [System.String]$Name) {
         # Fix Base64URL encoding (replace - and _)
         $replaced = $Part.Replace('-', '+').Replace('_', '/')
         # Pad string length to multiple of 4
@@ -42,8 +42,8 @@ function ConvertFrom-Jwt {
 
     # Return the decoded header and payload as a custom object
     [PSCustomObject]@{
-        Header    = Decode-Part -Part $parts[0] -Name "Header"
-        Payload   = Decode-Part -Part $parts[1] -Name "Payload"
+        Header    = Convert-Part -Part $parts[0] -Name "Header"
+        Payload   = Convert-Part -Part $parts[1] -Name "Payload"
         Signature = if ($parts.Count -gt 2) { $parts[2] } else { $null }
     } | Write-Output
 }
