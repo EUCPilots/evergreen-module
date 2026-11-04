@@ -27,6 +27,7 @@ jobs:
         id: checkout
         with:
           ref: main
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install pinned release tools
@@ -51,33 +52,19 @@ jobs:
 
             # Importing the manifest to determine the version
             $Manifest = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
-            echo "previousversion=v$($Manifest.Version)" >> $env:GITHUB_OUTPUT
+            . .\ci\Get-ReleaseVersionData.ps1
+            $Changelog = Get-Content -LiteralPath .\CHANGELOG.md -Raw -ErrorAction Stop
+            $Release = Get-ReleaseVersionData -Version $Manifest.Version -Changelog $Changelog
+            echo "previousversion=$($Release.PreviousVersion)" >> $env:GITHUB_OUTPUT
             Write-Host "Old version is: $($Manifest.Version)"
-            [System.String]$NewVersion = New-Object -TypeName "System.Version" -ArgumentList ((Get-Date -Format "yyMM"), ($Manifest.Version.Minor + 3 ), 0)
+            [System.String]$NewVersion = $Release.Version.ToString()
             Write-Host "New version is: $NewVersion"
 
             $functionList = (Get-ChildItem -Path (Join-Path $ModulePath "Public") -Filter *.ps1).BaseName
-            $Changelog = Get-Content -LiteralPath .\CHANGELOG.md -Raw
-            $Notes = [regex]::Match($Changelog, '(?ms)^## VERSION[ \t]*\r?\n(?<Notes>.*?)(?=^## |\z)').Groups["Notes"].Value.Trim()
-            if ([System.String]::IsNullOrWhiteSpace($Notes)) { throw "Missing release notes under '## VERSION'." }
-            Update-ModuleManifest -Path $ManifestPath -ModuleVersion $NewVersion -FunctionsToExport $functionList -ReleaseNotes "$NewVersion`n$Notes" -ErrorAction Stop
+            Update-ModuleManifest -Path $ManifestPath -ModuleVersion $NewVersion -FunctionsToExport $functionList -ReleaseNotes "$NewVersion`n$($Release.Notes)" -ErrorAction Stop
             Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop | Out-Null
+            $Release.Changelog | Set-Content -LiteralPath .\CHANGELOG.md -ErrorAction Stop
             echo "newversion=$NewVersion" >> $env:GITHUB_OUTPUT
-
-      # Update the change log with the new version number
-      - name: Update CHANGELOG.md
-        id: update-changelog
-        shell: powershell
-        run: |
-            $changeLog = "${{ github.workspace }}\changelog.md"
-            $replaceString = "^## VERSION$"
-            $content = Get-Content -Path $changeLog
-            if ($content -match $replaceString) {
-                $content -replace $replaceString, "## ${{steps.update-version.outputs.newversion}}" | Set-Content -Path $changeLog
-            }
-            else {
-                throw "No release placeholder in $changeLog."
-            }
 
       # Update the list of supported apps in APPS.md
       - name: Update APPS.md
@@ -170,7 +157,6 @@ jobs:
           CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
           CACHE_OUTCOME: ${{ steps.psmodulecache.outcome }}
           VERSION_OUTCOME: ${{ steps.update-version.outcome }}
-          CHANGELOG_OUTCOME: ${{ steps.update-changelog.outcome }}
           APPS_OUTCOME: ${{ steps.update-apps.outcome }}
           GPG_OUTCOME: ${{ steps.import_gpg.outcome }}
           COMMIT_OUTCOME: ${{ steps.commit.outcome }}
@@ -199,8 +185,7 @@ jobs:
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Step outcomes"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CHECKOUT_OUTCOME) Checkout: $($env:CHECKOUT_OUTCOME)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CACHE_OUTCOME) Install/cache modules: $($env:CACHE_OUTCOME)"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:VERSION_OUTCOME) Update module version: $($env:VERSION_OUTCOME)"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:CHANGELOG_OUTCOME) Update CHANGELOG.md: $($env:CHANGELOG_OUTCOME)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:VERSION_OUTCOME) Update module version and CHANGELOG.md: $($env:VERSION_OUTCOME)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:APPS_OUTCOME) Update apps.md: $($env:APPS_OUTCOME)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:GPG_OUTCOME) Import GPG key: $($env:GPG_OUTCOME)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $(Get-StatusIcon $env:COMMIT_OUTCOME) Commit changes: $($env:COMMIT_OUTCOME)"

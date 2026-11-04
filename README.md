@@ -100,6 +100,8 @@ Before staging and again immediately before publishing, [release validation](ci/
 
 The validated module directory is uploaded as a release artifact and downloaded by the publishing job. Only this revalidated directory is passed to `Publish-Module`. Additions or removals of module files require an explicit inventory update. Version commits and tags are created before validation; a blocked release can therefore leave a tag without a Gallery publication.
 
+Starting a new **Update and publish module** run after a blocked release does not require restoring `## VERSION`. If the first changelog section and an existing tag match the manifest version, the workflow increments the third version component (for example, `2611.2865.0` to `2611.2865.1`), reuses the notes, and updates that section and the manifest to the new version. Existing tags are preserved, and occupied candidate tags are skipped by incrementing the third component again. A new `## VERSION` section retains the normal date-based version and second-component increment of three. Missing or mismatched release notes still block the run.
+
 The live job tests a random sample of 30 applications with `Get-EvergreenApp` by default. To test all applications except the explicit exclusion list, run the workflow manually from GitHub Actions and enable **Test all applications**. Push and pull request runs continue to use the random sample.
 
 For local live Pester runs, set `$env:EVERGREEN_TEST_ALL_APPLICATIONS = "true"` before running the tests to use the expanded application set (excluding the explicit exclusion list). Remove the variable with `Remove-Item Env:\EVERGREEN_TEST_ALL_APPLICATIONS` to restore the default random sample.
