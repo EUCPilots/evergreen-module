@@ -17,7 +17,7 @@
         PSUseCompatibleSyntax  = @{
             Enable = $true
             TargetVersions = @(
-                '7.0'
+                '7.4'
                 '5.1'
             )
         }

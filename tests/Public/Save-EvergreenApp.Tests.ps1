@@ -100,6 +100,47 @@ InModuleScope -ModuleName "Evergreen" {
             }
         }
 
+        It "Uses the URI filename and forwards proxy credentials" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $uriFilenameApp = [PSCustomObject]@{ URI = "https://example.com/from-uri.msi" }
+            $proxyCredential = [System.Management.Automation.PSCredential]::new(
+                "proxy-user",
+                (ConvertTo-SecureString "proxy-password" -AsPlainText -Force)
+            )
+            try {
+                Mock Invoke-WebRequest {
+                    param ($Uri, $OutFile)
+                    [System.IO.File]::WriteAllText($OutFile, "installer")
+                }
+
+                $result = Save-EvergreenApp -InputObject $uriFilenameApp -CustomPath $testPath `
+                    -Proxy "http://proxy.example.com" -ProxyCredential $proxyCredential
+
+                $result.Name | Should -Be "from-uri.msi"
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                    $Proxy -eq "http://proxy.example.com" -and
+                    $ProxyCredential.UserName -eq "proxy-user"
+                }
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
+        It "Throws when a successful request does not create its temporary download" {
+            $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            try {
+                Mock Invoke-WebRequest {}
+
+                { Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -RetryCount 0 } |
+                    Should -Throw "*completed without creating a file*"
+                @(Get-ChildItem -LiteralPath $testPath -Force) | Should -BeNullOrEmpty
+            }
+            finally {
+                Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+            }
+        }
+
         It "Does not create directories or download under WhatIf" {
             $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
             try {
@@ -226,25 +267,28 @@ InModuleScope -ModuleName "Evergreen" {
 
         It "Passes timeout settings supported by the current PowerShell version" {
             $testPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "Evergreen-Save-$([guid]::NewGuid().ToString('N'))"
+            $script:requestedTimeouts = $null
             try {
                 Mock Invoke-WebRequest {
-                    param ($Uri, $OutFile)
+                    param ($Uri, $OutFile, $TimeoutSec, $ConnectionTimeoutSeconds, $OperationTimeoutSeconds)
+                    $script:requestedTimeouts = $PSBoundParameters
                     [System.IO.File]::WriteAllText($OutFile, "installer")
                 }
 
                 if ($PSVersionTable.PSVersion -ge [System.Version]"7.4") {
                     Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -ConnectionTimeoutSeconds 17 -OperationTimeoutSeconds 121 | Out-Null
-                    Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
-                        $ConnectionTimeoutSeconds -eq 17 -and $OperationTimeoutSeconds -eq 121
-                    }
+                    $script:requestedTimeouts.ConnectionTimeoutSeconds | Should -Be 17
+                    $script:requestedTimeouts.OperationTimeoutSeconds | Should -Be 121
                 }
                 else {
                     Save-EvergreenApp -InputObject $testApp -CustomPath $testPath -ConnectionTimeoutSeconds 17 | Out-Null
-                    Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $TimeoutSec -eq 17 }
+                    $script:requestedTimeouts.TimeoutSec | Should -Be 17
                 }
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly
             }
             finally {
                 Remove-Item -LiteralPath $testPath -Recurse -Force -ErrorAction "SilentlyContinue"
+                Remove-Variable -Name requestedTimeouts -Scope Script -ErrorAction "SilentlyContinue"
             }
         }
 

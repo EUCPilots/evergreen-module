@@ -1,5 +1,6 @@
 function Expand-CabArchive {
     [CmdletBinding(SupportsShouldProcess = $false)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on Ubuntu: New-Object -ComObject")]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
@@ -66,7 +67,7 @@ function Expand-CabArchive {
             if ($Segment.IndexOfAny($InvalidCharacters) -ge 0 -or
                 $Segment -match '[<>:"/\\|?*\x00-\x1F]' -or
                 $Segment -match '[ .]$' -or
-                $Segment -match '^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)') {
+                $Segment -match '^(CON|PRN|AUX|NUL|COM[1-9\u00B9\u00B2\u00B3]|LPT[1-9\u00B9\u00B2\u00B3])(?:\.|$)') {
                 throw "CAB item path '$Name' contains an invalid file name."
             }
         }

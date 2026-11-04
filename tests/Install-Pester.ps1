@@ -1,5 +1,5 @@
 <#
-    Install the Pester version used by CI, including on PowerShell 7.0.
+    Install the Pester version used by CI, including on PowerShell 7.4.
 #>
 
 $PesterVersion = (Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot "..\ci\ValidationTools.psd1")).Pester

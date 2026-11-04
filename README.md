@@ -55,7 +55,7 @@ Documentation for Evergreen, including usage examples, is located here: [https:/
 
 ## Testing
 
-The [Validate module workflow](.github/workflows/validate-module.yml) runs deterministic Pester tests on Windows PowerShell 5.1, PowerShell 7.0.13 (the minimum supported 7.0 line) on Windows, and the runner-provided PowerShell 7 on Windows, Linux, and macOS. Each runtime uploads a separate test report. Failed tests, discovery/setup failures, an empty run, an unexpected skip, inconclusive tests, or a required suite with no passing tests fail validation. Code coverage remains in the live Windows PowerShell job, avoiding debugger instrumentation in the compatibility matrix.
+The [Validate module workflow](.github/workflows/validate-module.yml) runs deterministic Pester tests on Windows PowerShell 5.1, PowerShell 7.4.0 (the minimum supported 7.4 line) on Windows, and the runner-provided PowerShell 7 on Windows, Linux, and macOS. Each runtime uploads a separate test report. Failed tests, discovery/setup failures, an empty run, an unexpected skip, inconclusive tests, or a required suite with no passing tests fail validation. Code coverage remains in the live Windows PowerShell job, avoiding debugger instrumentation in the compatibility matrix.
 
 The [release workflow](.github/workflows/update-module.yml) calls the same [runtime matrix](.github/workflows/test-runtimes.yml) against the release commit before publishing to the PowerShell Gallery. Every runtime must pass; a compatibility failure or the 20-minute job timeout blocks publication.
 
@@ -71,7 +71,7 @@ The runner installs Pester 5.7.1 if needed and writes reports to `tests/Results`
 
 ### Analysis and coverage gates
 
-The [analyzer workflow](.github/workflows/psscriptanalyzer.yml) runs default rules, the custom lowercase-keyword rule, and explicit PowerShell 5.1/7.0 syntax and command-compatibility rules. Errors and Warnings fail validation; `PSAvoidUsingWriteHost` remains excluded. SARIF is uploaded even when findings fail the job. The bundled command profiles cover Windows PowerShell 5.1 and Windows/Linux PowerShell 7.0; macOS compatibility is exercised by the runtime matrix. Existing findings are blockers, not grandfathered exceptions.
+The [analyzer workflow](.github/workflows/psscriptanalyzer.yml) runs default rules, the custom lowercase-keyword rule, explicit PowerShell 5.1/7.4 syntax checks, and command-compatibility checks against the bundled profiles for Windows PowerShell 5.1 and Windows/Linux PowerShell 7.0. Errors and Warnings fail validation; `PSAvoidUsingWriteHost` remains excluded. SARIF is uploaded even when findings fail the job. The runtime matrix separately tests the PowerShell 7.4 minimum on Windows and runner-provided PowerShell 7 on Windows, Linux, and macOS. Existing findings are blockers, not grandfathered exceptions.
 
 The runtime matrix parses module and CI `.ps1`, `.psm1`, and `.psd1` files under each engine. The [release-gates workflow](.github/workflows/validate-release.yml) also validates workflow YAML with actionlint and parses embedded PowerShell.
 
@@ -112,7 +112,7 @@ The module uses a version notation that follows: YearMonth.Build. It is expected
 
 ### PowerShell Support
 
-Evergreen supports Windows PowerShell 5.1 and PowerShell 7.0+. Evergreen should work on PowerShell Core 6.x; however, we are not actively testing on that version of PowerShell, so support cannot be guaranteed.
+Evergreen supports Windows PowerShell 5.1 and PowerShell 7.4+. Evergreen should work on PowerShell Core 6.x and PowerShell 7.0 to 7.3; however, we are not actively testing on those versions of PowerShell, so support cannot be guaranteed.
 
 ### Install from the PowerShell Gallery
 

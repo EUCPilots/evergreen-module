@@ -25,10 +25,10 @@ jobs:
             os: windows-latest
             shell: powershell
             version: '5.1'
-          - name: windows-powershell-7.0
+          - name: windows-powershell-7.4
             os: windows-latest
             shell: pwsh
-            version: '7.0'
+            version: '7.4'
           - name: windows-powershell-7
             os: windows-latest
             shell: pwsh
@@ -49,12 +49,12 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - name: Install minimum supported PowerShell
-        if: matrix.version == '7.0'
+        if: matrix.version == '7.4'
         shell: pwsh
         run: |
-          $Path = Join-Path -Path $env:RUNNER_TEMP -ChildPath "powershell-7.0.13"
+          $Path = Join-Path -Path $env:RUNNER_TEMP -ChildPath "powershell-7.4.0"
           $Archive = "$Path.zip"
-          Invoke-WebRequest -Uri "https://github.com/PowerShell/PowerShell/releases/download/v7.0.13/PowerShell-7.0.13-win-x64.zip" -OutFile $Archive -ErrorAction Stop
+          Invoke-WebRequest -Uri "https://github.com/PowerShell/PowerShell/releases/download/v7.4.0/PowerShell-7.4.0-win-x64.zip" -OutFile $Archive -ErrorAction Stop
           Expand-Archive -LiteralPath $Archive -DestinationPath $Path
           $Path | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 

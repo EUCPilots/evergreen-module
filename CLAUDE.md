@@ -92,7 +92,7 @@ Module version follows `YYmm.Build` (e.g., `2511.2826.0`). The `update-module.ym
 ## Code Conventions
 
 - **One function per file**, filename must exactly match the function name (enforced by `Main.Tests.ps1`).
-- Supports Windows PowerShell 5.1 and PowerShell 7.0+. Avoid PS6-only APIs.
+- Supports Windows PowerShell 5.1 and PowerShell 7.4+. Avoid PS6-only APIs.
 - PSScriptAnalyzer is run at `Error` and `Warning` severity. `PSAvoidUsingWriteHost` is excluded (use `Write-Message` instead).
 - GitHub API calls check for `GITHUB_TOKEN` or `GH_TOKEN` environment variables to avoid rate limits.
 - App functions are dot-sourced lazily (at invocation time, not module import) to reduce memory footprint.

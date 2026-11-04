@@ -4,6 +4,7 @@ function Resolve-DnsNameWrapper {
             Wrap DNS resolvers and return textual record data.
     #>
     [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on PS5.1: ConvertFrom-Json -AsHashtable")]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]

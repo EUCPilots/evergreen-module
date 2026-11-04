@@ -3,6 +3,7 @@
         Evergreen script to initiate the module
 #>
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSReviewUnusedParameter", "", Justification = "Required for argument completion.")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "Not reachable on Ubuntu: Get-CimInstance")]
 [CmdletBinding(SupportsShouldProcess = $false)]
 param ()
 

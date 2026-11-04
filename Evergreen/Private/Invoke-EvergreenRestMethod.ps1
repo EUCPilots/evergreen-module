@@ -49,7 +49,7 @@ function Invoke-EvergreenRestMethod {
         $ErrorActionPreference = $ErrorAction
     }
     else {
-        $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Continue
+        $ErrorActionPreference = [System.Management.Automation.ActionPreference]::continue
     }
 
     $SkipCertificateCheckEnabled = ($script:SkipCertificateCheck -eq $true -or $SkipCertificateCheck.IsPresent)
