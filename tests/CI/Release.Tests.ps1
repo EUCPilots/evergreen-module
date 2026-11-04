@@ -127,6 +127,94 @@ Describe "Release version preparation" {
     }
 }
 
+Describe "Release workflow tag creation" {
+    BeforeAll {
+        $RepositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+        $Workflow = Get-Content -LiteralPath (Join-Path $RepositoryRoot ".github/workflows/update-module.yml") -Raw
+        $Step = [regex]::Match($Workflow, '(?ms)      - name: Create and Push Tag\r?\n.*?        run: \|\r?\n(?<Script>.*?)(?=\r?\n      - name:)')
+        if (-not $Step.Success) { throw "Cannot find workflow tag step." }
+        $TagScript = [scriptblock]::Create($Step.Groups["Script"].Value)
+    }
+
+    BeforeEach {
+        $Root = Join-Path $TestDrive ([guid]::NewGuid().ToString("N"))
+        $Remote = Join-Path $TestDrive ([guid]::NewGuid().ToString("N"))
+        $null = New-Item -Path (Join-Path $Root "Evergreen") -ItemType Directory -Force
+        New-ModuleManifest -Path (Join-Path $Root "Evergreen/Evergreen.psd1") -ModuleVersion "2611.2865.1"
+        git init --bare --quiet $Remote
+        git -C $Root init --quiet
+        git -C $Root config tag.gpgsign false
+        git -C $Root add .
+        git -C $Root -c user.name=Test -c user.email=test@example.test -c commit.gpgsign=false commit --quiet -m "Tag fixture" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+        git -C $Root config user.name Test
+        git -C $Root config user.email test@example.test
+        git -C $Root remote add origin $Remote
+        if ($LASTEXITCODE -ne 0) { throw "Cannot initialize tag fixture." }
+        $Commit = git -C $Root rev-parse HEAD
+        $OriginalWorkspace = $env:GITHUB_WORKSPACE
+        $OriginalOutput = $env:GITHUB_OUTPUT
+        $env:GITHUB_WORKSPACE = $Root
+        $env:GITHUB_OUTPUT = Join-Path $Root "outputs.txt"
+        Push-Location $Root
+    }
+
+    AfterEach {
+        Pop-Location
+        $env:GITHUB_WORKSPACE = $OriginalWorkspace
+        $env:GITHUB_OUTPUT = $OriginalOutput
+    }
+
+    It "Creates or reuses a tag with state <State>" -ForEach @(
+        @{ State = "absent" }
+        @{ State = "local" }
+        @{ State = "remote" }
+        @{ State = "local-and-remote" }
+    ) {
+        if ($State -ne "absent") {
+            git tag -a v2611.2865.1 -m "Existing release tag"
+            if ($LASTEXITCODE -ne 0) { throw "Cannot create fixture tag." }
+            $OriginalTag = git rev-parse refs/tags/v2611.2865.1
+            if ($State -in @("remote", "local-and-remote")) {
+                git push origin refs/tags/v2611.2865.1
+                if ($LASTEXITCODE -ne 0) { throw "Cannot push fixture tag." }
+            }
+            if ($State -eq "remote") {
+                git tag -d v2611.2865.1
+                if ($LASTEXITCODE -ne 0) { throw "Cannot remove local fixture tag." }
+            }
+        }
+
+        & $TagScript
+
+        (git rev-parse "refs/tags/v2611.2865.1^{commit}") | Should -Be $Commit
+        (git --git-dir=$Remote rev-parse "refs/tags/v2611.2865.1^{commit}") | Should -Be $Commit
+        if ($State -ne "absent") {
+            (git rev-parse refs/tags/v2611.2865.1) | Should -Be $OriginalTag
+        }
+        Get-Content -LiteralPath $env:GITHUB_OUTPUT | Should -Contain "tested_commit=$Commit"
+    }
+
+    It "Rejects an existing remote tag on a different commit without overwriting it" {
+        git tag -a v2611.2865.1 -m "Original release"
+        git push origin refs/tags/v2611.2865.1
+        if ($LASTEXITCODE -ne 0) { throw "Cannot push original fixture tag." }
+        git -c commit.gpgsign=false commit --allow-empty --quiet -m "Different release commit" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+        if ($LASTEXITCODE -ne 0) { throw "Cannot create different release commit." }
+
+        { & $TagScript } | Should -Throw "*points to a different commit*"
+
+        (git --git-dir=$Remote rev-parse "refs/tags/v2611.2865.1^{commit}") | Should -Be $Commit
+        Test-Path -LiteralPath $env:GITHUB_OUTPUT | Should -BeFalse
+    }
+
+    It "Stops when remote tags cannot be fetched" {
+        git remote set-url origin (Join-Path $TestDrive "MissingRemote")
+        { & $TagScript } | Should -Throw "*Cannot fetch existing release tags*"
+        @(git tag --list v2611.2865.1).Count | Should -Be 0
+        Test-Path -LiteralPath $env:GITHUB_OUTPUT | Should -BeFalse
+    }
+}
+
 Describe "Release metadata and package gate" {
     BeforeEach {
         $Root = Join-Path $TestDrive ([guid]::NewGuid().ToString("N"))

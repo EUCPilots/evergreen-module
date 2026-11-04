@@ -124,19 +124,30 @@ jobs:
           $Module = Test-ModuleManifest -Path "$env:GITHUB_WORKSPACE\Evergreen\Evergreen.psd1" -ErrorAction Stop
           if ($null -ne $Module) {
               $tagName = "v$($Module.Version.ToString())"
-              Write-Host "Creating tag: $tagName"
-              
-              # Create annotated tag (no GPG signature needed)
-              git tag -a $tagName -m "Release version $($Module.Version.ToString())"
-              if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag." }
+              $Commit = git rev-parse --verify HEAD
+              if ($LASTEXITCODE -ne 0) { throw "Cannot resolve release commit." }
+
+              git fetch origin --tags
+              if ($LASTEXITCODE -ne 0) { throw "Cannot fetch existing release tags." }
+              $ExistingTag = @(git tag --list $tagName)
+              if ($LASTEXITCODE -ne 0) { throw "Cannot check existing release tag '$tagName'." }
+              if ($ExistingTag.Count -gt 0) {
+                  $TagCommit = git rev-parse --verify "refs/tags/$tagName^{commit}"
+                  if ($LASTEXITCODE -ne 0) { throw "Cannot resolve existing release tag '$tagName'." }
+                  if ($TagCommit -cne $Commit) { throw "Existing release tag '$tagName' points to a different commit." }
+                  Write-Host "Reusing existing tag: $tagName"
+              }
+              else {
+                  Write-Host "Creating tag: $tagName"
+                  git tag -a $tagName -m "Release version $($Module.Version.ToString())"
+                  if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag." }
+              }
               
               # Push the tag with verbose output
-              git push origin $tagName --verbose
+              git push origin "refs/tags/$tagName" --verbose
               
               if ($LASTEXITCODE -eq 0) {
-                  Write-Host "Tag $tagName created and pushed successfully" -ForegroundColor Green
-                  $Commit = git rev-parse HEAD
-                  if ($LASTEXITCODE -ne 0) { throw "Cannot resolve release commit." }
+                  Write-Host "Tag $tagName is available on origin" -ForegroundColor Green
                   "tested_commit=$Commit" >> $env:GITHUB_OUTPUT
               }
               else {
