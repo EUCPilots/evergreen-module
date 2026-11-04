@@ -42,7 +42,7 @@ Describe -Tag "Start" -Name "Start-EvergreenLibraryUpdate" {
         }
     }
 
-    Context "Validate Start-EvergreenLibraryUpdate basic functionality" -Skip {
+    Context "Validate Start-EvergreenLibraryUpdate basic functionality" -Tag "Integration" -Skip {
         BeforeAll {
             # This test requires a valid library setup, which is complex
             # Mark as skip for CI environments

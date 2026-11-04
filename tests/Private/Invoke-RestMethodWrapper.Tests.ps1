@@ -69,7 +69,7 @@ InModuleScope -ModuleName "Evergreen" {
                 } -Times 0 -Exactly
             }
 
-            It "Returns data from a proper URL" {
+            It "Returns data from a proper URL" -Tag "Integration" {
                 $params = @{
                     ContentType          = "application/vnd.github.v3+json"
                     ErrorAction          = "SilentlyContinue"
@@ -82,11 +82,11 @@ InModuleScope -ModuleName "Evergreen" {
                 Invoke-EvergreenRestMethod @params | Should -BeOfType [System.Object]
             }
 
-            It "Should throw with an invalid URL" {
+            It "Should throw with an invalid URL" -Tag "Integration" {
                 { Invoke-EvergreenRestMethod -Uri "https://nonsense.git" -WarningAction "SilentlyIgnore" } | Should -Throw
             }
 
-            It "Should throw with an invalid proxy server " {
+            It "Should throw with an invalid proxy server " -Tag "Integration" {
                 Set-ProxyEnv -Proxy "test.local"
                 { Invoke-EvergreenRestMethod -Uri "https://example.com" -WarningAction "SilentlyIgnore" } | Should -Throw
                 Remove-ProxyEnv

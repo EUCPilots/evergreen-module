@@ -51,7 +51,7 @@ InModuleScope -ModuleName "Evergreen" {
                 Test-Path -LiteralPath $script:RawResponseFile | Should -BeFalse
             }
 
-            It "Returns data from a URL" {
+            It "Returns data from a URL" -Tag "Integration" {
                 $params = @{
                     ContentType          = "text/html"
                     ErrorAction          = "SilentlyContinue"
@@ -67,11 +67,11 @@ InModuleScope -ModuleName "Evergreen" {
                 Invoke-EvergreenWebRequest @params | Should -BeOfType [System.String]
             }
 
-            It "Should throw with an invalid URL" {
+            It "Should throw with an invalid URL" -Tag "Integration" {
                 { Invoke-EvergreenWebRequest -Uri "https://nonsense.git" -WarningAction "SilentlyIgnore" } | Should -Throw
             }
 
-            It "Should throw with an invalid proxy server " {
+            It "Should throw with an invalid proxy server " -Tag "Integration" {
                 Set-ProxyEnv -Proxy "test.local"
                 { Invoke-EvergreenWebRequest -Uri "https://example.com" -WarningAction "SilentlyIgnore" } | Should -Throw
                 Remove-ProxyEnv

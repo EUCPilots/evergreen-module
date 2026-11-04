@@ -50,7 +50,7 @@ Describe -Tag "Get" -Name "Get-EvergreenLibrary" {
         }
     }
 
-    Context "Validate Get-EvergreenLibrary with valid library" -Skip {
+    Context "Validate Get-EvergreenLibrary with valid library" -Tag "Integration" -Skip {
         BeforeAll {
             # This test requires Update-Evergreen to have been run first
             # Mark as skip for CI environments where the library may not exist

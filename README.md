@@ -53,11 +53,25 @@ Evergreen's focus is on integration for PowerShell scripts to provide product ve
 
 Documentation for Evergreen, including usage examples, is located here: [https://eucpilots.com/evergreen/](https://eucpilots.com/evergreen/).
 
-## Testing Applications
+## Testing
 
-The [Validate module workflow](.github/workflows/validate-module.yml) tests a random sample of 50 applications with `Get-EvergreenApp` by default. To test all available applications, run the workflow manually from GitHub Actions and enable **Test all applications instead of a random sample of 50**. Push and pull request runs continue to use the random sample.
+The [Validate module workflow](.github/workflows/validate-module.yml) runs deterministic Pester tests on Windows PowerShell 5.1, PowerShell 7.0.13 (the minimum supported 7.0 line) on Windows, and the runner-provided PowerShell 7 on Windows, Linux, and macOS. Each runtime uploads a separate test report. Failed tests, discovery/setup failures, an empty run, an unexpected skip, inconclusive tests, or a required suite with no passing tests fail validation. Code coverage remains in the live Windows PowerShell job, avoiding debugger instrumentation in the compatibility matrix.
 
-For local Pester runs, set `$env:EVERGREEN_TEST_ALL_APPLICATIONS = "true"` before running the tests to test all applications. Remove the variable with `Remove-Item Env:\EVERGREEN_TEST_ALL_APPLICATIONS` to restore the default random sample.
+The [release workflow](.github/workflows/update-module.yml) calls the same [runtime matrix](.github/workflows/test-runtimes.yml) against the newly created release tag before publishing to the PowerShell Gallery. Every runtime must pass; a compatibility failure or the 20-minute job timeout blocks publication.
+
+The deterministic matrix uses an isolated apps-cache path and does not run `Update-Evergreen`. Tests tagged `Integration` and the companion-cache suites for `Find-EvergreenApp`, `Export-EvergreenManifest`, `Get-EvergreenApp`, `Test-EvergreenLibrary`, and `Update-Evergreen` remain in the separate live Windows PowerShell job. Platform-specific tests and repository-helper cases that do not apply to a particular helper can be skipped. Existing disabled library integration scenarios are not part of the deterministic matrix.
+
+To run the same deterministic checks locally:
+
+```powershell
+.\tests\Invoke-Tests.ps1
+```
+
+The runner installs Pester 5.7.1 if needed and writes reports to `tests/Results`. Use `-OutputPath` to choose another report directory. Add `-IncludeIntegration` to download the apps cache and run the full suite, including live-service tests and code coverage.
+
+The live job tests a random sample of 30 applications with `Get-EvergreenApp` by default. To test all applications except the explicit exclusion list, run the workflow manually from GitHub Actions and enable **Test all applications**. Push and pull request runs continue to use the random sample.
+
+For local live Pester runs, set `$env:EVERGREEN_TEST_ALL_APPLICATIONS = "true"` before running the tests to use the expanded application set (excluding the explicit exclusion list). Remove the variable with `Remove-Item Env:\EVERGREEN_TEST_ALL_APPLICATIONS` to restore the default random sample.
 
 ## Versioning
 

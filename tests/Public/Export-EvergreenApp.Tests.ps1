@@ -15,18 +15,13 @@ BeforeAll {
 
 Describe -Tag "Export" -Name "Export-EvergreenApp" {
     BeforeAll {
-        $App = Get-EvergreenApp -Name "MicrosoftOneDrive"
+        $App = @(
+            [PSCustomObject]@{ Version = "26.1.2.3"; URI = "https://example.test/installer.exe" }
+            [PSCustomObject]@{ Version = "26.1.2.4"; URI = "https://example.test/installer-x64.exe" }
+        )
 
         # Create download path
-        if ($env:Temp) {
-            $Path = Join-Path -Path $env:Temp -ChildPath "Downloads"
-        }
-        elseif ($env:TMPDIR) {
-            $Path = Join-Path -Path $env:TMPDIR -ChildPath "Downloads"
-        }
-        elseif ($env:RUNNER_TEMP) {
-            $Path = Join-Path -Path $env:RUNNER_TEMP -ChildPath "Downloads"
-        }
+        $Path = Join-Path -Path $TestDrive -ChildPath "Downloads"
         New-Item -Path $Path -ItemType "Directory" -Force -ErrorAction "SilentlyContinue" > $Null
         $File = Join-Path -Path $Path -ChildPath "MicrosoftOneDrive.json"
 

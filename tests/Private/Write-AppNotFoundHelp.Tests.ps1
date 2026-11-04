@@ -14,6 +14,14 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Write-AppNotFoundHelp" {
+    BeforeAll {
+        Mock Find-EvergreenApp -ModuleName "Evergreen" {
+            if ($Name -eq "MicrosoftEdg") {
+                [PSCustomObject]@{ Name = "MicrosoftEdge" }
+            }
+        }
+    }
+
     Context "Validate Write-AppNotFoundHelp basic functionality" {
         It "Should not throw when similar applications exist" {
             InModuleScope -ModuleName "Evergreen" {

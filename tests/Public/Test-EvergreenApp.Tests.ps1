@@ -13,7 +13,7 @@ BeforeDiscovery {
 BeforeAll {
 }
 
-Describe -Tag "Test" -Name "Test-EvergreenApp" {
+Describe -Tag "Test", "Integration" -Name "Test-EvergreenApp" {
     BeforeAll {
         $App = Get-EvergreenApp -Name "MicrosoftOneDrive"
         $Result = Test-EvergreenApp -InputObject $App

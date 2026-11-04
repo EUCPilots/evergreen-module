@@ -14,7 +14,7 @@ BeforeAll {
 }
 
 Describe -Tag "Private" -Name "Expand-CabArchive" {
-    Context "Validate Shell extraction and expand.exe fallback" {
+    Context "Validate Shell extraction and expand.exe fallback" -Skip:([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
         BeforeAll {
             $OriginalSystemRoot = $env:SystemRoot
             $env:SystemRoot = $TestDrive
@@ -396,7 +396,7 @@ param (
         }
     }
 
-    Context "Validate Microsoft's Power Automate Desktop update CAB" {
+    Context "Validate Microsoft's Power Automate Desktop update CAB" -Tag "Integration" {
         BeforeAll {
             if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
                 $MicrosoftCab = Join-Path -Path $TestDrive -ChildPath "PADUpdate.json.cab"
@@ -487,24 +487,24 @@ param (
         }
     }
 
-    Context "Validate Expand-CabArchive on Windows" -Skip:(-not $IsWindows) {
+    Context "Validate Expand-CabArchive on Windows" -Skip:([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
         BeforeAll {
             # This would require a valid CAB file to test properly
             # Skipping actual expansion tests as they require Windows and valid CAB files
         }
 
-        It "Should be available on Windows" -Skip:(-not $IsWindows) {
+        It "Should be available on Windows" {
             InModuleScope -ModuleName "Evergreen" {
                 Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
             }
         }
     }
 
-    Context "Validate Expand-CabArchive on non-Windows" -Skip:($IsWindows) {
-        It "Should handle non-Windows platforms" -Skip:($IsWindows) {
+    Context "Validate Expand-CabArchive on non-Windows" -Skip:([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+        It "Should handle non-Windows platforms" {
             InModuleScope -ModuleName "Evergreen" {
-                # The function should handle non-Windows platforms gracefully
-                Get-Command -Name Expand-CabArchive -ErrorAction "SilentlyContinue" | Should -Not -BeNullOrEmpty
+                { Expand-CabArchive -Path "test.cab" -DestinationPath "destination" } |
+                    Should -Throw "*only supported on Windows*"
             }
         }
     }

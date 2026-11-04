@@ -15,7 +15,7 @@ BeforeAll {
 
 Describe -Tag "Convert" -Name "ConvertTo-DotNetVersionClass" {
     BeforeAll {
-        $App = Get-EvergreenApp -Name "MicrosoftOneDrive"
+        $App = @([PSCustomObject]@{ Version = "26.1.2.3"; URI = "https://example.test/installer.exe" })
     }
 
     It "Should return a valid .NET version class" {

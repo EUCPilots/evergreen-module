@@ -9,13 +9,16 @@ param ()
 
 BeforeDiscovery {
     # Get details for Microsoft Edge
-    $Installers = Get-EvergreenApp -Name "MicrosoftEdge" | Where-Object { $_.Channel -eq "Stable" }
+    $Installers = @()
+    if ($env:EVERGREEN_TEST_OFFLINE -ne "true") {
+        $Installers = Get-EvergreenApp -Name "MicrosoftEdge" | Where-Object { $_.Channel -eq "Stable" }
+    }
 }
 
 BeforeAll {
 }
 
-Describe -Tag "Save" -Name "Save-EvergreenApp" -ForEach $Installers {
+Describe -Tag "Save", "Integration" -Name "Save-EvergreenApp" -ForEach $Installers {
     BeforeAll {
         # Renaming the automatic $_ variable to $application to make it easier to work with
         $installer = $_

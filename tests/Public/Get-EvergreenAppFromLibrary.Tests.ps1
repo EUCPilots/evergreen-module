@@ -34,7 +34,7 @@ Describe -Tag "Get" -Name "Get-EvergreenAppFromLibrary" {
         }
     }
 
-    Context "Validate Get-EvergreenAppFromLibrary with valid library" -Skip {
+    Context "Validate Get-EvergreenAppFromLibrary with valid library" -Tag "Integration" -Skip {
         BeforeAll {
             # This test requires a valid Evergreen library, which may not exist in CI
             # Mark as skip for now, but can be enabled in local testing
