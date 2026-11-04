@@ -26,6 +26,108 @@ BeforeAll {
     }
 }
 
+Describe -Tag "Update" -Name "Update-Evergreen ShouldProcess" {
+    It "Leaves cache state unchanged with WhatIf (existing: <CacheExists>, force: <Force>, release: <Release>)" -TestCases @(
+        @{ CacheExists = $false; Force = $false; Release = $null }
+        @{ CacheExists = $true; Force = $false; Release = $null }
+        @{ CacheExists = $false; Force = $true; Release = $null }
+        @{ CacheExists = $true; Force = $true; Release = $null }
+        @{ CacheExists = $false; Force = $true; Release = "v26.11.04.1" }
+        @{ CacheExists = $true; Force = $true; Release = "v26.11.04.1" }
+    ) {
+        param ($CacheExists, $Force, $Release)
+
+        $CachePath = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString())
+        if ($CacheExists) {
+            New-Item -Path (Join-Path -Path $CachePath -ChildPath "Apps") -ItemType "Directory" -Force | Out-Null
+            Set-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Value "26.11.03.1"
+        }
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            CachePath = $CachePath; CacheExists = $CacheExists; Force = $Force; Release = $Release
+        } {
+            Mock Get-EvergreenAppsPath { $CachePath }
+            Mock Get-GitHubRepoRelease { throw "Unexpected network request." }
+            Mock Save-EvergreenApp { throw "Unexpected download." }
+            $OriginalAppsPath = $script:AppsPath
+            $OriginalVersionFile = $script:VersionFile
+            $Options = @{ WhatIf = $true; Force = $Force }
+            if ($Release) { $Options.Release = $Release }
+
+            Update-Evergreen @Options
+
+            $script:AppsPath | Should -Be $OriginalAppsPath
+            $script:VersionFile | Should -Be $OriginalVersionFile
+            Test-Path -Path $CachePath | Should -Be $CacheExists
+            if ($CacheExists) {
+                @(Get-ChildItem -Path $CachePath -Recurse -Force).Count | Should -Be 2
+                (Get-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Raw).Trim() |
+                    Should -Be "26.11.03.1"
+            }
+            Should -Invoke Get-GitHubRepoRelease -Times 0 -Exactly
+            Should -Invoke Save-EvergreenApp -Times 0 -Exactly
+        }
+    }
+
+    It "Validates the Release and Force requirement even with WhatIf" {
+        { Update-Evergreen -Release "v26.11.04.1" -WhatIf } | Should -Throw "*Force parameter required*"
+    }
+
+    It "Completes an update using a local release archive (explicit confirmation disabled: <SuppressConfirmation>)" -TestCases @(
+        @{ SuppressConfirmation = $false }
+        @{ SuppressConfirmation = $true }
+    ) {
+        param ($SuppressConfirmation)
+
+        $RootPath = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString())
+        $SourcePath = Join-Path -Path $RootPath -ChildPath "Source"
+        New-Item -Path (Join-Path -Path $SourcePath -ChildPath "Apps") -ItemType "Directory" -Force | Out-Null
+        New-Item -Path (Join-Path -Path $SourcePath -ChildPath "Manifests") -ItemType "Directory" -Force | Out-Null
+        Set-Content -Path (Join-Path -Path $SourcePath -ChildPath "Apps\Get-TestApp.ps1") -Value "function Get-TestApp {}"
+        Set-Content -Path (Join-Path -Path $SourcePath -ChildPath "Manifests\TestApp.json") -Value "{}"
+        $ZipPath = Join-Path -Path $RootPath -ChildPath "Release.zip"
+        Compress-Archive -Path (Join-Path -Path $SourcePath -ChildPath "*") -DestinationPath $ZipPath
+        $CachePath = Join-Path -Path $RootPath -ChildPath "ApprovedCache"
+
+        InModuleScope -ModuleName "Evergreen" -Parameters @{
+            CachePath = $CachePath; ZipPath = $ZipPath; SuppressConfirmation = $SuppressConfirmation
+        } {
+            Mock Get-EvergreenAppsPath { $CachePath }
+            Mock Get-GitHubRepoRelease {
+                [PSCustomObject]@{
+                    Type = "zip"
+                    Version = "26.11.04.1"
+                    Uri = "https://example.invalid/release.zip"
+                    Sha256 = (Get-FileHash -Path $ZipPath -Algorithm "SHA256").Hash
+                }
+            }
+            Mock Save-EvergreenApp { $ZipPath }
+            $OriginalAppsPath = $script:AppsPath
+            $OriginalVersionFile = $script:VersionFile
+            $OriginalProgressPreference = $global:ProgressPreference
+            try {
+                if ($SuppressConfirmation) {
+                    Update-Evergreen -Force -Confirm:$false
+                }
+                else {
+                    Update-Evergreen
+                }
+
+                Test-Path -Path (Join-Path -Path $CachePath -ChildPath "Apps\Get-TestApp.ps1") | Should -BeTrue
+                Test-Path -Path (Join-Path -Path $CachePath -ChildPath "Manifests\TestApp.json") | Should -BeTrue
+                (Get-Content -Path (Join-Path -Path $CachePath -ChildPath ".evergreen_version") -Raw).Trim() |
+                    Should -Be "26.11.04.1"
+                Should -Invoke Save-EvergreenApp -Times 1 -Exactly
+            }
+            finally {
+                $script:AppsPath = $OriginalAppsPath
+                $script:VersionFile = $OriginalVersionFile
+                $global:ProgressPreference = $OriginalProgressPreference
+            }
+        }
+    }
+}
+
 Describe -Tag "Update" -Name "Update-Evergreen Parameter Validation" {
     Context "Validate Release parameter format" {
         It "Should throw with invalid Release format - missing 'v' prefix" {
