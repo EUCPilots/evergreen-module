@@ -242,7 +242,7 @@ InModuleScope -ModuleName "Evergreen" {
                     #Raw
                     #ReturnObject = "Content"
                     Method               = "Default"
-                    SkipCertificateCheck = $True
+                    SkipCertificateCheck = $true
                     SslProtocol          = "Tls12"
                     UserAgent            = [Microsoft.PowerShell.Commands.PSUserAgent]::Safari
                     Uri                  = "https://github.com"

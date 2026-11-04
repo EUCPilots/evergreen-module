@@ -193,7 +193,7 @@ InModuleScope -ModuleName "Evergreen" {
                     ContentType          = "application/vnd.github.v3+json"
                     ErrorAction          = "SilentlyContinue"
                     Method               = "Default"
-                    SkipCertificateCheck = $True
+                    SkipCertificateCheck = $true
                     SslProtocol          = "Tls12"
                     UserAgent            = [Microsoft.PowerShell.Commands.PSUserAgent]::Safari
                     Uri                  = "https://api.github.com/rate_limit"

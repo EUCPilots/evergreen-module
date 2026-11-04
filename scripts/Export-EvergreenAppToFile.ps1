@@ -4,10 +4,10 @@
     Reads any existing JSON for that application, adds the new version content, sorts for unique versions,
     then outputs the new content back to the target JSON file.
 #>
-[CmdletBinding(SupportsShouldProcess = $False)]
+[CmdletBinding(SupportsShouldProcess = $false)]
 param (
     [Parameter(
-        Mandatory = $False,
+        Mandatory = $false,
         Position = 0,
         ValueFromPipeline,
         HelpMessage = "An application name supported by Evergreen.")]
@@ -15,7 +15,7 @@ param (
     [System.String[]] $Name = "MicrosoftEdge",
 
     [Parameter(
-        Mandatory = $False,
+        Mandatory = $false,
         Position = 1,
         ValueFromPipelineByPropertyName,
         HelpMessage = "Specify a top-level directory path where the application JSON file will be saved into.",
