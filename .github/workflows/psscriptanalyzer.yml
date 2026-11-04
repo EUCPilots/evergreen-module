@@ -10,6 +10,7 @@ on:
     paths:
       - 'Evergreen/**'
       - '.rules/**'
+      - 'ci/**'
       - '.github/workflows/psscriptanalyzer.yml'
   pull_request:
     branches:
@@ -17,8 +18,15 @@ on:
     paths:
       - 'Evergreen/**'
       - '.rules/**'
+      - 'ci/**'
       - '.github/workflows/psscriptanalyzer.yml'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ''
 
 jobs:
   psscriptanalyzer:
@@ -30,17 +38,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || '' }}
 
       - name: Run PSScriptAnalyzer
-        uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f
-        with:
-          path: "./Evergreen"
-          recurse: true
-          settings: "./.rules/PSScriptAnalyzerSettings.psd1"
-          output: results.sarif
+        shell: pwsh
+        run: |
+          & (Join-Path $env:GITHUB_WORKSPACE "ci/Test-Analysis.ps1") -OutputPath (Join-Path $env:GITHUB_WORKSPACE "results.sarif")
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v4.39.1
+        if: always() && hashFiles('results.sarif') != ''
         with:
           sarif_file: results.sarif

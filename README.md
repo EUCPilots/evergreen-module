@@ -57,7 +57,7 @@ Documentation for Evergreen, including usage examples, is located here: [https:/
 
 The [Validate module workflow](.github/workflows/validate-module.yml) runs deterministic Pester tests on Windows PowerShell 5.1, PowerShell 7.0.13 (the minimum supported 7.0 line) on Windows, and the runner-provided PowerShell 7 on Windows, Linux, and macOS. Each runtime uploads a separate test report. Failed tests, discovery/setup failures, an empty run, an unexpected skip, inconclusive tests, or a required suite with no passing tests fail validation. Code coverage remains in the live Windows PowerShell job, avoiding debugger instrumentation in the compatibility matrix.
 
-The [release workflow](.github/workflows/update-module.yml) calls the same [runtime matrix](.github/workflows/test-runtimes.yml) against the newly created release tag before publishing to the PowerShell Gallery. Every runtime must pass; a compatibility failure or the 20-minute job timeout blocks publication.
+The [release workflow](.github/workflows/update-module.yml) calls the same [runtime matrix](.github/workflows/test-runtimes.yml) against the release commit before publishing to the PowerShell Gallery. Every runtime must pass; a compatibility failure or the 20-minute job timeout blocks publication.
 
 The deterministic matrix uses an isolated apps-cache path and does not run `Update-Evergreen`. Tests tagged `Integration` and the companion-cache suites for `Find-EvergreenApp`, `Export-EvergreenManifest`, `Get-EvergreenApp`, `Test-EvergreenLibrary`, and `Update-Evergreen` remain in the separate live Windows PowerShell job. Platform-specific tests and repository-helper cases that do not apply to a particular helper can be skipped. Existing disabled library integration scenarios are not part of the deterministic matrix.
 
@@ -68,6 +68,37 @@ To run the same deterministic checks locally:
 ```
 
 The runner installs Pester 5.7.1 if needed and writes reports to `tests/Results`. Use `-OutputPath` to choose another report directory. Add `-IncludeIntegration` to download the apps cache and run the full suite, including live-service tests and code coverage.
+
+### Analysis and coverage gates
+
+The [analyzer workflow](.github/workflows/psscriptanalyzer.yml) runs default rules, the custom lowercase-keyword rule, and explicit PowerShell 5.1/7.0 syntax and command-compatibility rules. Errors and Warnings fail validation; `PSAvoidUsingWriteHost` remains excluded. SARIF is uploaded even when findings fail the job. The bundled command profiles cover Windows PowerShell 5.1 and Windows/Linux PowerShell 7.0; macOS compatibility is exercised by the runtime matrix. Existing findings are blockers, not grandfathered exceptions.
+
+The runtime matrix parses module and CI `.ps1`, `.psm1`, and `.psd1` files under each engine. The [release-gates workflow](.github/workflows/validate-release.yml) also validates workflow YAML with actionlint and parses embedded PowerShell.
+
+Deterministic coverage runs separately on Windows PowerShell 5.1 with `-CollectCoverage`. The [coverage baseline](.rules/CoverageBaseline.json) records 3,103 covered commands out of 3,847 (80.66%), measured with Pester 5.7.1. Overall coverage must not fall below that exact ratio. Changed critical files listed in the policy require at least 90% command coverage, including files with no reported coverage (which fail). Comparisons use the PR base commit, the previous push commit, or the previous release tag for releases.
+
+```powershell
+.\tests\Invoke-Tests.ps1 -CollectCoverage
+. .\ci\Test-Coverage.ps1
+Test-Coverage -ReportPath .\tests\Results\CodeCoverage.xml -BaseRef HEAD^
+.\ci\Test-Analysis.ps1
+.\ci\Test-Workflows.ps1
+```
+
+Baseline and critical-file-list changes require deliberate review. Remeasure with the same runtime and pinned Pester version; do not lower the baseline to make a failing run pass. Raise the baseline when adopting improved coverage. Test and release-tool versions are centralized in [ValidationTools.psd1](ci/ValidationTools.psd1).
+
+### Publication gates
+
+Release runs are serialized without cancelling an active release. Publication depends on runtime tests, static analysis, deterministic coverage, and workflow validation for the exact release commit.
+
+Before staging and again immediately before publishing, [release validation](ci/Test-Release.ps1) checks:
+
+- The candidate version is greater than the stable version returned by the PowerShell Gallery; Gallery lookup failures block release.
+- The tag name, tag commit, tested commit, checkout, and module manifest version agree.
+- The changelog has nonempty notes for the candidate version, with no `## VERSION` heading or unresolved release placeholders; manifest release notes also identify the candidate.
+- Source and staged files exactly match the reviewed [package inventory](.rules/PackageInventory.json), contain no links, and have identical SHA-256 hashes.
+
+The validated module directory is uploaded as a release artifact and downloaded by the publishing job. Only this revalidated directory is passed to `Publish-Module`. Additions or removals of module files require an explicit inventory update. Version commits and tags are created before validation; a blocked release can therefore leave a tag without a Gallery publication.
 
 The live job tests a random sample of 30 applications with `Get-EvergreenApp` by default. To test all applications except the explicit exclusion list, run the workflow manually from GitHub Actions and enable **Test all applications**. Push and pull request runs continue to use the random sample.
 

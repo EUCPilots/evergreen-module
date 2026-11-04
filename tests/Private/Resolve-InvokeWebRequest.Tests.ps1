@@ -35,7 +35,14 @@ BeforeAll {
         param ($Listener, $Requests, $RequestMetadata, $ReleaseBody, $OtherBaseUri)
 
         while ($Listener.IsListening) {
-            $Context = $Listener.GetContext()
+            $PendingContext = $Listener.GetContextAsync()
+            while ($Listener.IsListening -and -not $PendingContext.IsCompleted) {
+                Start-Sleep -Milliseconds 10
+            }
+            if (-not $Listener.IsListening) {
+                break
+            }
+            $Context = $PendingContext.GetAwaiter().GetResult()
             $Path = $Context.Request.Url.AbsolutePath
             $Requests.Enqueue("$($Context.Request.HttpMethod) $Path")
             $RequestMetadata.Enqueue("$($Context.Request.UserAgent)|$($Context.Request.Headers['X-Test'])|$($Context.Request.Headers['Authorization'])")
@@ -86,7 +93,14 @@ BeforeAll {
         param ($Listener, $Requests)
 
         while ($Listener.IsListening) {
-            $Context = $Listener.GetContext()
+            $PendingContext = $Listener.GetContextAsync()
+            while ($Listener.IsListening -and -not $PendingContext.IsCompleted) {
+                Start-Sleep -Milliseconds 10
+            }
+            if (-not $Listener.IsListening) {
+                break
+            }
+            $Context = $PendingContext.GetAwaiter().GetResult()
             $Requests.Enqueue("$($Context.Request.HttpMethod) $($Context.Request.Url.AbsolutePath)|$($Context.Request.Headers['Authorization'])")
             $Context.Response.StatusCode = 200
             $Context.Response.Close()

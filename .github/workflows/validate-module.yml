@@ -10,9 +10,12 @@ on:
     paths:
       - 'Evergreen/**'
       - 'tests/**'
+      - 'ci/**'
       - '.rules/**'
       - '.github/workflows/validate-module.yml'
       - '.github/workflows/test-runtimes.yml'
+      - '.github/workflows/validate-release.yml'
+      - '.github/workflows/psscriptanalyzer.yml'
       - '.github/workflows/update-module.yml'
   pull_request:
     branches:
@@ -20,9 +23,12 @@ on:
     paths:
       - 'Evergreen/**'
       - 'tests/**'
+      - 'ci/**'
       - '.rules/**'
       - '.github/workflows/validate-module.yml'
       - '.github/workflows/test-runtimes.yml'
+      - '.github/workflows/validate-release.yml'
+      - '.github/workflows/psscriptanalyzer.yml'
       - '.github/workflows/update-module.yml'
   workflow_dispatch:
     inputs:
@@ -33,6 +39,13 @@ on:
         default: false
 
 jobs:
+  release-gates:
+    uses: ./.github/workflows/validate-release.yml
+    permissions:
+      contents: read
+    with:
+      coverage_base_ref: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+
   runtime-matrix:
     uses: ./.github/workflows/test-runtimes.yml
     permissions:

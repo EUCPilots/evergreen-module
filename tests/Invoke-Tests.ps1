@@ -2,6 +2,8 @@
 param (
     [System.Management.Automation.SwitchParameter] $IncludeIntegration,
 
+    [System.Management.Automation.SwitchParameter] $CollectCoverage,
+
     [System.String] $OutputPath = (Join-Path -Path $PSScriptRoot -ChildPath "Results")
 )
 
@@ -27,7 +29,8 @@ try {
     $null = New-Item -Path $OutputPath -ItemType Directory -Force
 
     & (Join-Path -Path $PSScriptRoot -ChildPath "Install-Pester.ps1")
-    Import-Module -Name Pester -RequiredVersion "5.7.1" -Force
+    $Tools = Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot "..\ci\ValidationTools.psd1")
+    Import-Module -Name Pester -RequiredVersion $Tools.Pester -Force
     Import-Module -Name (Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath "Evergreen") -Force
     if ($IncludeIntegration) {
         Update-Evergreen -Verbose
@@ -47,7 +50,7 @@ try {
             "Public\Update-Evergreen.Tests.ps1"
         ) | ForEach-Object { Join-Path -Path $PSScriptRoot -ChildPath $_ }
     }
-    $Config.CodeCoverage.Enabled = $IncludeIntegration.IsPresent
+    $Config.CodeCoverage.Enabled = $IncludeIntegration.IsPresent -or $CollectCoverage.IsPresent
     $Config.CodeCoverage.Path = Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath "Evergreen"
     $Config.CodeCoverage.OutputFormat = "JaCoCo"
     $Config.CodeCoverage.OutputPath = Join-Path -Path $OutputPath -ChildPath "CodeCoverage.xml"

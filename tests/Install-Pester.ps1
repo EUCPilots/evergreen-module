@@ -2,7 +2,7 @@
     Install the Pester version used by CI, including on PowerShell 7.0.
 #>
 
-$PesterVersion = "5.7.1"
+$PesterVersion = (Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot "..\ci\ValidationTools.psd1")).Pester
 if (-not (Get-Module -Name Pester -ListAvailable | Where-Object { $_.Version -eq [System.Version]$PesterVersion })) {
     if ($PSVersionTable.PSEdition -eq "Desktop") {
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072

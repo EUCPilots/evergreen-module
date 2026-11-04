@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: evergreen-gallery-release
+  cancel-in-progress: false
+
 jobs:
   update-module:
     name: Update module version
@@ -16,6 +20,8 @@ jobs:
     outputs:
       changes_detected: ${{ steps.commit.outputs.changes_detected }}
       new_version: ${{ steps.update-version.outputs.newversion }}
+      previous_version: ${{ steps.update-version.outputs.previousversion }}
+      tested_commit: ${{ steps.create-tag.outputs.tested_commit }}
     steps:
       - uses: actions/checkout@v7
         id: checkout
@@ -23,12 +29,15 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install and cache PowerShell modules
+      - name: Install pinned release tools
         id: psmodulecache
-        uses: potatoqualitee/psmodulecache@v6.3
-        with:
-          modules-to-cache: MarkdownPS
-          shell: powershell
+        shell: powershell
+        run: |
+          $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.208 -Force -Scope CurrentUser -ErrorAction Stop | Out-Null
+          Install-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Repository PSGallery -Scope CurrentUser -Force -ErrorAction Stop
+          Install-Module -Name MarkdownPS -RequiredVersion $Tools.MarkdownPS -Repository PSGallery -Scope CurrentUser -Force -ErrorAction Stop
 
       # Update the version number in the module manifest
       - name: Update module version number
@@ -37,20 +46,22 @@ jobs:
         run: |
             $ModulePath = "${{ github.workspace }}\Evergreen"
             $ManifestPath = "${{ github.workspace }}\Evergreen\Evergreen.psd1"
+            $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+            Import-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Force -ErrorAction Stop
 
             # Importing the manifest to determine the version
-            $Manifest = Test-ModuleManifest -Path $ManifestPath
+            $Manifest = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
+            echo "previousversion=v$($Manifest.Version)" >> $env:GITHUB_OUTPUT
             Write-Host "Old version is: $($Manifest.Version)"
             [System.String]$NewVersion = New-Object -TypeName "System.Version" -ArgumentList ((Get-Date -Format "yyMM"), ($Manifest.Version.Minor + 3 ), 0)
             Write-Host "New version is: $NewVersion"
 
-            # Update the manifest with the new version value and fix the weird string replace bug
-            $functionList = ((Get-ChildItem -Path (Join-Path -Path $ModulePath -ChildPath "Public")).BaseName)
-            Update-ModuleManifest -Path $ManifestPath -ModuleVersion $NewVersion -FunctionsToExport $functionList
-            (Get-Content -Path $ManifestPath) -replace 'PSGet_$module', $module | Set-Content -Path $ManifestPath
-            (Get-Content -Path $ManifestPath) -replace 'NewManifest', $module | Set-Content -Path $ManifestPath
-            (Get-Content -Path $ManifestPath) -replace 'FunctionsToExport = ','FunctionsToExport = @(' | Set-Content -Path $ManifestPath
-            (Get-Content -Path $ManifestPath) -replace "$($functionList[-1])'", "$($functionList[-1])')" | Set-Content -Path $ManifestPath -Force
+            $functionList = (Get-ChildItem -Path (Join-Path $ModulePath "Public") -Filter *.ps1).BaseName
+            $Changelog = Get-Content -LiteralPath .\CHANGELOG.md -Raw
+            $Notes = [regex]::Match($Changelog, '(?ms)^## VERSION[ \t]*\r?\n(?<Notes>.*?)(?=^## |\z)').Groups["Notes"].Value.Trim()
+            if ([System.String]::IsNullOrWhiteSpace($Notes)) { throw "Missing release notes under '## VERSION'." }
+            Update-ModuleManifest -Path $ManifestPath -ModuleVersion $NewVersion -FunctionsToExport $functionList -ReleaseNotes "$NewVersion`n$Notes" -ErrorAction Stop
+            Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop | Out-Null
             echo "newversion=$NewVersion" >> $env:GITHUB_OUTPUT
 
       # Update the change log with the new version number
@@ -65,7 +76,7 @@ jobs:
                 $content -replace $replaceString, "## ${{steps.update-version.outputs.newversion}}" | Set-Content -Path $changeLog
             }
             else {
-                Write-Host "No match in $changeLog for '## VERSION'. Manual update of CHANGELOG required." -ForegroundColor Cyan
+                throw "No release placeholder in $changeLog."
             }
 
       # Update the list of supported apps in APPS.md
@@ -75,7 +86,8 @@ jobs:
         run: |
             Import-Module -Name "$env:GITHUB_WORKSPACE\Evergreen" -Force
             Update-Evergreen
-            Import-Module -Name MarkdownPS
+            $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+            Import-Module -Name MarkdownPS -RequiredVersion $Tools.MarkdownPS -ErrorAction Stop
 
             $OutFile = [System.IO.Path]::Combine($env:GITHUB_WORKSPACE, "apps.md")
             $markdown = New-MDHeader -Text "$((Find-EvergreenApp).Count) Supported applications" -Level 1
@@ -122,19 +134,23 @@ jobs:
         if: steps.commit.outputs.changes_detected == 'true'
         shell: pwsh
         run: |
-          $Module = Test-ModuleManifest -Path "$env:GITHUB_WORKSPACE\Evergreen\Evergreen.psd1"
+          $Module = Test-ModuleManifest -Path "$env:GITHUB_WORKSPACE\Evergreen\Evergreen.psd1" -ErrorAction Stop
           if ($null -ne $Module) {
               $tagName = "v$($Module.Version.ToString())"
               Write-Host "Creating tag: $tagName"
               
               # Create annotated tag (no GPG signature needed)
               git tag -a $tagName -m "Release version $($Module.Version.ToString())"
+              if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag." }
               
               # Push the tag with verbose output
               git push origin $tagName --verbose
               
               if ($LASTEXITCODE -eq 0) {
                   Write-Host "Tag $tagName created and pushed successfully" -ForegroundColor Green
+                  $Commit = git rev-parse HEAD
+                  if ($LASTEXITCODE -ne 0) { throw "Cannot resolve release commit." }
+                  "tested_commit=$Commit" >> $env:GITHUB_OUTPUT
               }
               else {
                   Write-Host "Failed to push tag. Exit code: $LASTEXITCODE" -ForegroundColor Red
@@ -198,36 +214,105 @@ jobs:
     permissions:
       contents: read
     with:
-      ref: refs/tags/v${{ needs.update-module.outputs.new_version }}
+      ref: ${{ needs.update-module.outputs.tested_commit }}
+
+  validate-analysis:
+    needs: update-module
+    if: needs.update-module.outputs.changes_detected == 'true'
+    uses: ./.github/workflows/psscriptanalyzer.yml
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    with:
+      ref: ${{ needs.update-module.outputs.tested_commit }}
+
+  validate-release-gates:
+    needs: update-module
+    if: needs.update-module.outputs.changes_detected == 'true'
+    uses: ./.github/workflows/validate-release.yml
+    permissions:
+      contents: read
+    with:
+      ref: ${{ needs.update-module.outputs.tested_commit }}
+      coverage_base_ref: ${{ needs.update-module.outputs.previous_version }}
+
+  stage-package:
+    name: Validate release metadata and stage package
+    needs: [update-module, validate-runtimes, validate-analysis, validate-release-gates]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.update-module.outputs.tested_commit }}
+          fetch-depth: 0
+      - name: Stage and validate package
+        shell: pwsh
+        env:
+          CANDIDATE_VERSION: ${{ needs.update-module.outputs.new_version }}
+          TESTED_COMMIT: ${{ needs.update-module.outputs.tested_commit }}
+        run: |
+          $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+          Install-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Repository PSGallery -Scope CurrentUser -Force -ErrorAction Stop
+          Import-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Force -ErrorAction Stop
+          $StageRoot = Join-Path $env:RUNNER_TEMP "release-package"
+          New-Item -Path $StageRoot -ItemType Directory -ErrorAction Stop | Out-Null
+          Copy-Item -LiteralPath .\Evergreen -Destination $StageRoot -Recurse -ErrorAction Stop
+          . .\ci\Test-Release.ps1
+          Test-Release -Version $env:CANDIDATE_VERSION -Tag "v$env:CANDIDATE_VERSION" -TestedCommit $env:TESTED_COMMIT -PackagePath (Join-Path $StageRoot "Evergreen")
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-package
+          path: ${{ runner.temp }}/release-package/Evergreen
+          if-no-files-found: error
 
   publish-module:
     name: Publish module
     runs-on: ubuntu-latest
-    needs: [update-module, validate-runtimes]
+    needs: [update-module, stage-package]
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         id: checkout
         with:
-          ref: refs/tags/v${{ needs.update-module.outputs.new_version }}
+          ref: ${{ needs.update-module.outputs.tested_commit }}
+          fetch-depth: 0
         if: needs.update-module.outputs.changes_detected == 'true'
 
-      - name: Install and cache PowerShell modules
-        id: psmodulecache
-        uses: potatoqualitee/psmodulecache@v6.3
-        if: needs.update-module.outputs.changes_detected == 'true'
+      - uses: actions/download-artifact@v8
         with:
-          modules-to-cache: PowerShellGet
-          shell: pwsh
+          name: release-package
+          path: ${{ runner.temp }}/release-package/Evergreen
+
+      - name: Install pinned publishing tools
+        id: psmodulecache
+        if: needs.update-module.outputs.changes_detected == 'true'
+        shell: pwsh
+        run: |
+          $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+          Install-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Repository PSGallery -Scope CurrentUser -Force -ErrorAction Stop
 
       # Push the updated module to the PowerShell Gallery
       - name: Push module to PowerShell Gallery
         id: publish
         shell: pwsh
         if: needs.update-module.outputs.changes_detected == 'true'
+        env:
+          CANDIDATE_VERSION: ${{ needs.update-module.outputs.new_version }}
+          TESTED_COMMIT: ${{ needs.update-module.outputs.tested_commit }}
+          NUGET_API_KEY: ${{ secrets.NUGETAPIKEY }}
         run: |
+          $Tools = Import-PowerShellDataFile .\ci\ValidationTools.psd1
+          Import-Module -Name PowerShellGet -RequiredVersion $Tools.PowerShellGet -Force -ErrorAction Stop
+          $PackagePath = Join-Path $env:RUNNER_TEMP "release-package/Evergreen"
+          . .\ci\Test-Release.ps1
+          Test-Release -Version $env:CANDIDATE_VERSION -Tag "v$env:CANDIDATE_VERSION" -TestedCommit $env:TESTED_COMMIT -PackagePath $PackagePath
           $params = @{
-              Path        = "${{ github.workspace }}/Evergreen"
-              NuGetApiKey = "${{ secrets.NUGETAPIKEY }}"
+              Path        = $PackagePath
+              NuGetApiKey = $env:NUGET_API_KEY
               ErrorAction = "Stop"
           }
           Publish-Module @params

@@ -1,0 +1,26 @@
+{
+  "Runtime": "Windows PowerShell 5.1",
+  "Pester": "5.7.1",
+  "Covered": 3103,
+  "Total": 3847,
+  "CriticalPercent": 90,
+  "CriticalFiles": [
+    "Evergreen/Private/Expand-CabArchive.ps1",
+    "Evergreen/Private/Expand-GzipArchive.ps1",
+    "Evergreen/Private/Invoke-EvergreenRestMethod.ps1",
+    "Evergreen/Private/Invoke-EvergreenWebRequest.ps1",
+    "Evergreen/Private/Invoke-SystemNetRequest.ps1",
+    "Evergreen/Private/Resolve-InvokeWebRequest.ps1",
+    "Evergreen/Private/Resolve-SystemNetWebRequest.ps1",
+    "Evergreen/Private/Save-File.ps1",
+    "Evergreen/Public/Export-EvergreenApp.ps1",
+    "Evergreen/Public/Get-EvergreenApp.ps1",
+    "Evergreen/Public/Get-EvergreenLibrary.ps1",
+    "Evergreen/Public/New-EvergreenLibrary.ps1",
+    "Evergreen/Public/Remove-EvergreenLibraryAppVersion.ps1",
+    "Evergreen/Public/Save-EvergreenApp.ps1",
+    "Evergreen/Public/Start-EvergreenLibraryUpdate.ps1",
+    "Evergreen/Public/Test-EvergreenApp.ps1",
+    "Evergreen/Public/Update-Evergreen.ps1"
+  ]
+}
