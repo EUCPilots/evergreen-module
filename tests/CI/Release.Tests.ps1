@@ -112,7 +112,7 @@ Describe "Release version preparation" {
 
             $Manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $Root "Evergreen/Evergreen.psd1")
             $Manifest.ModuleVersion | Should -Be "2611.2865.1"
-            $Manifest.PrivateData.PSData.ReleaseNotes | Should -Be "2611.2865.1`nCurrent release notes."
+            ($Manifest.PrivateData.PSData.ReleaseNotes -replace "`r`n", "`n") | Should -Be "2611.2865.1`nCurrent release notes."
             $Manifest.FunctionsToExport | Should -Contain "Get-Example"
             (Get-Content -LiteralPath (Join-Path $Root "CHANGELOG.md") -Raw).TrimEnd() |
                 Should -Be ($Changelog.Replace("## 2611.2865.0", "## 2611.2865.1").TrimEnd())
