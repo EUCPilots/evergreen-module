@@ -14,6 +14,11 @@ BeforeAll {
 
 InModuleScope -ModuleName "Evergreen" {
     Describe -Name "Invoke-EvergreenRestMethod" {
+        AfterEach {
+            # Module-scoped proxy settings outlive Pester's per-test mocks.
+            Remove-ProxyEnv
+        }
+
         Context "Ensure Invoke-EvergreenRestMethod works as expected" {
             It "Allows insecure redirects on Windows PowerShell without an unsupported parameter" {
                 Mock Test-PSCore { $false }
@@ -115,6 +120,19 @@ InModuleScope -ModuleName "Evergreen" {
                 finally {
                     Remove-Item -Path "Function:Invoke-RestMethod" -Force
                     Remove-Variable -Name CapturedRestParams -Scope Script -ErrorAction SilentlyContinue
+                }
+            }
+
+            It "Does not leak proxy settings or credentials into subsequent requests" {
+                Test-ProxyEnv | Should -BeFalse
+                Test-ProxyEnv -Creds | Should -BeFalse
+                Mock Invoke-RestMethod { "mock response" }
+
+                Invoke-EvergreenRestMethod -Uri "https://example.com" | Should -Be "mock response"
+
+                Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+                    -not $PSBoundParameters.ContainsKey("Proxy") -and
+                    -not $PSBoundParameters.ContainsKey("ProxyCredential")
                 }
             }
 

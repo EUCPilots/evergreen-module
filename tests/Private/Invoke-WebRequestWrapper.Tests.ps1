@@ -15,6 +15,11 @@ BeforeAll {
 
 InModuleScope -ModuleName "Evergreen" {
     Describe -Name "Invoke-EvergreenWebRequest" {
+        AfterEach {
+            # Module-scoped proxy settings outlive Pester's per-test mocks.
+            Remove-ProxyEnv
+        }
+
         Context "Ensure Invoke-EvergreenWebRequest works as expected" {
             It "Does not disable certificate validation when explicitly passed false" {
                 Mock Invoke-WebRequest {
@@ -126,6 +131,26 @@ InModuleScope -ModuleName "Evergreen" {
                 finally {
                     Remove-Item -Path "Function:Invoke-WebRequest" -Force
                     Remove-Variable -Name CapturedWebParams -Scope Script -ErrorAction SilentlyContinue
+                }
+            }
+
+            It "Does not leak proxy settings or credentials into subsequent requests" {
+                Test-ProxyEnv | Should -BeFalse
+                Test-ProxyEnv -Creds | Should -BeFalse
+                Mock Invoke-WebRequest {
+                    [PSCustomObject]@{
+                        StatusCode = 200
+                        Headers    = @{ "Content-Type" = "text/plain" }
+                        Content    = "mock response"
+                        RawContent = "HTTP/1.1 200 OK`r`n`r`nmock response"
+                    }
+                }
+
+                Invoke-EvergreenWebRequest -Uri "https://example.com" | Should -Be "mock response"
+
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                    -not $PSBoundParameters.ContainsKey("Proxy") -and
+                    -not $PSBoundParameters.ContainsKey("ProxyCredential")
                 }
             }
 
