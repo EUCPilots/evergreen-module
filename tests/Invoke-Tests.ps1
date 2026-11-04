@@ -47,7 +47,6 @@ try {
             "Public\Export-EvergreenManifest.Tests.ps1"
             "Public\Get-EvergreenApp.Tests.ps1"
             "Public\Test-EvergreenLibrary.Tests.ps1"
-            "Public\Update-Evergreen.Tests.ps1"
         ) | ForEach-Object { Join-Path -Path $PSScriptRoot -ChildPath $_ }
     }
     $Config.CodeCoverage.Enabled = $IncludeIntegration.IsPresent -or $CollectCoverage.IsPresent

@@ -85,8 +85,15 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     param ($Items, $Options)
                     $this.Copied = $true
                     foreach ($Item in $Items) {
-                        $FileName = if ($Item.Path) { Split-Path -Path $Item.Path -Leaf } else { $Item.Name }
-                        Set-Content -LiteralPath (Join-Path -Path $this.Path -ChildPath $FileName) -Value "shell"
+                        $RelativePath = if ($Item.Path) {
+                            $Item.Path.Substring($script:CabPath.Length + 1)
+                        }
+                        else {
+                            $Item.Name
+                        }
+                        $FilePath = Join-Path -Path $this.Path -ChildPath $RelativePath
+                        $null = [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($FilePath))
+                        Set-Content -LiteralPath $FilePath -Value "shell"
                     }
                 }
                 $script:Shell = [PSCustomObject]@{
@@ -161,6 +168,33 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                 Split-Path -Path $Items -Leaf | Should -Be "PADUpdate.json"
                 Test-Path -LiteralPath $Items -PathType "Leaf" | Should -BeTrue
                 Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+            }
+        }
+
+        It "Should promote nested CAB entries and create their destination directories" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @([PSCustomObject]@{
+                    Name = "nested"
+                    Path = "$script:CabPath\nested\child\file.txt"
+                })
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+
+                $Items | Should -Be (Join-Path -Path $script:CabDestination -ChildPath "nested\child\file.txt")
+                Test-Path -LiteralPath $Items -PathType Leaf | Should -BeTrue
+                (Get-Content -LiteralPath $Items -Raw).Trim() | Should -Be "shell"
+            }
+        }
+
+        It "Should not replace an existing destination directory with a CAB file" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @([PSCustomObject]@{ Name = "existing" })
+                $ExistingDirectory = Join-Path -Path $script:CabDestination -ChildPath "existing"
+                $null = New-Item -Path $ExistingDirectory -ItemType Directory
+
+                { Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination } |
+                    Should -Throw "*Cannot replace destination directory*"
+                Test-Path -LiteralPath $ExistingDirectory -PathType Container | Should -BeTrue
             }
         }
 
@@ -255,6 +289,40 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 ([System.IO.File]::ReadAllText($FirstDestination)).Trim() | Should -Be "original"
                 Test-Path -LiteralPath $script:SecondDestination | Should -BeFalse
+            }
+        }
+
+        It "Should retain staging and report errors when rollback cannot restore a backup" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @(
+                    [PSCustomObject]@{ Name = "first.txt" }
+                    [PSCustomObject]@{ Name = "second.txt" }
+                )
+                $FirstDestination = Join-Path -Path $script:CabDestination -ChildPath "first.txt"
+                $SecondDestination = Join-Path -Path $script:CabDestination -ChildPath "second.txt"
+                Set-Content -LiteralPath $FirstDestination -Value "original"
+                Mock Move-Item {
+                    & (Get-Command -Name "Microsoft.PowerShell.Management\Move-Item" -CommandType Cmdlet) `
+                        -LiteralPath $LiteralPath -Destination $Destination -Force -ErrorAction Stop
+                }
+                Mock Move-Item { throw "Simulated promotion failure" } -ParameterFilter {
+                    $Destination -eq $SecondDestination
+                }
+                Mock Move-Item { throw "Simulated rollback failure" } -ParameterFilter {
+                    $LiteralPath -like "*\Backup\first.txt" -and $Destination -eq $FirstDestination
+                }
+
+                $ErrorMessage = try {
+                    Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+                }
+                catch {
+                    $_.Exception.Message
+                }
+
+                $ErrorMessage | Should -Match "Rollback was incomplete: Simulated rollback failure"
+                $ErrorMessage | Should -Match "Backups/staging retained at"
+                $StageRoot = [regex]::Match($ErrorMessage, "retained at '(.*?)'\.").Groups[1].Value
+                Test-Path -LiteralPath $StageRoot -PathType Container | Should -BeTrue
             }
         }
 

@@ -62,11 +62,111 @@ InModuleScope -ModuleName "Evergreen" {
             It "Does not disable certificate validation when explicitly passed false" {
                 Mock Invoke-RestMethod { "mock response" }
 
-                Invoke-EvergreenRestMethod -Uri "https://example.com" -SkipCertificateCheck:$false |
+                Invoke-EvergreenRestMethod -Uri "https://example.com" -SkipCertificateCheck:$false `
+                    -ErrorAction SilentlyContinue |
                     Should -Be "mock response"
                 Should -Invoke Invoke-RestMethod -ParameterFilter {
                     $PSBoundParameters.ContainsKey("SkipCertificateCheck")
                 } -Times 0 -Exactly
+            }
+
+            It "Passes request options, proxy settings, and credentials to PowerShell Core" {
+                $script:EvergreenProxy = "http://proxy.example.com"
+                $script:EvergreenProxyCreds = [System.Management.Automation.PSCredential]::new(
+                    "proxy-user",
+                    (ConvertTo-SecureString "proxy-password" -AsPlainText -Force)
+                )
+                $headers = @{ Authorization = "Bearer token" }
+                $body = @{ name = "test" }
+                function script:Invoke-RestMethod {
+                    param (
+                        [System.String] $Uri,
+                        [System.String] $ContentType,
+                        [System.Collections.Hashtable] $Headers,
+                        [System.Object] $Body,
+                        [System.String] $Method,
+                        [System.Int32] $MaximumRedirection,
+                        [System.Boolean] $UseBasicParsing,
+                        [System.String] $UserAgent,
+                        [System.Management.Automation.SwitchParameter] $SkipCertificateCheck,
+                        [System.String] $SslProtocol,
+                        [System.Management.Automation.SwitchParameter] $AllowInsecureRedirect,
+                        [System.String] $Proxy,
+                        [System.Management.Automation.PSCredential] $ProxyCredential
+                    )
+                    $script:CapturedRestParams = $PSBoundParameters
+                    "mock response"
+                }
+                Mock Test-PSCore { $true }
+                Mock Test-ProxyEnv { $true }
+                try {
+                    Invoke-EvergreenRestMethod -Uri "https://example.com" -Headers $headers -Body $body `
+                        -SkipCertificateCheck -SslProtocol Tls12 -AllowInsecureRedirect -ErrorAction SilentlyContinue |
+                        Should -Be "mock response"
+
+                    $script:CapturedRestParams.Headers.Authorization | Should -Be "Bearer token"
+                    $script:CapturedRestParams.Body.name | Should -Be "test"
+                    $script:CapturedRestParams.SkipCertificateCheck | Should -BeTrue
+                    $script:CapturedRestParams.SslProtocol | Should -Be "Tls12"
+                    $script:CapturedRestParams.AllowInsecureRedirect | Should -BeTrue
+                    $script:CapturedRestParams.Proxy | Should -Be "http://proxy.example.com"
+                    $script:CapturedRestParams.ProxyCredential.UserName | Should -Be "proxy-user"
+                }
+                finally {
+                    Remove-Item -Path "Function:Invoke-RestMethod" -Force
+                    Remove-Variable -Name CapturedRestParams -Scope Script -ErrorAction SilentlyContinue
+                }
+            }
+
+            It "Applies and restores the requested legacy TLS protocol" {
+                $originalProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+                Mock Test-PSCore { $false }
+                Mock Invoke-RestMethod { "mock response" }
+                try {
+                    Invoke-EvergreenRestMethod -Uri "https://example.com" -SslProtocol Tls |
+                        Should -Be "mock response"
+                    [System.Net.ServicePointManager]::SecurityProtocol | Should -Be $originalProtocol
+                }
+                finally {
+                    [System.Net.ServicePointManager]::SecurityProtocol = $originalProtocol
+                }
+            }
+
+            if ($PSVersionTable.PSVersion.Major -lt 6) {
+                It "Temporarily trusts certificates in Windows PowerShell and restores the prior policy" {
+                    $originalPolicy = [System.Net.ServicePointManager]::CertificatePolicy
+                    Mock Test-PSCore { $false }
+                    Mock Invoke-RestMethod { "mock response" }
+                    try {
+                        Invoke-EvergreenRestMethod -Uri "https://example.com" -SkipCertificateCheck |
+                            Should -Be "mock response"
+                        [System.Net.ServicePointManager]::CertificatePolicy | Should -Be $originalPolicy
+                    }
+                    finally {
+                        [System.Net.ServicePointManager]::CertificatePolicy = $originalPolicy
+                    }
+                }
+            }
+
+            It "Rejects TLS 1.3 on Windows PowerShell and restores the prior protocol" {
+                $originalProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+                Mock Test-PSCore { $false }
+
+                try {
+                    { Invoke-EvergreenRestMethod -Uri "https://example.com" -SslProtocol Tls13 } |
+                        Should -Throw "*TLS 1.3 is not supported*"
+                    [System.Net.ServicePointManager]::SecurityProtocol | Should -Be $originalProtocol
+                }
+                finally {
+                    [System.Net.ServicePointManager]::SecurityProtocol = $originalProtocol
+                }
+            }
+
+            It "Warns and rethrows request failures" {
+                Mock Invoke-RestMethod { throw "request failed" }
+
+                { Invoke-EvergreenRestMethod -Uri "https://example.com" -WarningAction SilentlyContinue } |
+                    Should -Throw "*request failed*"
             }
 
             It "Returns data from a proper URL" -Tag "Integration" {
