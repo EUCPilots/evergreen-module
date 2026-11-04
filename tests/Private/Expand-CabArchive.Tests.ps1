@@ -547,7 +547,7 @@ param (
                 else {
                     $TestFile = "/tmp/test.cab"
                 }
-                
+
                 "test" | Out-File -FilePath $TestFile -Force
                 { Expand-CabArchive -Path $TestFile -DestinationPath "/nonexistent/path/file" -ErrorAction Stop } | Should -Throw
                 Remove-Item -Path $TestFile -Force -ErrorAction "SilentlyContinue"

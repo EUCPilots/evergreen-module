@@ -10,7 +10,7 @@ Invoke-WebRequest @params
 
 
 https://mobaxterm.mobatek.net/download.html
-irm -Uri "https://mobaxterm.mobatek.net/lastver.php?pro=free&version=24%2E2&beta=0&wget=true" -UserAgent "MobaXterm" -UseBasicParsing 
+irm -Uri "https://mobaxterm.mobatek.net/lastver.php?pro=free&version=24%2E2&beta=0&wget=true" -UserAgent "MobaXterm" -UseBasicParsing
 
 $params = @{
     Uri             = "https://mobaxterm.mobatek.net/lastver.php?pro=pro&version=24%2E2&beta=0&wget=true"

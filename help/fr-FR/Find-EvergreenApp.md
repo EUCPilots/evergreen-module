@@ -39,7 +39,7 @@ Find-EvergreenApp -Name "Edge"
 ```
 
 Description :
-Renvoie un tableau de toutes les applications actuellement prises en charge dont le nom contient « Edge ». 
+Renvoie un tableau de toutes les applications actuellement prises en charge dont le nom contient « Edge ».
 
 ### EXAMPLE 3
 
@@ -48,7 +48,7 @@ Find-EvergreenApp -Name "Microsoft"
 ```
 
 Description :
-Renvoie un tableau de toutes les applications actuellement prises en charge dont le nom contient « Microsoft ». 
+Renvoie un tableau de toutes les applications actuellement prises en charge dont le nom contient « Microsoft ».
 
 ## PARAMETERS
 

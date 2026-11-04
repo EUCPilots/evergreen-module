@@ -69,13 +69,13 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'ConvertTo-DotNetVersionClass', 'Export-EvergreenApp', 
-               'Export-EvergreenManifest', 'Find-EvergreenApp', 'Get-EvergreenApp', 
-               'Get-EvergreenAppFromApi', 'Get-EvergreenAppFromLibrary', 
-               'Get-EvergreenAppsPath', 'Get-EvergreenAppsVersion', 
-               'Get-EvergreenEndpointFromApi', 'Get-EvergreenLibrary', 
-               'New-EvergreenLibrary', 'Remove-EvergreenLibraryAppVersion', 
-               'Save-EvergreenApp', 'Start-EvergreenLibraryUpdate', 
+FunctionsToExport = 'ConvertTo-DotNetVersionClass', 'Export-EvergreenApp',
+               'Export-EvergreenManifest', 'Find-EvergreenApp', 'Get-EvergreenApp',
+               'Get-EvergreenAppFromApi', 'Get-EvergreenAppFromLibrary',
+               'Get-EvergreenAppsPath', 'Get-EvergreenAppsVersion',
+               'Get-EvergreenEndpointFromApi', 'Get-EvergreenLibrary',
+               'New-EvergreenLibrary', 'Remove-EvergreenLibraryAppVersion',
+               'Save-EvergreenApp', 'Start-EvergreenLibraryUpdate',
                'Test-EvergreenApp', 'Update-Evergreen'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -85,8 +85,8 @@ CmdletsToExport = @()
 # VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'sea', 'gea', 'fea', 'tea', 'iea', 'Invoke-EvergreenLibraryUpdate', 
-               'Get-EvergreenLibraryApp', 'Invoke-EvergreenApp', 
+AliasesToExport = 'sea', 'gea', 'fea', 'tea', 'iea', 'Invoke-EvergreenLibraryUpdate',
+               'Get-EvergreenLibraryApp', 'Invoke-EvergreenApp',
                'Get-EvergreenEndpoint'
 
 # DSC resources to export from this module
