@@ -75,7 +75,7 @@ The [analyzer workflow](.github/workflows/psscriptanalyzer.yml) runs default rul
 
 The runtime matrix parses module and CI `.ps1`, `.psm1`, and `.psd1` files under each engine. The [release-gates workflow](.github/workflows/validate-release.yml) also validates workflow YAML with actionlint and parses embedded PowerShell.
 
-Deterministic coverage runs separately on Windows PowerShell 5.1 with `-CollectCoverage`. The [coverage baseline](.rules/CoverageBaseline.json) records 3,103 covered commands out of 3,847 (80.66%), measured with Pester 5.7.1. Overall coverage must not fall below that exact ratio. Changed critical files listed in the policy require at least 90% command coverage, including files with no reported coverage (which fail). Comparisons use the PR base commit, the previous push commit, or the previous release tag for releases.
+Deterministic coverage runs separately on Windows PowerShell 5.1 with `-CollectCoverage`. The [coverage baseline](.rules/CoverageBaseline.json) records 3,103 covered commands out of 3,847 (80.66%), measured with Pester 5.7.1. Overall coverage must not fall below that exact ratio. Changed critical files listed in the policy require at least 90% command coverage, including files with no reported coverage (which fail). Comparisons use the PR base commit, the previous push commit, or the previous release tag for releases. When preparing a new release, if the previous manifest version has no tag, the release workflow warns and uses the nearest reachable release tag instead; it fails if none exists.
 
 ```powershell
 .\tests\Invoke-Tests.ps1 -CollectCoverage

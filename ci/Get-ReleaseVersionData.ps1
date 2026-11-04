@@ -35,9 +35,16 @@ function Get-ReleaseVersionData {
         $NewVersion = [System.Version]::new($NewVersion.Major, $NewVersion.Minor, ($NewVersion.Build + 1))
     }
 
+    $PreviousVersion = "v$Version"
+    if ($PreviousVersion -cnotin $Tags) {
+        $PreviousVersion = git -C $Root describe --tags --match "v[0-9]*.[0-9]*.[0-9]*" --abbrev=0 HEAD
+        if ($LASTEXITCODE -ne 0) { throw "Cannot determine a reachable release tag for the coverage baseline." }
+        Write-Warning "Release tag 'v$Version' is missing; using '$PreviousVersion' as the coverage baseline."
+    }
+
     [PSCustomObject]@{
         Version         = $NewVersion
-        PreviousVersion = "v$Version"
+        PreviousVersion = $PreviousVersion
         Notes           = $Notes
         Changelog       = $Changelog.Remove($Section.Index, $Section.Length).Insert(
             $Section.Index,

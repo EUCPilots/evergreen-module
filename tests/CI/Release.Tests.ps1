@@ -67,6 +67,38 @@ Describe "Release version preparation" {
             Should -Throw "*existing tag matching*"
     }
 
+    It "Uses a reachable release tag when a new release follows an untagged manifest version" {
+        $null = New-Item -Path (Join-Path $Root "Evergreen/Public") -ItemType Directory -Force
+        Set-Content -LiteralPath (Join-Path $Root "Evergreen/Public/Save-EvergreenApp.ps1") -Value 'function Save-EvergreenApp {}'
+        git -C $Root add Evergreen
+        git -C $Root -c user.name=Test -c user.email=test@example.test -c commit.gpgsign=false commit --quiet -m "Untagged version"
+        git -C $Root -c tag.gpgsign=false tag unrelated-tag
+        if ($LASTEXITCODE -ne 0) { throw "Cannot create untagged version fixture." }
+
+        $Result = Get-ReleaseVersionData -Version "2611.2865.1" -Changelog $Changelog.Replace("## 2611.2865.0", "## VERSION") -Root $Root
+
+        $Result.PreviousVersion | Should -Be "v2611.2865.0"
+        $Result.Version | Should -Be ([version]::new([int](Get-Date -Format "yyMM"), 2868, 0))
+        $ChangedFiles = @(git -C $Root diff --name-only --diff-filter=ACMR $Result.PreviousVersion HEAD -- Evergreen)
+        $LASTEXITCODE | Should -Be 0
+        $ChangedFiles | Should -Contain "Evergreen/Public/Save-EvergreenApp.ps1"
+    }
+
+    It "Rejects a missing baseline when no release tag is reachable" {
+        git -C $Root tag -d v2611.2865.0
+        if ($LASTEXITCODE -ne 0) { throw "Cannot remove fixture release tag." }
+
+        { Get-ReleaseVersionData -Version "2611.2865.1" -Changelog $Changelog.Replace("## 2611.2865.0", "## VERSION") -Root $Root } |
+            Should -Throw "*Cannot determine a reachable release tag*"
+    }
+
+    It "Surfaces coverage baseline lookup failures" {
+        Mock git { $global:LASTEXITCODE = 128 } -ParameterFilter { $args -contains "describe" }
+
+        { Get-ReleaseVersionData -Version "2611.2865.1" -Changelog $Changelog.Replace("## 2611.2865.0", "## VERSION") -Root $Root } |
+            Should -Throw "*Cannot determine a reachable release tag*"
+    }
+
     It "Rejects invalid or missing release notes: <Notes>" -ForEach @(
         @{ Notes = "# Change log" }
         @{ Notes = "## VERSION`n`n" }
@@ -89,14 +121,24 @@ Describe "Release version preparation" {
             Should -Throw "*Cannot determine existing release tags*"
     }
 
-    It "Updates the manifest, changelog and job outputs together in the workflow retry step" {
+    It "Updates the manifest, changelog and job outputs together for <Scenario>" -ForEach @(
+        @{ Scenario = "a tagged retry"; ManifestVersion = "2611.2865.0"; NewRelease = $false }
+        @{ Scenario = "a new release after an untagged version"; ManifestVersion = "2611.2865.1"; NewRelease = $true }
+    ) {
         $RepositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
         $null = New-Item -Path (Join-Path $Root "ci"), (Join-Path $Root "Evergreen") -ItemType Directory
         Copy-Item -LiteralPath (Join-Path $RepositoryRoot "ci/Get-ReleaseVersionData.ps1"), (Join-Path $RepositoryRoot "ci/ValidationTools.psd1") -Destination (Join-Path $Root "ci")
         Set-Content -LiteralPath (Join-Path $Root "Evergreen/Evergreen.psm1") -Value ""
-        New-ModuleManifest -Path (Join-Path $Root "Evergreen/Evergreen.psd1") -RootModule Evergreen.psm1 -ModuleVersion "2611.2865.0"
+        New-ModuleManifest -Path (Join-Path $Root "Evergreen/Evergreen.psd1") -RootModule Evergreen.psm1 -ModuleVersion $ManifestVersion
         $null = New-Item -Path (Join-Path $Root "Evergreen/Public") -ItemType Directory
         Set-Content -LiteralPath (Join-Path $Root "Evergreen/Public/Get-Example.ps1") -Value 'function Get-Example { "example" }'
+        $ExpectedVersion = "2611.2865.1"
+        $ExpectedChangelog = $Changelog.Replace("## 2611.2865.0", "## $ExpectedVersion")
+        if ($NewRelease) {
+            $ExpectedVersion = [version]::new([int](Get-Date -Format "yyMM"), 2868, 0).ToString()
+            $ExpectedChangelog = $Changelog.Replace("## 2611.2865.0", "## $ExpectedVersion")
+            $Changelog = $Changelog.Replace("## 2611.2865.0", "## VERSION")
+        }
         Set-Content -LiteralPath (Join-Path $Root "CHANGELOG.md") -Value $Changelog
         $Workflow = Get-Content -LiteralPath (Join-Path $RepositoryRoot ".github/workflows/update-module.yml") -Raw
         $Step = [regex]::Match($Workflow, '(?ms)      - name: Update module version number\r?\n.*?        run: \|\r?\n(?<Script>.*?)(?=\r?\n      #)')
@@ -111,14 +153,14 @@ Describe "Release version preparation" {
             & ([scriptblock]::Create($Script))
 
             $Manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $Root "Evergreen/Evergreen.psd1")
-            $Manifest.ModuleVersion | Should -Be "2611.2865.1"
-            ($Manifest.PrivateData.PSData.ReleaseNotes -replace "`r`n", "`n") | Should -Be "2611.2865.1`nCurrent release notes."
+            $Manifest.ModuleVersion | Should -Be $ExpectedVersion
+            ($Manifest.PrivateData.PSData.ReleaseNotes -replace "`r`n", "`n") | Should -Be "$ExpectedVersion`nCurrent release notes."
             $Manifest.FunctionsToExport | Should -Contain "Get-Example"
             (Get-Content -LiteralPath (Join-Path $Root "CHANGELOG.md") -Raw).TrimEnd() |
-                Should -Be ($Changelog.Replace("## 2611.2865.0", "## 2611.2865.1").TrimEnd())
+                Should -Be $ExpectedChangelog.TrimEnd()
             $Outputs = Get-Content -LiteralPath $OutputFile
             $Outputs | Should -Contain "previousversion=v2611.2865.0"
-            $Outputs | Should -Contain "newversion=2611.2865.1"
+            $Outputs | Should -Contain "newversion=$ExpectedVersion"
         }
         finally {
             $env:GITHUB_OUTPUT = $OriginalOutput
