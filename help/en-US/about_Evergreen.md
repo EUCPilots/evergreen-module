@@ -8,7 +8,7 @@ Return the latest version and download URLs for a set of common Windows applicat
 
 ### LONG DESCRIPTION
 
-Evergreen is a PowerShell module that returns the latest version and download URLs for a set of common Windows applications. The module consists of simple functions to use in scripts when performing several tasks including:
+Evergreen is a PowerShell module framework for retrieving application release information and download URLs. The core module is maintained separately from application-specific functions and manifests, which are downloaded from the `eucpilots/evergreen-apps` repository with `Update-Evergreen`. After synchronizing the apps cache, use Evergreen functions in scripts to:
 
 - Retrieve the latest version of a particular application to comparing against a version already installed or downloaded
 - Return the URL for the latest version of the application to download it for local installation or deployment to target machines

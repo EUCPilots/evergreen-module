@@ -41,7 +41,7 @@ Update-Evergreen -Force
 Description:
 Forces a full download and synchronization of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository, regardless of the state of the local cache.
 
-### EXAMPLE 2
+### EXAMPLE 3
 
 ```powershell
 Update-Evergreen -Release "v25.09.27.16" -Force
@@ -61,7 +61,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

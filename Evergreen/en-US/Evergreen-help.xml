@@ -6,7 +6,7 @@
       <command:verb>ConvertTo</command:verb>
       <command:noun>DotNetVersionClass</command:noun>
       <maml:description>
-        <maml:para>Converts a version string to a standard .NET compliant Version class.</maml:para>
+        <maml:para>Converts a version string to a four-component .NET Version.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
@@ -109,7 +109,7 @@
       <command:verb>Export</command:verb>
       <command:noun>EvergreenApp</command:noun>
       <maml:description>
-        <maml:para>Exports application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file. Pipeline input is collected and written once per invocation.</maml:para>
+        <maml:para>Exports application details gathered by `Get-EvergreenApp` to an external JSON file. Existing JSON is merged with the new version data, duplicate versions are removed, and pipeline input is collected and written once per invocation.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
@@ -118,7 +118,7 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Export-EvergreenApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
           <maml:name>InputObject</maml:name>
           <maml:description>
             <maml:para>`Export-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`.</maml:para>
@@ -130,7 +130,7 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies a path to the JSON file where version information will be stored. If the file does not exist, the parent directory must already exist.</maml:para>
@@ -167,7 +167,7 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
         <maml:name>InputObject</maml:name>
         <maml:description>
           <maml:para>`Export-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`.</maml:para>
@@ -179,7 +179,7 @@
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies a path to the JSON file where version information will be stored. If the file does not exist, the parent directory must already exist.</maml:para>
@@ -270,7 +270,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Export-EvergreenManifest</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -285,7 +285,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -354,12 +354,12 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Returns a table built from the internal application manifests to list the applications supported by Evergreen. The table includes the Name (the internal name used when querying for the application via `Get-EvergreenApp`), Application (typically the full vendor and application name) and Link (a URL hosting official vendor information about the application) properties.</maml:para>
+      <maml:para>Returns a table built from the locally cached Evergreen application manifests. The table includes the Name (the internal name used when querying for the application via `Get-EvergreenApp`), Application (typically the full vendor and application name), and Link (a URL hosting official vendor information about the application).</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Find-EvergreenApp</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. This can be the entire application name or a portion thereof.</maml:para>
@@ -374,7 +374,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. This can be the entire application name or a portion thereof.</maml:para>
@@ -457,14 +457,14 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Queries the internal application functions and manifests included in the module to find the latest version and download link/s for the specified application.</maml:para>
+      <maml:para>Loads the application function and manifest from the Evergreen apps cache and uses vendor sources to find the latest version and download URLs. Use `Update-Evergreen` to download or update the apps cache.</maml:para>
       <maml:para>The output from this function can be passed to Where-Object to filter for a specific download based on properties including processor architecture, file type or other properties.</maml:para>
       <maml:para>`Get-EvergreenApp` uses official vendor sources including update APIs, web queries, and code repository locations to return details of a target application at run time.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Get-EvergreenApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -474,9 +474,9 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>Microsoft365Apps</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>AppParams</maml:name>
           <maml:description>
             <maml:para>A hashtable of parameters to pass to the internal application function. Accepts a hashtable of keys and values that will be passed to the internal application function to enable additional functionality (application function dependent).</maml:para>
@@ -488,18 +488,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>Proxy</maml:name>
           <maml:description>
             <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -511,7 +500,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
           <maml:name>ProxyCredential</maml:name>
           <maml:description>
             <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -523,18 +512,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
             <maml:name>PSCredential</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
-          <maml:name>WhatIf</maml:name>
-          <maml:description>
-            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
+          <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>SkipCertificateCheck</maml:name>
@@ -551,7 +529,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -561,9 +539,9 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>Microsoft365Apps</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>AppParams</maml:name>
         <maml:description>
           <maml:para>A hashtable of parameters to pass to the internal application function. Accepts a hashtable of keys and values that will be passed to the internal application function to enable additional functionality (application function dependent).</maml:para>
@@ -575,19 +553,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
-        <maml:name>Confirm</maml:name>
-        <maml:description>
-          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
         <maml:name>Proxy</maml:name>
         <maml:description>
           <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -599,7 +565,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
         <maml:name>ProxyCredential</maml:name>
         <maml:description>
           <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -611,19 +577,7 @@ Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\Microsof
           <maml:name>PSCredential</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
-        <maml:name>WhatIf</maml:name>
-        <maml:description>
-          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
+        <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>SkipCertificateCheck</maml:name>
@@ -759,7 +713,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Get-EvergreenAppFromApi</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -769,12 +723,12 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>Microsoft365Apps</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -784,7 +738,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>Microsoft365Apps</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -851,23 +805,23 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Get-EvergreenLibraryApp</command:name>
+      <command:name>Get-EvergreenAppFromLibrary</command:name>
       <command:verb>Get</command:verb>
-      <command:noun>EvergreenLibraryApp</command:noun>
+      <command:noun>EvergreenAppFromLibrary</command:noun>
       <maml:description>
-        <maml:para>Returns details for a specified application from an Evergreen Library. The output will include version and path information for the application that can be used to install application binaries from the library.</maml:para>
+        <maml:para>Returns details for a specified application from an Evergreen library.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Returns details for a specified application from an Evergreen Library including all version and binaries / installer information stored in the library. Details returned are in descending order by version number so that the latest version can be used or a specific version filtered with Where-Object.</maml:para>
+      <maml:para>Returns details for a specified application from an Evergreen library including all version and binaries / installer information stored in the library. Details are sorted in descending version order.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Get-EvergreenLibraryApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
-          <maml:name>InputObject</maml:name>
+        <maml:name>Get-EvergreenAppFromLibrary</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+          <maml:name>Inventory</maml:name>
           <maml:description>
-            <maml:para>`Get-EvergreenLibraryApp` accepts the PSObject output from `Get-EvergreenLibrary`. `Get-EvergreenLibraryApp` will test for the existence of the Inventory property on this object and throw an error if it does not exist.</maml:para>
+            <maml:para>The inventory object returned by `Get-EvergreenLibrary`. The command requires the object to have an `Inventory` property.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
           <dev:type>
@@ -876,7 +830,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -891,10 +845,10 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
-        <maml:name>InputObject</maml:name>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+        <maml:name>Inventory</maml:name>
         <maml:description>
-          <maml:para>`Get-EvergreenLibraryApp` accepts the PSObject output from `Get-EvergreenLibrary`. `Get-EvergreenLibraryApp` will test for the existence of the Inventory property on this object and throw an error if it does not exist.</maml:para>
+          <maml:para>The inventory object returned by `Get-EvergreenLibrary`. The command requires the object to have an `Inventory` property.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
         <dev:type>
@@ -903,7 +857,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
@@ -945,7 +899,7 @@ URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservi
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Get-EvergreenLibrary -Path "\\server\EvergreenLibrary" | Get-EvergreenLibraryApp -Name "MicrosoftVisualStudioCode"
+        <dev:code>PS C:\&gt; Get-EvergreenLibrary -Path "\\server\EvergreenLibrary" | Get-EvergreenAppFromLibrary -Name "MicrosoftVisualStudioCode"
 
 Version      : 1.74.3
 URI          : https://az764295.vo.msecnd.net/stable/97dec172d3256f8ca4bfb2143f3f76b503ca0534/VSCodeSetup-x64-1.74.3.exe
@@ -963,13 +917,13 @@ Path         : \\server\EvergreenLibrary\MicrosoftVisualStudioCode\Stable\1.74.3
 Channel      : Stable
 Architecture : x64</dev:code>
         <dev:remarks>
-          <maml:para>Returns details about Microsoft Visual Studio Code from the Evergreen library at \server\EvergreenLibrary that is sent to Get-EvergreenLibraryApp from Get-EvergreenLibrary via the pipeline.</maml:para>
+          <maml:para>Returns details about Microsoft Visual Studio Code from the Evergreen library at \server\EvergreenLibrary that is sent to Get-EvergreenAppFromLibrary from Get-EvergreenLibrary via the pipeline.</maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 2 --------------------------</maml:title>
         <dev:code>PS C:\&gt; $Library = Get-EvergreenLibrary -Path "\\server\EvergreenLibrary"
-PS C:\&gt; Get-EvergreenLibraryApp -Inventory $Library -Name "MicrosoftTeams"
+PS C:\&gt; Get-EvergreenAppFromLibrary -Inventory $Library -Name "MicrosoftTeams"
 
 Version      : 1.5.00.36367
 URI          : https://statics.teams.cdn.office.net/production-windows-x64/1.5.00.36367/Teams_windows_x64.msi
@@ -985,14 +939,14 @@ Ring         : General
 Path         : \\server\EvergreenLibrary\MicrosoftTeams\General\1.5.00.31168\x64\Teams_windows_x64.msi
 Architecture : x64</dev:code>
         <dev:remarks>
-          <maml:para>Uses Get-EvergreenLibrary to place details about the Evergreen library at \server\EvergreenLibrary into an object called $Library, which is then used on the command line for Get-EvergreenLibraryApp to return details about Microsoft Teams.</maml:para>
+          <maml:para>Uses Get-EvergreenLibrary to place details about the Evergreen library at \server\EvergreenLibrary into an object called $Library, which is then used on the command line for Get-EvergreenAppFromLibrary to return details about Microsoft Teams. `Get-EvergreenLibraryApp` is an alias for this command.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Online Version:</maml:linkText>
-        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibraryApp/</maml:uri>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppFromLibrary/</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Create an Evergreen library:</maml:linkText>
@@ -1006,11 +960,11 @@ Architecture : x64</dev:code>
       <command:verb>Get</command:verb>
       <command:noun>EvergreenAppsPath</command:noun>
       <maml:description>
-        <maml:para>Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+        <maml:para>Returns the local cache path for the Evergreen apps functions and manifests, honoring the `EVERGREEN_APPS_PATH` environment variable when set.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+      <maml:para>Returns the path specified by `EVERGREEN_APPS_PATH` when it is set. Otherwise, returns `%LOCALAPPDATA%\Evergreen` on Windows or `~/.evergreen` on macOS and Linux. If the environment variable points to a path that does not exist, the function warns and returns its value.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -1040,7 +994,7 @@ Architecture : x64</dev:code>
         <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
         <dev:code>Get-EvergreenAppsPath</dev:code>
         <dev:remarks>
-          <maml:para>Description: Returns the local cache path for the Evergreen apps functions and manifests.</maml:para>
+          <maml:para>Description: Returns the configured Evergreen apps cache path.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -1132,12 +1086,12 @@ Architecture : x64</dev:code>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Get-EvergreenEndpointFromApi</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
           </maml:description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
             <maml:name>String</maml:name>
             <maml:uri />
@@ -1147,12 +1101,12 @@ Architecture : x64</dev:code>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="ApplicationName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>The application name to return details for. The list of supported applications can be found with `Find-EvergreenApp`.</maml:para>
         </maml:description>
-        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
           <maml:name>String</maml:name>
           <maml:uri />
@@ -1269,7 +1223,7 @@ c.1password.com</dev:code>
       </command:syntaxItem>
       <command:syntaxItem>
         <maml:name>Get-EvergreenLibrary</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Uri</maml:name>
           <maml:description>
             <maml:para>Specify the URI to an Evergreen Library hosted on blob storage on an Azure storage account.</maml:para>
@@ -1296,7 +1250,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Uri</maml:name>
         <maml:description>
           <maml:para>Specify the URI to an Evergreen Library hosted on blob storage on an Azure storage account.</maml:para>
@@ -1377,7 +1331,7 @@ c.1password.com</dev:code>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>New-EvergreenLibrary</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the path to the Evergreen library. It is expected that the target location is empty. If the path includes EvergreenLibrary.json, `New-EvergreenLibrary` will not make changes to the manifest.</maml:para>
@@ -1389,7 +1343,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="LibraryName">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>Specify a name for the library.</maml:para>
@@ -1399,7 +1353,7 @@ c.1password.com</dev:code>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>EvergreenLibrary</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
@@ -1426,7 +1380,7 @@ c.1password.com</dev:code>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the path to the Evergreen library. It is expected that the target location is empty. If the path includes EvergreenLibrary.json, `New-EvergreenLibrary` will not make changes to the manifest.</maml:para>
@@ -1438,7 +1392,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="LibraryName">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>Specify a name for the library.</maml:para>
@@ -1448,7 +1402,7 @@ c.1password.com</dev:code>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>EvergreenLibrary</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
@@ -1741,22 +1695,21 @@ c.1password.com</dev:code>
       <command:verb>Save</command:verb>
       <command:noun>EvergreenApp</command:noun>
       <maml:description>
-        <maml:para>Downloads target URIs passed to this function from `Get-EvergreenApp` into a directory structure.</maml:para>
+        <maml:para>Downloads application installers and updaters specified by `Get-EvergreenApp`.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Saves target URLs passed to this function from `Get-EvergreenApp` output to into a directory structure below -Path using the properties from the object passed to the function.</maml:para>
-      <maml:para>`Get-EvergreenApp` will return an object that may include application properties including (in the following order) - Product, Track, Channel, Release, Ring, Version, Language, and (processor) Architecture. Only properties that exist on the target object will be used.</maml:para>
-      <maml:para>This simplifies saving the target application installers or updaters into a consistent directory structure without having to build the target directory structure yourself or deal with other functions to download the file.</maml:para>
-      <maml:para>To override the default behaviour that creates the directory structure based on the properties of the object passed to the function, use the `-CustomPath` parameter to specify an exact path to save files into. Note that this method download the first file and then will skip files from an object passed from `Get-EvergreenApp` that includes files with the same name.</maml:para>
+      <maml:para>Downloads installer URLs from `Get-EvergreenApp` output. By default, files are saved in a directory structure based on the available application properties below `-Path`; `-CustomPath` saves all files directly in the specified directory. Missing destination directories are created as needed. Existing files are skipped unless `-Force` is specified.</maml:para>
+      <maml:para>The directory structure uses available properties such as Product, Track, Channel, Release, Ring, Version, Language, and Architecture.</maml:para>
+      <maml:para>Downloads are retried for transient network failures and retryable HTTP responses. Use the retry and timeout parameters to adjust download behavior. `-VerifyChecksum` validates supported checksums supplied by the input object.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Save-EvergreenApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
           <maml:name>InputObject</maml:name>
           <maml:description>
-            <maml:para>`Save-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Save-EvergreenApp` will test for the existence of at least these properties - Version and URI.</maml:para>
+            <maml:para>`Save-EvergreenApp` accepts objects from `Get-EvergreenApp` and requires a non-empty URI property. `-Path` mode also requires a Version property.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
           <dev:type>
@@ -1765,7 +1718,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>The target directory under which a directory structure will be created and application installers saved into. Typically the target path used will be a path per application.</maml:para>
@@ -1775,9 +1728,9 @@ c.1password.com</dev:code>
             <maml:name>FileInfo</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>(Resolve-Path -Path $PWD)</dev:defaultValue>
+          <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>Proxy</maml:name>
           <maml:description>
             <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -1789,7 +1742,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
           <maml:name>ProxyCredential</maml:name>
           <maml:description>
             <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -1861,15 +1814,68 @@ c.1password.com</dev:code>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>(Get-EvergreenUserAgent)</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>VerifyChecksum</maml:name>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>RetryCount</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>3</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>RetryDelaySeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>2</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>MaximumRetryDelaySeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>300</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ConnectionTimeoutSeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>30</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OperationTimeoutSeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>300</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
       <command:syntaxItem>
         <maml:name>Save-EvergreenApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
           <maml:name>InputObject</maml:name>
           <maml:description>
-            <maml:para>`Save-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Save-EvergreenApp` will test for the existence of at least these properties - Version and URI.</maml:para>
+            <maml:para>`Save-EvergreenApp` accepts objects from `Get-EvergreenApp` and requires a non-empty URI property. `-Path` mode also requires a Version property.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
           <dev:type>
@@ -1878,7 +1884,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="LiteralPath">
           <maml:name>CustomPath</maml:name>
           <maml:description>
             <maml:para>Specify a single directory path where all application installers will be saved into. No sub-directories will be created.</maml:para>
@@ -1890,7 +1896,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>Proxy</maml:name>
           <maml:description>
             <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -1902,7 +1908,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
           <maml:name>ProxyCredential</maml:name>
           <maml:description>
             <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -1974,15 +1980,68 @@ c.1password.com</dev:code>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>(Get-EvergreenUserAgent)</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>VerifyChecksum</maml:name>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>RetryCount</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>3</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>RetryDelaySeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>2</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>MaximumRetryDelaySeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>300</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ConnectionTimeoutSeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>30</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OperationTimeoutSeconds</maml:name>
+          <command:parameterValue required="false" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>300</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
         <maml:name>InputObject</maml:name>
         <maml:description>
-          <maml:para>`Save-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Save-EvergreenApp` will test for the existence of at least these properties - Version and URI.</maml:para>
+          <maml:para>`Save-EvergreenApp` accepts objects from `Get-EvergreenApp` and requires a non-empty URI property. `-Path` mode also requires a Version property.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
         <dev:type>
@@ -1991,7 +2050,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>The target directory under which a directory structure will be created and application installers saved into. Typically the target path used will be a path per application.</maml:para>
@@ -2001,9 +2060,9 @@ c.1password.com</dev:code>
           <maml:name>FileInfo</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>(Resolve-Path -Path $PWD)</dev:defaultValue>
+        <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="LiteralPath">
         <maml:name>CustomPath</maml:name>
         <maml:description>
           <maml:para>Specify a single directory path where all application installers will be saved into. No sub-directories will be created.</maml:para>
@@ -2015,7 +2074,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
         <maml:name>Proxy</maml:name>
         <maml:description>
           <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -2027,7 +2086,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
         <maml:name>ProxyCredential</maml:name>
         <maml:description>
           <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -2103,7 +2162,7 @@ c.1password.com</dev:code>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>(Get-EvergreenUserAgent)</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>RetryCount</maml:name>
@@ -2247,7 +2306,7 @@ c.1password.com</dev:code>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Start-EvergreenLibraryUpdate</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the path to the Evergreen library. The path must include EvergreenLibrary.json, in the expected structure, which defines the applications to be stored in the library.</maml:para>
@@ -2281,7 +2340,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>Proxy</maml:name>
           <maml:description>
             <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -2293,7 +2352,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>ProxyCredential</maml:name>
           <maml:description>
             <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -2305,12 +2364,12 @@ c.1password.com</dev:code>
             <maml:name>PSCredential</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the path to the Evergreen library. The path must include EvergreenLibrary.json, in the expected structure, which defines the applications to be stored in the library.</maml:para>
@@ -2346,7 +2405,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Proxy</maml:name>
         <maml:description>
           <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server</maml:para>
@@ -2358,7 +2417,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
         <maml:name>ProxyCredential</maml:name>
         <maml:description>
           <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -2370,7 +2429,7 @@ c.1password.com</dev:code>
           <maml:name>PSCredential</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -2425,7 +2484,7 @@ c.1password.com</dev:code>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Test-EvergreenApp</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
           <maml:name>InputObject</maml:name>
           <maml:description>
             <maml:para>`Test-EvergreenApp` accepts application objects from `Get-EvergreenApp` and requires a non-empty URI property. Invalid objects produce a warning and a false result; processing continues for subsequent objects.</maml:para>
@@ -2437,7 +2496,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>Proxy</maml:name>
           <maml:description>
             <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server. Note - this is experimental support for proxies.</maml:para>
@@ -2449,7 +2508,7 @@ c.1password.com</dev:code>
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>ProxyCredential</maml:name>
           <maml:description>
             <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -2500,15 +2559,15 @@ c.1password.com</dev:code>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>(Get-EvergreenUserAgent)</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
         <maml:name>InputObject</maml:name>
         <maml:description>
-          <maml:para>`Test-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Test-EvergreenApp` will test for the existence of at least these properties - Version and URI.</maml:para>
+          <maml:para>`Test-EvergreenApp` accepts application objects from `Get-EvergreenApp` and requires a non-empty URI property. Invalid objects produce a warning and a false result; processing continues for subsequent objects.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
         <dev:type>
@@ -2517,7 +2576,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Proxy</maml:name>
         <maml:description>
           <maml:para>Specifies a proxy server for the request, rather than connecting directly to the internet resource. Enter the URI of a network proxy server. Note - this is experimental support for proxies.</maml:para>
@@ -2529,7 +2588,7 @@ c.1password.com</dev:code>
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
         <maml:name>ProxyCredential</maml:name>
         <maml:description>
           <maml:para>Specifies a user account that has permission to use the proxy server that is specified by the Proxy parameter. The default is the current user.</maml:para>
@@ -2581,7 +2640,7 @@ c.1password.com</dev:code>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>(Get-EvergreenUserAgent)</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -2720,7 +2779,7 @@ c.1password.com</dev:code>
         </dev:remarks>
       </command:example>
       <command:example>
-        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
         <dev:code>Update-Evergreen -Release "v25.09.27.16" -Force</dev:code>
         <dev:remarks>
           <maml:para>Description: Downloads and synchronizes the v25.09.27.16 release of the Evergreen Apps functions and Manifests from the eucpilots/evergreen-apps GitHub repository.</maml:para>

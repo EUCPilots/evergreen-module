@@ -1,20 +1,20 @@
 ---
 external help file: Evergreen-help.xml
 Module Name: Evergreen
-online version: https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibraryApp/
+online version: https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppFromLibrary/
 schema: 2.0.0
 ---
 
-# Get-EvergreenLibraryApp
+# Get-EvergreenAppFromLibrary
 
 ## SYNOPSIS
 
-Returns details for a specified application from an Evergreen Library. The output will include version and path information for the application that can be used to install application binaries from the library.
+Returns details for a specified application from an Evergreen library.
 
 ## SYNTAX
 
 ```
-Get-EvergreenLibraryApp [-Inventory] <PSObject> [-Name] <String> [<CommonParameters>]
+Get-EvergreenAppFromLibrary [-Inventory] <PSObject> [-Name] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -26,7 +26,7 @@ Returns details for a specified application from an Evergreen Library including 
 ### Example 1
 
 ```powershell
-PS C:\> Get-EvergreenLibrary -Path "\\server\EvergreenLibrary" | Get-EvergreenLibraryApp -Name "MicrosoftVisualStudioCode"
+PS C:\> Get-EvergreenLibrary -Path "\\server\EvergreenLibrary" | Get-EvergreenAppFromLibrary -Name "MicrosoftVisualStudioCode"
 
 Version      : 1.74.3
 URI          : https://az764295.vo.msecnd.net/stable/97dec172d3256f8ca4bfb2143f3f76b503ca0534/VSCodeSetup-x64-1.74.3.exe
@@ -45,13 +45,13 @@ Channel      : Stable
 Architecture : x64
 ```
 
-Returns details about Microsoft Visual Studio Code from the Evergreen library at \\server\EvergreenLibrary that is sent to Get-EvergreenLibraryApp from Get-EvergreenLibrary via the pipeline.
+Returns details about Microsoft Visual Studio Code from the Evergreen library at \\server\EvergreenLibrary that is sent to Get-EvergreenAppFromLibrary from Get-EvergreenLibrary via the pipeline.
 
 ### Example 2
 
 ```powershell
 PS C:\> $Library = Get-EvergreenLibrary -Path "\\server\EvergreenLibrary"
-PS C:\> Get-EvergreenLibraryApp -Inventory $Library -Name "MicrosoftTeams"
+PS C:\> Get-EvergreenAppFromLibrary -Inventory $Library -Name "MicrosoftTeams"
 
 Version      : 1.5.00.36367
 URI          : https://statics.teams.cdn.office.net/production-windows-x64/1.5.00.36367/Teams_windows_x64.msi
@@ -68,13 +68,13 @@ Path         : \\server\EvergreenLibrary\MicrosoftTeams\General\1.5.00.31168\x64
 Architecture : x64
 ```
 
-Uses Get-EvergreenLibrary to place details about the Evergreen library at \\server\EvergreenLibrary into an object called $Library, which is then used on the command line for Get-EvergreenLibraryApp to return details about Microsoft Teams.
+Uses Get-EvergreenLibrary to place details about the Evergreen library at \\server\EvergreenLibrary into an object called $Library, which is then used on the command line for Get-EvergreenAppFromLibrary to return details about Microsoft Teams. `Get-EvergreenLibraryApp` is an alias for this command.
 
 ## PARAMETERS
 
-### -InputObject
+### -Inventory
 
-`Get-EvergreenLibraryApp` accepts the PSObject output from `Get-EvergreenLibrary`. `Get-EvergreenLibraryApp` will test for the existence of the Inventory property on this object and throw an error if it does not exist.
+The inventory object returned by `Get-EvergreenLibrary`. The command requires the object to have an `Inventory` property.
 
 ```yaml
 Type: PSObject
@@ -84,7 +84,7 @@ Aliases:
 Required: True
 Position: 0
 Default value: None
-Accept pipeline input: True (ByValue)
+Accept pipeline input: True (ByValue, ByPropertyName)
 Accept wildcard characters: False
 ```
 
@@ -96,12 +96,12 @@ The list of supported applications can be found with `Find-EvergreenApp`.
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ApplicationName
 
 Required: True
 Position: 1
 Default value: None
-Accept pipeline input: True (ByPropertyName, ByValue)
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

@@ -8,7 +8,7 @@ schema: 2.0.0
 # ConvertTo-DotNetVersionClass
 
 ## SYNOPSIS
-Converts a version string to a standard .NET compliant Version class.
+Converts a version string to a four-component .NET Version.
 
 ## SYNTAX
 
@@ -17,11 +17,9 @@ ConvertTo-DotNetVersionClass [-Version] <String> [-ProgressAction <ActionPrefere
 ```
 
 ## DESCRIPTION
-The ConvertTo-DotNetVersionClass function takes a version string as input and converts it into a .NET Version class. 
-It normalizes the segments of the version string, ensuring it has exactly four segments by either summing excess segments 
-or padding with zeros if there are fewer than four segments.
+Separators (periods, underscores, plus signs, and hyphens) delimit version components. Numeric components must use ASCII digits. Text components are mapped to stable SHA-256-derived integers; this allows conversion but does not preserve semantic version ordering, so the resulting .NET Version should not be used to compare prerelease or other text-labeled versions.
 
-If the conversion to a .NET Version class fails, the function will return the normalized version string as a string.
+Versions with fewer than four components are padded with zeros. Components after the third are summed into the fourth component, which saturates at Int32.MaxValue. Invalid or out-of-range numeric components result in an error.
 
 ## EXAMPLES
 
@@ -58,7 +56,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 1
+Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
@@ -70,7 +68,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### System.String
+
+A version string with numeric or text components separated by periods, underscores, plus signs, or hyphens.
+
 ## OUTPUTS
+
+### System.Version
+
+A four-component .NET Version. Text-derived components are not suitable for semantic version ordering.
 
 ## NOTES
 
