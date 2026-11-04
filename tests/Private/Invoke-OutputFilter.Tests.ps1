@@ -33,7 +33,7 @@ InModuleScope -ModuleName "Evergreen" {
 
             $Result | Should -Be @("filtered-first", "filtered-second")
             Should -Invoke Get-FilteredData -Times 2 -Exactly -ParameterFilter {
-                $FilterPath -eq "/evergreen-test/Filters/Example.json"
+                $FilterPath -eq [System.IO.Path]::Combine("/evergreen-test", "Filters", "Example.json")
             }
         }
 

@@ -168,6 +168,8 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             $oldPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[old].exe"
             $null = New-Item -Path (Split-Path -Path $oldPath -Parent) -ItemType "Directory" -Force
             Set-Content -LiteralPath $oldPath -Value "old"
+            # Windows PowerShell expands short directory names; normalize while the file exists.
+            $expectedOldPath = [System.IO.Path]::GetFullPath($oldPath)
             Remove-Item -LiteralPath $versions[0].Path -Force
             $versions[0].Path = if ($PathFormat -eq "relative") {
                 "Stable/1.0.0/x64/setup[old].exe"
@@ -175,6 +177,7 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             elseif ($PathFormat -eq "multiple") {
                 $secondPath = Join-Path -Path $appPath -ChildPath "Stable/1.0.0/x64/setup[other].exe"
                 Set-Content -LiteralPath $secondPath -Value "old"
+                $expectedSecondPath = [System.IO.Path]::GetFullPath($secondPath)
                 @($oldPath, "Stable/1.0.0/x64/setup[other].exe")
             }
             else {
@@ -185,11 +188,11 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
             $result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 3 -Name "ContosoApp" -Confirm:$false
 
             Test-Path -LiteralPath $oldPath | Should -Be $false
-            $result.RemovedFiles | Should -Contain $oldPath
+            $result.RemovedFiles | Should -Contain $expectedOldPath
             $result.RemovedCount | Should -Be 1
             if ($PathFormat -eq "multiple") {
                 Test-Path -LiteralPath $secondPath | Should -Be $false
-                $result.RemovedFiles | Should -Contain $secondPath
+                $result.RemovedFiles | Should -Contain $expectedSecondPath
                 $result.RemovedFileCount | Should -Be 2
             }
             else {
