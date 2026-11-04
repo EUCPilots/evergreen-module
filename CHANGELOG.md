@@ -1,5 +1,16 @@
 # Change log
 
+## VERSION
+
+This version strengthens download and library reliability, improves validation and error reporting across public cmdlets, and refreshes help documentation.
+
+- **Downloads — `Save-EvergreenApp`:** Add optional `-VerifyChecksum` support for SHA-1, SHA-256, and SHA-512 hashes. Add bounded retries with exponential backoff and `Retry-After` handling, plus configurable connection and operation timeouts. Validate destination paths and filenames, support pipeline-bound paths, honor `-WhatIf` and custom user agents, publish only completed downloads, clean up partial files, and restore TLS settings.
+- **App lookup and API queries — `Get-EvergreenApp`, `Find-EvergreenApp`, `Get-EvergreenAppFromApi`, `Get-EvergreenEndpointFromApi`:** Validate app names and API inputs, encode names for requests, preserve API error details, and reuse output filtering for local and API results. Improve literal-name matching and not-found diagnostics; clean up proxy and certificate state on completion or terminating errors. `Get-EvergreenApp` diagnostics now include exception and location details while preserving the original error.
+- **Exports — `Export-EvergreenApp`, `Export-EvergreenManifest`:** Support pipeline input and improve validation and error reporting. `Export-EvergreenApp` batches pipeline records into a single write, respects `-WhatIf`, and preserves arrays, nested data, and nonstandard versions when merging and sorting.
+- **Library operations — `Start-EvergreenLibraryUpdate`, `Get-EvergreenLibrary`, `Get-EvergreenAppFromLibrary`, `Remove-EvergreenLibraryAppVersion`:** Improve mixed-version sorting and isolate per-app state. Export only entries with matching installer files; stage manifest updates before deleting files; and reject unsafe paths and reparse points. Clarify pruning behavior and correct installer-path handling for retained entries.
+- **Validation and compatibility — `Test-EvergreenApp`, `ConvertTo-DotNetVersionClass`, `Convert-Segment`, `Expand-CabArchive`:** Add HEAD-to-ranged-GET fallback, configurable timeouts, and HTTP status results to `Test-EvergreenApp`. Harden version conversion and make CAB extraction preserve original filenames and extensions. Support the insecure-redirect option on Windows PowerShell 5.1 while retaining compatibility checks for PowerShell Core.
+- **Module initialization and help:** Handle GitHub rate limits and invalid cache versions in `Evergreen.psm1`; update `Import.ps1`; and refresh cmdlet and module help, including German, Spanish, French, and Japanese documentation.
+
 ## 2610.2862.0
 
 > [!IMPORTANT]
