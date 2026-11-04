@@ -1,6 +1,6 @@
 # Change log
 
-## 2611.2865.1
+## VERSION
 
 > [!WARNING]
 > The module now requires Windows PowerShell 5.1 or PowerShell 7.4 or later on Windows, macOS, or Linux; PowerShell 4.0 or PowerShell 6/7.0-7.3 are no longer supported.
