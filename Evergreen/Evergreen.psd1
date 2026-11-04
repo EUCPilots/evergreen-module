@@ -12,7 +12,7 @@
 RootModule = 'Evergreen.psm1'
 
 # Version number of this module.
-ModuleVersion = '2611.2865.1'
+ModuleVersion = '2611.2868.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -119,7 +119,7 @@ PrivateData = @{
         IconUri = 'https://raw.githubusercontent.com/eucpilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = '2611.2865.1
+        ReleaseNotes = '2611.2868.0
 > [!WARNING]
 > The module now requires Windows PowerShell 5.1 or PowerShell 7.4 or later on Windows, macOS, or Linux; PowerShell 4.0 or PowerShell 6/7.0-7.3 are no longer supported.
 
