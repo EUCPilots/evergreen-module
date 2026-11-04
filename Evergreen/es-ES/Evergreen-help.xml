@@ -1,0 +1,2647 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<helpItems schema="maml" xmlns="http://msh">
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>ConvertTo-DotNetVersionClass</command:name>
+      <command:verb>ConvertTo</command:verb>
+      <command:noun>DotNetVersionClass</command:noun>
+      <maml:description>
+        <maml:para>Convierte una cadena de versión en una clase Version estándar compatible con .NET.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>La función ConvertTo-DotNetVersionClass toma una cadena de versión como entrada y la convierte en una clase Version de .NET. Normaliza los segmentos de la cadena de versión para que tenga exactamente cuatro segmentos, ya sea sumando los segmentos sobrantes o añadiendo ceros si hay menos de cuatro segmentos.</maml:para>
+      <maml:para>Si se produce un error al convertirla en una clase Version de .NET, la función devuelve la cadena de versión normalizada como una cadena.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>ConvertTo-DotNetVersionClass</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+          <maml:name>Version</maml:name>
+          <maml:description>
+            <maml:para>Cadena de versión que se va a convertir en una clase de versión estándar compatible con .NET.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <maml:name>Version</maml:name>
+        <maml:description>
+          <maml:para>Cadena de versión que se va a convertir en una clase de versión estándar compatible con .NET.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
+    <command:returnValues />
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>ConvertTo-DotNetVersionClass -Version "1.2.3.4"
+1.2.3.4</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>ConvertTo-DotNetVersionClass -Version "1.2.3"
+1.2.3.0</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>ConvertTo-DotNetVersionClass -Version "1.2.3.4.5"
+1.2.3.9</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Exportar información de la versión de la aplicación</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/convertversion/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Export-EvergreenApp</command:name>
+      <command:verb>Export</command:verb>
+      <command:noun>EvergreenApp</command:noun>
+      <maml:description>
+        <maml:para>Exporta los detalles de la aplicación obtenidos por `Get-EvergreenApp` a un archivo JSON externo. Esta función lee cualquier JSON existente para esa aplicación, añade el contenido de la nueva versión, ordena las versiones únicas y, a continuación, escribe el nuevo contenido en el archivo JSON de destino.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Exporta los detalles de la aplicación obtenidos por `Get-EvergreenApp` a un archivo JSON externo. Esta función lee cualquier JSON existente para esa aplicación, añade el contenido de la nueva versión, ordena las versiones únicas y, a continuación, escribe el nuevo contenido en el archivo JSON de destino.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Export-EvergreenApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+          <maml:name>InputObject</maml:name>
+          <maml:description>
+            <maml:para>`Export-EvergreenApp` acepta el PSObject de `Get-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Array</command:parameterValue>
+          <dev:type>
+            <maml:name>Array</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Especifica la ruta al archivo JSON donde se almacenará la información de versión. Si el archivo no existe, el directorio principal debe existir.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <maml:name>InputObject</maml:name>
+        <maml:description>
+          <maml:para>`Export-EvergreenApp` acepta el PSObject de `Get-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Array</command:parameterValue>
+        <dev:type>
+          <maml:name>Array</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Especifica la ruta al archivo JSON donde se almacenará la información de versión. Si el archivo no existe, el directorio principal debe existir.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Export-EvergreenApp acepta la salida de Get-EvergreenApp.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues />
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>$OneDrive = Get-EvergreenApp -Name "MicrosoftOneDrive"
+Save-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive"
+Export-EvergreenApp -InputObject $OneDrive -Path "C:\Evergreen\OneDrive\MicrosoftOneDrive.json"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: `Get-EvergreenApp` devuelve la información de versión de `MicrosoftOneDrive`. A continuación, se usa `Save-EvergreenApp` para guardar los instaladores devueltos en `C:\Evergreen\OneDrive`. Después, se guarda la información de versión en `C:\Evergreen\OneDrive\MicrosoftOneDrive.json` con `Export-EvergreenApp`. Si ya hay información de versión almacenada en el archivo de destino, la información de versión adicional se guarda en el mismo archivo.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Export-EvergreenApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Exportar información de la versión de la aplicación</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/export/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Export-EvergreenManifest</command:name>
+      <command:verb>Export</command:verb>
+      <command:noun>EvergreenManifest</command:noun>
+      <maml:description>
+        <maml:para>Exporta un manifiesto JSON de aplicación de Evergreen como una tabla hash.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Exporta un manifiesto JSON de aplicación de Evergreen como una tabla hash que se puede usar en distintas funciones, por ejemplo, en scripts o para guardar en un archivo externo.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Export-EvergreenManifest</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Export-EvergreenManifest -Name "MicrosoftEdge"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Exporta el manifiesto de la aplicación "MicrosoftEdge".</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Export-EvergreenManifest/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Introducción a Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Find-EvergreenApp</command:name>
+      <command:verb>Find</command:verb>
+      <command:noun>EvergreenApp</command:noun>
+      <maml:description>
+        <maml:para>Muestra una tabla con las aplicaciones compatibles con Evergreen.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Devuelve una tabla creada a partir de los manifiestos internos de aplicaciones para enumerar las aplicaciones compatibles con Evergreen. La tabla incluye las propiedades Name (el nombre interno que se usa al consultar la aplicación mediante `Get-EvergreenApp`), Application (normalmente, el nombre completo del proveedor y de la aplicación) y Link (una URL que aloja información oficial del proveedor sobre la aplicación).</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Find-EvergreenApp</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. Puede ser el nombre completo de la aplicación o una parte de él.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. Puede ser el nombre completo de la aplicación o una parte de él.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Find-EvergreenApp</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve una tabla con todas las aplicaciones compatibles actualmente con Evergreen.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Find-EvergreenApp -Name "Edge"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve una tabla con todas las aplicaciones compatibles actualmente que coinciden con "Edge".</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Find-EvergreenApp -Name "Microsoft"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve una tabla con todas las aplicaciones compatibles actualmente que coinciden con "Microsoft".</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Find-EvergreenApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Buscar aplicaciones compatibles</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/find/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenApp</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenApp</command:noun>
+      <maml:description>
+        <maml:para>Devuelve la versión más reciente y las URL de descarga de una aplicación compatible con el módulo Evergreen.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Consulta las funciones y los manifiestos internos de aplicaciones incluidos en el módulo para encontrar la versión más reciente y los enlaces de descarga de la aplicación especificada.</maml:para>
+      <maml:para>La salida de esta función se puede pasar a Where-Object para filtrar una descarga concreta según propiedades como la arquitectura del procesador, el tipo de archivo u otras propiedades.</maml:para>
+      <maml:para>`Get-EvergreenApp` usa fuentes oficiales de los proveedores, como API de actualización, consultas web y ubicaciones de repositorios de código, para devolver en tiempo de ejecución los detalles de una aplicación de destino.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+          <maml:name>AppParams</maml:name>
+          <maml:description>
+            <maml:para>Tabla hash de parámetros que se pasarán a la función interna de aplicación. Acepta una tabla hash de claves y valores que se pasarán a la función interna de aplicación para habilitar funcionalidades adicionales (según la función de aplicación).</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Hashtable</command:parameterValue>
+          <dev:type>
+            <maml:name>Hashtable</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Proxy</maml:name>
+          <maml:description>
+            <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ProxyCredential</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+            <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+            <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+          <dev:type>
+            <maml:name>PSCredential</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>SkipCertificateCheck</maml:name>
+          <maml:description>
+            <maml:para>Omite las comprobaciones de validación de certificados. Esto incluye todas las validaciones, como la caducidad, la revocación y la entidad de certificación raíz de confianza.</maml:para>
+            <maml:para>Advertencia: el uso de este parámetro no es seguro y no se recomienda. Este modificador solo está pensado para usarse cuando un proveedor tiene un problema temporal con un certificado y únicamente con fines de prueba. Úsalo bajo tu propia responsabilidad.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+        <maml:name>AppParams</maml:name>
+        <maml:description>
+          <maml:para>Tabla hash de parámetros que se pasarán a la función interna de aplicación. Acepta una tabla hash de claves y valores que se pasarán a la función interna de aplicación para habilitar funcionalidades adicionales (según la función de aplicación).</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Hashtable</command:parameterValue>
+        <dev:type>
+          <maml:name>Hashtable</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Proxy</maml:name>
+        <maml:description>
+          <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ProxyCredential</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+          <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+          <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+        <dev:type>
+          <maml:name>PSCredential</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>SkipCertificateCheck</maml:name>
+        <maml:description>
+          <maml:para>Omite las comprobaciones de validación de certificados. Esto incluye todas las validaciones, como la caducidad, la revocación y la entidad de certificación raíz de confianza.</maml:para>
+          <maml:para>Advertencia: el uso de este parámetro no es seguro y no se recomienda. Este modificador solo está pensado para usarse cuando un proveedor tiene un problema temporal con un certificado y únicamente con fines de prueba. Úsalo bajo tu propia responsabilidad.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "MicrosoftEdge"
+
+Version      : 89.0.774.76
+Platform     : Windows
+Channel      : Stable
+Release      : Enterprise
+Architecture : x64
+Date         : 12/4/2021
+Hash         : 9E7A29B4BE6E1CD707F80B4B79008F19D2D5DD5C774D317A493EC6DE5BE0B7D7
+URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/4d12f620-174c-4259-85e6-8a80ea45ff10/MicrosoftEdgeEnterpriseX64.msi</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y las URL de descarga de Microsoft Edge mediante la API oficial de actualización de Microsoft Edge en https://edgeupdates.microsoft.com/api/products (https://edgeupdates.microsoft.com/api/products).</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "MicrosoftEdge" | Where-Object { $_.Architecture -eq "x64" -and $_.Channel -eq "Stable" -and $_.Release -eq "Enterprise" }</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y la URL de descarga del canal Stable de la edición Enterprise de 64 bits de Microsoft Edge.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>(Get-EvergreenApp -Name "MicrosoftOneDrive" | Where-Object { $_.Type -eq "Exe" -and $_.Ring -eq "Production" }) | `
+    Sort-Object -Property @{ Expression = { [System.Version]$_.Version }; Descending = $true } | Select-Object -First 1</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y la URL de descarga del anillo Production de Microsoft OneDrive y selecciona la versión más reciente si se devuelve más de una versión.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 4 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "AdobeAcrobatReaderDC" | Where-Object { $_.Language -eq "English" -and $_.Architecture -eq "x86" }</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y la URL de descarga que coinciden con la edición en inglés de 32 bits de Adobe Acrobat Reader DC.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 5 --------------------------</maml:title>
+        <dev:code>Find-EvergreenApp -Name "Teams" | Get-EvergreenApp</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Enumera las aplicaciones disponibles que coinciden con la cadena "Teams" (por ejemplo, Microsoft Teams) y pasa la salida a `Get-EvergreenApp`, que consulta el nombre de la aplicación coincidente. Ten en cuenta que `Get-EvergreenApp` solo procesará la primera aplicación devuelta en la canalización, no todas las aplicaciones coincidentes.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 6 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "MicrosoftTeams" | Save-EvergreenApp -Path "C:\Apps\Teams"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: `Get-EvergreenApp` devuelve los detalles de la versión más reciente de Microsoft Teams, que se pasa mediante la canalización a `Save-EvergreenApp`. La salida se usa para guardar las URL de destino en C:\Apps\Teams, en una estructura de directorios basada en el objeto devuelto. En este caso, las propiedades Ring y Architecture del objeto devuelto se usarán en la estructura de directorios.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 7 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "MozillaFirefox" -AppParams @{ Language = "en-GB", "es-ES" }</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Pasa los idiomas en-GB y es-ES a MozillaFirefox para que devuelva las descargas de esos idiomas en lugar del idioma predeterminado en-US.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 8 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "GitHubRelease" -AppParams @{ Uri = "https://api.github.com/repos/atom/atom/releases/latest" }</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Pasa un repositorio personalizado a la función interna de aplicación `GetHubRelease` en lugar de usar el repositorio incluido en el manifiesto. Así, `Get-EvergreenApp` puede encontrar las versiones de una aplicación alojada en GitHub que aún no es compatible con Evergreen.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Usar Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/use/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenAppFromApi</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenAppFromApi</command:noun>
+      <maml:description>
+        <maml:para>Devuelve la versión más reciente y las URL de descarga de una aplicación compatible con el módulo Evergreen. Esta función devuelve los mismos datos que Get-EvergreenApp, pero consulta la API de Evergreen App Tracker para obtenerlos.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Devuelve la versión más reciente y las URL de descarga de una aplicación compatible con el módulo Evergreen. Esta función devuelve los mismos datos que Get-EvergreenApp, pero consulta la API de Evergreen App Tracker para obtenerlos. Los datos de la API proceden de un almacén de clave/valor que Get-EvergreenApp actualiza cada 12 horas.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenAppFromApi</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="0" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppFromApi -Name "MicrosoftEdge"
+
+Version      : 89.0.774.76
+Platform     : Windows
+Channel      : Stable
+Release      : Enterprise
+Architecture : x64
+Date         : 12/4/2021
+Hash         : 9E7A29B4BE6E1CD707F80B4B79008F19D2D5DD5C774D317A493EC6DE5BE0B7D7
+URI          : https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/4d12f620-174c-4259-85e6-8a80ea45ff10/MicrosoftEdgeEnterpriseX64.msi</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y las URL de descarga de Microsoft Edge mediante la API oficial de actualización de Microsoft Edge en https://edgeupdates.microsoft.com/api/products (https://edgeupdates.microsoft.com/api/products).</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppFromApi -Name "MicrosoftEdge" | Where-Object { $_.Architecture -eq "x64" -and $_.Channel -eq "Stable" -and $_.Release -eq "Enterprise" }</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión actual y la URL de descarga del canal Stable de la edición Enterprise de 64 bits de Microsoft Edge.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppFromApi/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>https://eucpilots.com/evergreen/invoke/</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/invoke/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenLibraryApp</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenLibraryApp</command:noun>
+      <maml:description>
+        <maml:para>Devuelve los detalles de una aplicación especificada de una biblioteca de Evergreen. La salida incluye la información de versión y ruta de la aplicación que se puede usar para instalar los binarios de la aplicación desde la biblioteca.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Devuelve los detalles de una aplicación especificada de una biblioteca de Evergreen, incluida toda la información de versiones y binarios/instaladores almacenada en la biblioteca. Los detalles devueltos se ordenan de forma descendente por número de versión para que se pueda usar la versión más reciente o filtrar una versión específica con Where-Object.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenLibraryApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
+          <maml:name>InputObject</maml:name>
+          <maml:description>
+            <maml:para>`Get-EvergreenLibraryApp` acepta la salida PSObject de `Get-EvergreenLibrary`. `Get-EvergreenLibraryApp` comprueba si existe la propiedad Inventory en este objeto y genera un error si no existe.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+          <dev:type>
+            <maml:name>PSObject</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="0" aliases="none">
+        <maml:name>InputObject</maml:name>
+        <maml:description>
+          <maml:para>`Get-EvergreenLibraryApp` acepta la salida PSObject de `Get-EvergreenLibrary`. `Get-EvergreenLibraryApp` comprueba si existe la propiedad Inventory en este objeto y genera un error si no existe.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+        <dev:type>
+          <maml:name>PSObject</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Get-EvergreenLibrary -Path "\\server\EvergreenLibrary" | Get-EvergreenLibraryApp -Name "MicrosoftVisualStudioCode"
+
+Version      : 1.74.3
+URI          : https://az764295.vo.msecnd.net/stable/97dec172d3256f8ca4bfb2143f3f76b503ca0534/VSCodeSetup-x64-1.74.3.exe
+Sha256       : cea32aa015116f8346e054c59497908f6da6059361c1b33d5b68059031f2dc97
+Platform     : win32-x64
+Path         : \\server\EvergreenLibrary\MicrosoftVisualStudioCode\Stable\1.74.3\x64\VSCodeSetup-x64-1.74.3.exe
+Channel      : Stable
+Architecture : x64
+
+Version      : 1.74.0
+URI          : https://az764295.vo.msecnd.net/stable/5235c6bb189b60b01b1f49062f4ffa42384f8c91/VSCodeSetup-x64-1.74.0.exe
+Sha256       : fbe977aa69a1c1438d2c2b9d5525415e1fd8d97b6dbb149301a7c3bf3a84b14a
+Platform     : win32-x64
+Path         : \\server\EvergreenLibrary\MicrosoftVisualStudioCode\Stable\1.74.3\x64\VSCodeSetup-x64-1.74.0.exe
+Channel      : Stable
+Architecture : x64</dev:code>
+        <dev:remarks>
+          <maml:para>Devuelve los detalles de Microsoft Visual Studio Code de la biblioteca de Evergreen en \server\EvergreenLibrary, que se pasa mediante la canalización a Get-EvergreenLibraryApp desde Get-EvergreenLibrary.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; $Library = Get-EvergreenLibrary -Path "\\server\EvergreenLibrary"
+PS C:\&gt; Get-EvergreenLibraryApp -Inventory $Library -Name "MicrosoftTeams"
+
+Version      : 1.5.00.36367
+URI          : https://statics.teams.cdn.office.net/production-windows-x64/1.5.00.36367/Teams_windows_x64.msi
+Type         : msi
+Ring         : General
+Path         : \\server\EvergreenLibrary\MicrosoftTeams\General\1.5.00.36367\x64\Teams_windows_x64.msi
+Architecture : x64
+
+Version      : 1.5.00.31168
+URI          : https://statics.teams.cdn.office.net/production-windows-x64/1.5.00.31168/Teams_windows_x64.msi
+Type         : msi
+Ring         : General
+Path         : \\server\EvergreenLibrary\MicrosoftTeams\General\1.5.00.31168\x64\Teams_windows_x64.msi
+Architecture : x64</dev:code>
+        <dev:remarks>
+          <maml:para>Usa Get-EvergreenLibrary para colocar en un objeto llamado $Library los detalles de la biblioteca de Evergreen en \server\EvergreenLibrary. A continuación, ese objeto se usa en la línea de comandos de Get-EvergreenLibraryApp para devolver los detalles de Microsoft Teams.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibraryApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Crear una biblioteca de Evergreen:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/getlibrary.html</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenAppsPath</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenAppsPath</command:noun>
+      <maml:description>
+        <maml:para>Devuelve la ruta de la caché local de las funciones y los manifiestos de aplicaciones de Evergreen.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Devuelve la ruta de la caché local de las funciones y los manifiestos de aplicaciones de Evergreen.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenAppsPath</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters />
+    <command:inputTypes />
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppsPath</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la ruta de la caché local de las funciones y los manifiestos de aplicaciones de Evergreen.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppsPath/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenAppsVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenAppsVersion</command:noun>
+      <maml:description>
+        <maml:para>Devuelve la versión de la versión más reciente del repositorio de Evergreen Apps.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Consulta la API de versiones de GitHub para obtener la versión más reciente del repositorio de Evergreen Apps y la devuelve.</maml:para>
+      <maml:para>Se aplican los límites de frecuencia de la API de GitHub. Establece la variable de entorno `GITHUB_TOKEN` o `GH_TOKEN` para usar una solicitud autenticada.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenAppsVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters />
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>None</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenAppsVersion</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la versión más reciente disponible del repositorio de Evergreen Apps.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenAppsVersion/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Repositorio de Evergreen Apps</maml:linkText>
+        <maml:uri>https://github.com/EUCPilots/evergreen-apps</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenEndpointFromApi</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenEndpointFromApi</command:noun>
+      <maml:description>
+        <maml:para>Devuelve una matriz de aplicaciones, puntos de conexión y puertos que Evergreen necesita para obtener actualizaciones de aplicaciones y URL de descarga de aplicaciones.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Consulta la API de Evergreen para devolver las URL de los puntos de conexión y los puertos TCP necesarios para usar Evergreen y encontrar versiones de aplicaciones y descargar instaladores.</maml:para>
+      <maml:para>La lista de puntos de conexión devuelta se puede usar con fines de auditoría y para definir una lista de permitidos en firewalls o servidores proxy cuando el acceso a Internet está restringido.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenEndpointFromApi</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName, ByValue)" position="1" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Nombre de la aplicación cuyos detalles se van a devolver. La lista de aplicaciones compatibles se puede consultar con `Find-EvergreenApp`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Array</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenEndpointFromApi
+
+Application  Endpoints                                                                              Ports
+-----------  ---------                                                                              -----
+1Password    {1password.com, app-updates.agilebits.com, downloads.1password.com, cdn.agilebits.com} {443}
+1Password7   {1password.com, c.1password.com, download.app.com"}                                    {443}
+1PasswordCLI {app-updates.agilebits.com, cache.agilebits.com, developer.1password.com}              {443}
+7zip         {nchc.dl.sourceforge.net, sourceforge.net, www.7-zip.org, versaweb.dl.sourceforge.net} {443}
+7ZipZS       {api.github.com, mcmilk.de, github.com}                                                {443}</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la lista de fuentes de URL de puntos de conexión y puertos de todas las aplicaciones compatibles actualmente con Evergreen.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-EvergreenEndpointFromApi -Name "MicrosoftEdge", "MicrosoftTeams"
+
+Application    Endpoints                                                                              Ports
+-----------    ---------                                                                              -----
+MicrosoftEdge  {edgeupdates.microsoft.com, www.microsoft.com, msedge.sf.dl.delivery.mp.microsoft.com} {443}
+MicrosoftTeams {config.teams.microsoft.com, www.microsoft.com, statics.teams.cdn.office.net}          {443}</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve la lista de fuentes de URL de puntos de conexión y puertos para determinar las versiones y descargas de Microsoft Edge y Microsoft Teams.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Get-EvergreenEndpointFromApi | Select-Object -ExpandProperty Endpoints -Unique
+
+1password.com
+app-updates.agilebits.com
+downloads.1password.com
+cdn.agilebits.com
+c.1password.com</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Devuelve una matriz sencilla con todas las URL de puntos de conexión únicas de las aplicaciones compatibles actualmente con Evergreen.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenEndpointFromApi/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Recuperar los puntos de conexión que usa Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/endpoints/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-EvergreenLibrary</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>EvergreenLibrary</command:noun>
+      <maml:description>
+        <maml:para>Devuelve detalles sobre una biblioteca de Evergreen, incluidos los detalles de las aplicaciones configuradas en la biblioteca y los binarios y versiones de aplicaciones descargados.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Devuelve detalles sobre una biblioteca de Evergreen en una ruta especificada. Incluye los detalles de la biblioteca almacenados en `EvergreenLibrary.json` y la información de versiones de aplicaciones almacenada para cada aplicación de la biblioteca. Las descargas y la información de versiones de las aplicaciones deben descargarse primero mediante `Invoke-EvergreenLibraryUpdate`.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenLibrary</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Especifica la ruta local o UNC a la biblioteca de Evergreen.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+      <command:syntaxItem>
+        <maml:name>Get-EvergreenLibrary</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+          <maml:name>Uri</maml:name>
+          <maml:description>
+            <maml:para>Especifica el URI a una biblioteca de Evergreen alojada en el almacenamiento de blobs de una cuenta de Azure Storage.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Uri</command:parameterValue>
+          <dev:type>
+            <maml:name>Uri</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Especifica la ruta local o UNC a la biblioteca de Evergreen.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <maml:name>Uri</maml:name>
+        <maml:description>
+          <maml:para>Especifica el URI a una biblioteca de Evergreen alojada en el almacenamiento de blobs de una cuenta de Azure Storage.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Uri</command:parameterValue>
+        <dev:type>
+          <maml:name>Uri</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.IO.FileInfo</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Object</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Get-EvergreenLibrary -Path "\\server\EvergreenLibrary"</dev:code>
+        <dev:remarks>
+          <maml:para>Devuelve detalles sobre la biblioteca de Evergreen en \server\EvergreenLibrary, incluida la información de versiones de aplicaciones almacenada para cada aplicación.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Get-EvergreenLibrary -Uri "https://st5srpuzr5v74.blob.core.windows.net/library/EvergreenLibrary.json"</dev:code>
+        <dev:remarks>
+          <maml:para>Devuelve detalles sobre la biblioteca de Evergreen de la cuenta de almacenamiento "st5srpuzr5v74", en el contenedor "library", incluida la información de versiones de aplicaciones almacenada para cada aplicación.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Get-EvergreenLibrary/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Crear una biblioteca de Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/getlibrary.html</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>New-EvergreenLibrary</command:name>
+      <command:verb>New</command:verb>
+      <command:noun>EvergreenLibrary</command:noun>
+      <maml:description>
+        <maml:para>Crea una biblioteca de Evergreen en la ruta especificada.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Crea una biblioteca de Evergreen en la ruta especificada. Una biblioteca de Evergreen es un directorio con un archivo de manifiesto que define los instaladores de aplicaciones que se almacenarán en la biblioteca (`EvergreenLibrary.json`). `New-EvergreenLibrary` crea una biblioteca predeterminada en la ruta especificada; después, el archivo de manifiesto se puede actualizar manualmente para definir la lista de aplicaciones de la biblioteca.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>New-EvergreenLibrary</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Especifica la ruta a la biblioteca de Evergreen. Se espera que la ubicación de destino esté vacía. Si la ruta incluye EvergreenLibrary.json, `New-EvergreenLibrary` no modificará el manifiesto.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Especifica un nombre para la biblioteca.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Especifica la ruta a la biblioteca de Evergreen. Se espera que la ubicación de destino esté vacía. Si la ruta incluye EvergreenLibrary.json, `New-EvergreenLibrary` no modificará el manifiesto.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Especifica un nombre para la biblioteca.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>New-EvergreenLibrary acepta parámetros de cadena.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues />
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>New-EvergreenLibrary -Path "\\server\EvergreenLibrary"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Crea una nueva biblioteca de Evergreen en la ruta \server\EvergreenLibrary.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>New-EvergreenLibrary -Path "\\server\EvergreenLibrary" -Name "AzureVirtualDesktopProd"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Crea una nueva biblioteca de Evergreen en la ruta \server\EvergreenLibrary. Asigna el nombre AzureVirtualDesktopProd al archivo de manifiesto `EvergreenLibrary.json`.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/New-EvergreenLibrary/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Crear una biblioteca de Evergreen:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/newlibrary/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Remove-EvergreenLibraryAppVersion</command:name>
+      <command:verb>Remove</command:verb>
+      <command:noun>EvergreenLibraryAppVersion</command:noun>
+      <maml:description>
+        <maml:para>Quita las versiones antiguas de los instaladores de aplicaciones de una biblioteca de Evergreen y conserva las versiones más recientes de cada manifiesto de aplicación.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>`Remove-EvergreenLibraryAppVersion` depura las versiones históricas de un manifiesto de aplicación de una biblioteca de Evergreen.</maml:para>
+      <maml:para>El cmdlet valida que `-Path` apunte a una biblioteca de Evergreen comprobando la existencia de `EvergreenLibrary.json`. Para cada aplicación de destino, lee el manifiesto de la aplicación (`&lt;ApplicationName&gt;.json`), ordena las versiones de más reciente a más antigua, conserva el número de entradas definido por `-Keep`, elimina del disco los archivos de instalación anteriores y escribe las versiones conservadas en el manifiesto de la aplicación.</maml:para>
+      <maml:para>De forma predeterminada, se procesan todas las aplicaciones de la biblioteca y se conservan las 3 versiones más recientes.</maml:para>
+      <maml:para>El límite de conservación cuenta entradas individuales del manifiesto tanto en Windows PowerShell 5.1 como en PowerShell 7. El manifiesto conservado sigue siendo una matriz JSON, incluso cuando se usa `-Keep 1`. Las rutas de los instaladores pueden ser absolutas, relativas al directorio de la aplicación o matrices de rutas registradas por versiones anteriores del módulo. Solo se eliminan los archivos de instalación registrados en las entradas depuradas; se conservan los archivos a los que también hacen referencia las entradas conservadas. Se omiten las rutas fuera del directorio de la aplicación y las rutas que atraviesan puntos de reanálisis. No se eliminan los directorios de versiones vacíos.</maml:para>
+      <maml:para>Los archivos que queden tras una depuración anterior no se podrán eliminar al volver a ejecutar este cmdlet si sus entradas ya no están en el manifiesto. Este cmdlet no busca archivos de instalación que no estén registrados.</maml:para>
+      <maml:para>Usa `-Verbose` para diagnosticar la validación de la biblioteca, la selección de aplicaciones, la lectura de manifiestos, la ordenación de versiones, las entradas conservadas y depuradas, los archivos de instalación omitidos y las actualizaciones de manifiestos. Los mensajes distinguen la depuración prevista de los archivos realmente eliminados e indican las acciones omitidas por `-WhatIf` o por el rechazo de la confirmación. Los mensajes detallados no modifican los objetos devueltos.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Remove-EvergreenLibraryAppVersion</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Especifica la ruta a una biblioteca de Evergreen. La ruta debe existir y contener `EvergreenLibrary.json`.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+          <maml:name>Keep</maml:name>
+          <maml:description>
+            <maml:para>Especifica cuántas versiones se conservarán en cada manifiesto de aplicación de destino. Se quitan las versiones anteriores.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>3</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Especifica uno o varios nombres de aplicación del manifiesto de la biblioteca que se procesarán. Si se omite, se procesan todas las aplicaciones.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Especifica la ruta a una biblioteca de Evergreen. La ruta debe existir y contener `EvergreenLibrary.json`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <maml:name>Keep</maml:name>
+        <maml:description>
+          <maml:para>Especifica cuántas versiones se conservarán en cada manifiesto de aplicación de destino. Se quitan las versiones anteriores.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>3</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Especifica uno o varios nombres de aplicación del manifiesto de la biblioteca que se procesarán. Si se omite, se procesan todas las aplicaciones.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.IO.FileInfo</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>`Remove-EvergreenLibraryAppVersion` acepta entrada por nombre de propiedad para `Path`.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSCustomObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Devuelve un objeto por cada aplicación procesada con las propiedades siguientes:</maml:para>
+          <maml:para>- `ApplicationName`</maml:para>
+          <maml:para>- `Keep`</maml:para>
+          <maml:para>- `KeptCount`</maml:para>
+          <maml:para>- `PrunedCount`: número de entradas seleccionadas para depuración.</maml:para>
+          <maml:para>- `RemovedCount`: número de entradas eliminadas del manifiesto.</maml:para>
+          <maml:para>- `RemovedFileCount`: número de archivos de instalación realmente eliminados.</maml:para>
+          <maml:para>- `RemovedFiles`: rutas de los archivos de instalación realmente eliminados.</maml:para>
+          <maml:para>- `ManifestPath`</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Procesa todas las aplicaciones de la biblioteca y conserva las 3 versiones más recientes de cada aplicación. Se eliminan los archivos de instalación antiguos y se actualiza cada manifiesto de aplicación.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Keep 2 -Name "MicrosoftEdge", "Zoom"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Procesa solo MicrosoftEdge y Zoom, conserva las 2 versiones más recientes en cada manifiesto de aplicación y elimina los archivos de instalación anteriores.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
+        <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Keep 5 -WhatIf</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Muestra qué archivos y manifiestos cambiarían al conservar las 5 versiones más recientes, sin realizar ningún cambio.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 4 --------------------------</maml:title>
+        <dev:code>Remove-EvergreenLibraryAppVersion -Path "\\server\EvergreenLibrary" -Name "MicrosoftEdge" -Keep 3 -WhatIf -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Muestra mensajes de diagnóstico detallados y los cambios previstos para MicrosoftEdge sin eliminar instaladores ni actualizar su manifiesto.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Remove-EvergreenLibraryAppVersion/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Actualizar una biblioteca de Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/updatelibrary/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Save-EvergreenApp</command:name>
+      <command:verb>Save</command:verb>
+      <command:noun>EvergreenApp</command:noun>
+      <maml:description>
+        <maml:para>Descarga en una estructura de directorios los URI de destino que se pasan a esta función desde `Get-EvergreenApp`.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Guarda en una estructura de directorios bajo -Path las URL de destino que se pasan a esta función en la salida de `Get-EvergreenApp`, usando las propiedades del objeto que se pasa a la función.</maml:para>
+      <maml:para>`Get-EvergreenApp` devuelve un objeto que puede incluir propiedades de la aplicación como (en el siguiente orden) Product, Track, Channel, Release, Ring, Version, Language y Architecture (del procesador). Solo se usarán las propiedades que existan en el objeto de destino.</maml:para>
+      <maml:para>Esto simplifica el guardado de los instaladores o actualizadores de la aplicación de destino en una estructura de directorios uniforme, sin tener que crear dicha estructura ni usar otras funciones para descargar el archivo.</maml:para>
+      <maml:para>Para reemplazar el comportamiento predeterminado, que crea la estructura de directorios según las propiedades del objeto pasado a la función, usa el parámetro `-CustomPath` para especificar una ruta exacta donde guardar los archivos. Ten en cuenta que este método descarga el primer archivo y, después, omite los archivos del objeto pasado desde `Get-EvergreenApp` que tengan el mismo nombre.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Save-EvergreenApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+          <maml:name>InputObject</maml:name>
+          <maml:description>
+            <maml:para>`Save-EvergreenApp` acepta el PSObject de `Get-EvergreenApp`. `Save-EvergreenApp` comprueba la existencia de, al menos, estas propiedades: Version y URI.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+          <dev:type>
+            <maml:name>PSObject</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Directorio de destino bajo el que se creará una estructura de directorios y se guardarán los instaladores de aplicaciones. Normalmente, la ruta de destino será específica de cada aplicación.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>(Resolve-Path -Path $PWD)</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Proxy</maml:name>
+          <maml:description>
+            <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ProxyCredential</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+            <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+            <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+          <dev:type>
+            <maml:name>PSCredential</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>NoProgress</maml:name>
+          <maml:description>
+            <maml:para>`Save-EvergreenApp` usa `Invoke-WebRequest` para descargar instaladores de aplicaciones de destino. De forma predeterminada, se suprime el progreso de la descarga para acelerarla; sin embargo, si se usa `-Verbose`, se muestra dicho progreso. Usa `-NoProgress` junto con `-Verbose` para suprimir el progreso de la descarga y, al mismo tiempo, mostrar la salida detallada.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para>Fuerza la descarga de los instaladores de la aplicación de destino desde la propiedad URI, incluso si ya existen en el directorio de destino.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>UserAgent</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cadena de agente de usuario para la solicitud web.</maml:para>
+            <maml:para>El agente de usuario predeterminado es similar al siguiente, con ligeras variaciones según el sistema operativo y la plataforma.</maml:para>
+            <maml:para>Mozilla/5.0 (Macintosh; Darwin 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103; en-AU) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.500.0 Safari/534.6</maml:para>
+            <maml:para>Para probar un sitio web con la cadena de agente de usuario estándar que utilizan la mayoría de los exploradores de Internet, usa las propiedades de la clase PSUserAgent, como Chrome, FireFox, InternetExplorer, Opera y Safari.</maml:para>
+            <maml:para>Por ejemplo, el siguiente comando usa la cadena de agente de usuario de Internet Explorer: Save-EvergreenApp -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::InternetExplorer)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+      <command:syntaxItem>
+        <maml:name>Save-EvergreenApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+          <maml:name>InputObject</maml:name>
+          <maml:description>
+            <maml:para>`Save-EvergreenApp` acepta el PSObject de `Get-EvergreenApp`. `Save-EvergreenApp` comprueba la existencia de, al menos, estas propiedades: Version y URI.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+          <dev:type>
+            <maml:name>PSObject</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+          <maml:name>CustomPath</maml:name>
+          <maml:description>
+            <maml:para>Especifica una única ruta de directorio donde se guardarán todos los instaladores de aplicaciones. No se crearán subdirectorios.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Proxy</maml:name>
+          <maml:description>
+            <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ProxyCredential</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+            <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+            <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+          <dev:type>
+            <maml:name>PSCredential</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>NoProgress</maml:name>
+          <maml:description>
+            <maml:para>`Save-EvergreenApp` usa `Invoke-WebRequest` para descargar instaladores de aplicaciones de destino. De forma predeterminada, se suprime el progreso de la descarga para acelerarla; sin embargo, si se usa `-Verbose`, se muestra dicho progreso. Usa `-NoProgress` junto con `-Verbose` para suprimir el progreso de la descarga y, al mismo tiempo, mostrar la salida detallada.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para>Fuerza la descarga de los instaladores de la aplicación de destino desde la propiedad URI, incluso si ya existen en el directorio de destino.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>UserAgent</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cadena de agente de usuario para la solicitud web.</maml:para>
+            <maml:para>El agente de usuario predeterminado es similar al siguiente, con ligeras variaciones según el sistema operativo y la plataforma.</maml:para>
+            <maml:para>Mozilla/5.0 (Macintosh; Darwin 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103; en-AU) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.500.0 Safari/534.6</maml:para>
+            <maml:para>Para probar un sitio web con la cadena de agente de usuario estándar que utilizan la mayoría de los exploradores de Internet, usa las propiedades de la clase PSUserAgent, como Chrome, FireFox, InternetExplorer, Opera y Safari.</maml:para>
+            <maml:para>Por ejemplo, el siguiente comando usa la cadena de agente de usuario de Internet Explorer: Save-EvergreenApp -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::InternetExplorer)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <maml:name>InputObject</maml:name>
+        <maml:description>
+          <maml:para>`Save-EvergreenApp` acepta el PSObject de `Get-EvergreenApp`. `Save-EvergreenApp` comprueba la existencia de, al menos, estas propiedades: Version y URI.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+        <dev:type>
+          <maml:name>PSObject</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Directorio de destino bajo el que se creará una estructura de directorios y se guardarán los instaladores de aplicaciones. Normalmente, la ruta de destino será específica de cada aplicación.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>(Resolve-Path -Path $PWD)</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <maml:name>CustomPath</maml:name>
+        <maml:description>
+          <maml:para>Especifica una única ruta de directorio donde se guardarán todos los instaladores de aplicaciones. No se crearán subdirectorios.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Proxy</maml:name>
+        <maml:description>
+          <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ProxyCredential</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+          <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+          <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+        <dev:type>
+          <maml:name>PSCredential</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>NoProgress</maml:name>
+        <maml:description>
+          <maml:para>`Save-EvergreenApp` usa `Invoke-WebRequest` para descargar instaladores de aplicaciones de destino. De forma predeterminada, se suprime el progreso de la descarga para acelerarla; sin embargo, si se usa `-Verbose`, se muestra dicho progreso. Usa `-NoProgress` junto con `-Verbose` para suprimir el progreso de la descarga y, al mismo tiempo, mostrar la salida detallada.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet. El cmdlet no se ejecuta.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Force</maml:name>
+        <maml:description>
+          <maml:para>Fuerza la descarga de los instaladores de la aplicación de destino desde la propiedad URI, incluso si ya existen en el directorio de destino.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>UserAgent</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cadena de agente de usuario para la solicitud web.</maml:para>
+          <maml:para>El agente de usuario predeterminado es similar al siguiente, con ligeras variaciones según el sistema operativo y la plataforma.</maml:para>
+          <maml:para>Mozilla/5.0 (Macintosh; Darwin 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103; en-AU) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.500.0 Safari/534.6</maml:para>
+          <maml:para>Para probar un sitio web con la cadena de agente de usuario estándar que utilizan la mayoría de los exploradores de Internet, usa las propiedades de la clase PSUserAgent, como Chrome, FireFox, InternetExplorer, Opera y Safari.</maml:para>
+          <maml:para>Por ejemplo, el siguiente comando usa la cadena de agente de usuario de Internet Explorer: Save-EvergreenApp -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::InternetExplorer)</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Save-EvergreenApp acepta la salida de Get-EvergreenApp.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Proporciona una lista de rutas de los archivos de destino descargados.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "AdobeAcrobat" | Save-EvergreenApp -Path "C:\Temp\Adobe"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Descarga en una estructura de directorios bajo C:\Temp\Adobe cada archivo especificado en los URI devueltos por `Get-EvergreenApp -Name "AdobeAcrobat"`. El resultado es una estructura de directorios por archivo similar a: C:\Temp\Adobe&lt;Product&gt;&lt;Track&gt;&lt;Version&gt;&lt;Language&gt;&lt;Architecture&gt;.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "AdobeAcrobat" | Save-EvergreenApp -CustomPath "C:\Temp\Adobe"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Descarga todos los URI devueltos por `Get-EvergreenApp -Name "AdobeAcrobat"` en el directorio C:\Temp\Adobe. Todos los archivos especificados en la propiedad URI se guardan en este directorio.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Save-EvergreenApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Descargar instaladores de aplicaciones:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/save</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Start-EvergreenLibraryUpdate</command:name>
+      <command:verb>Start</command:verb>
+      <command:noun>EvergreenLibraryUpdate</command:noun>
+      <maml:description>
+        <maml:para>Invoca la actualización y descarga de instaladores de aplicaciones en una biblioteca de Evergreen. `Start-EvergreenLibraryUpdate` lee el manifiesto de la biblioteca (`EvergreenLibrary.json`), que define las aplicaciones de la biblioteca, y usa `Get-EvergreenApp` y `Save-EvergreenApp` para descargar los instaladores más recientes en la biblioteca.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Una biblioteca de Evergreen permite mantener varias versiones de los instaladores de aplicaciones, en lugar de usar siempre el instalador más reciente. Permite instalar la versión de una aplicación necesaria para un entorno específico, incluida la posibilidad de volver a una versión anterior. Una biblioteca de Evergreen también permite crear una imagen sin acceso a Internet: basta con descargar los instaladores de aplicaciones en la biblioteca y usarlos después durante el proceso de creación de la imagen.</maml:para>
+      <maml:para>`Start-EvergreenLibraryUpdate` invoca la actualización y descarga de instaladores de aplicaciones en una biblioteca de Evergreen. `Start-EvergreenLibraryUpdate` lee el manifiesto de la biblioteca (`EvergreenLibrary.json`), que define las aplicaciones de la biblioteca, y usa `Get-EvergreenApp` y `Save-EvergreenApp` para descargar los instaladores más recientes en la biblioteca.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Start-EvergreenLibraryUpdate</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Especifica la ruta a la biblioteca de Evergreen. La ruta debe incluir EvergreenLibrary.json, en la estructura esperada, que define las aplicaciones que se almacenarán en la biblioteca.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+          <dev:type>
+            <maml:name>FileInfo</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Proxy</maml:name>
+          <maml:description>
+            <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ProxyCredential</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+            <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+            <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+          <dev:type>
+            <maml:name>PSCredential</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Especifica la ruta a la biblioteca de Evergreen. La ruta debe incluir EvergreenLibrary.json, en la estructura esperada, que define las aplicaciones que se almacenarán en la biblioteca.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">FileInfo</command:parameterValue>
+        <dev:type>
+          <maml:name>FileInfo</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Muestra lo que ocurriría si se ejecutara el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Solicita confirmación antes de ejecutar el cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Proxy</maml:name>
+        <maml:description>
+          <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ProxyCredential</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+          <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+          <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+        <dev:type>
+          <maml:name>PSCredential</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Start-EvergreenLibraryUpdate acepta un parámetro de cadena.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues />
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Start-EvergreenLibraryUpdate -Path "\\server\EvergreenLibrary"</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: `Start-EvergreenLibraryUpdate` lee el manifiesto `EvergreenLibrary.json` de la biblioteca, ubicado en \server\EvergreenLibrary, que define las aplicaciones de esa biblioteca. Usa `Get-EvergreenApp` y `Save-EvergreenApp` para descargar los instaladores más recientes en la biblioteca.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Start-EvergreenLibraryUpdate/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Actualizar una biblioteca de Evergreen</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/updatelibrary/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Test-EvergreenApp</command:name>
+      <command:verb>Test</command:verb>
+      <command:noun>EvergreenApp</command:noun>
+      <maml:description>
+        <maml:para>Valida los URI de destino que se pasan a esta función desde `Get-EvergreenApp`.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Evergreen incluye la función `Test-EvergreenApp`, que valida las URL de los instaladores de aplicaciones devueltas por `Get-EvergreenApp`. Primero envía una solicitud HEAD y vuelve a intentarlo con un GET por rangos si la solicitud falla. La salida incluye el resultado, el código de estado HTTP cuando está disponible y el URI.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Test-EvergreenApp</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+          <maml:name>InputObject</maml:name>
+          <maml:description>
+            <maml:para>`Test-EvergreenApp` acepta objetos de aplicación de `Get-EvergreenApp` y requiere una propiedad URI no vacía. Los objetos no válidos generan una advertencia y un resultado false; el procesamiento continúa con los objetos siguientes.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+          <dev:type>
+            <maml:name>PSObject</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Proxy</maml:name>
+          <maml:description>
+            <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red. Nota: la compatibilidad con servidores proxy es experimental.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ProxyCredential</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+            <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+            <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando. Nota: la compatibilidad con servidores proxy es experimental y no se ha probado exhaustivamente.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+          <dev:type>
+            <maml:name>PSCredential</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>NoProgress</maml:name>
+          <maml:description>
+            <maml:para>El progreso se suprime de forma predeterminada. Si se usa `-Verbose`, se muestra el progreso, salvo que también se especifique `-NoProgress`.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>UserAgent</maml:name>
+          <maml:description>
+            <maml:para>Especifica una cadena de agente de usuario para la solicitud web.</maml:para>
+            <maml:para>El agente de usuario predeterminado es similar al siguiente, con ligeras variaciones según el sistema operativo y la plataforma.</maml:para>
+            <maml:para>Mozilla/5.0 (Macintosh; Darwin 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103; en-AU) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.500.0 Safari/534.6</maml:para>
+            <maml:para>Para probar un sitio web con la cadena de agente de usuario estándar que utilizan la mayoría de los exploradores de Internet, usa las propiedades de la clase PSUserAgent, como Chrome, FireFox, InternetExplorer, Opera y Safari.</maml:para>
+            <maml:para>Por ejemplo, el siguiente comando usa la cadena de agente de usuario de Internet Explorer: Save-EvergreenApp -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::InternetExplorer)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ConnectionTimeoutSeconds</maml:name>
+          <maml:description>
+            <maml:para>Especifica el número máximo de segundos de espera para cada solicitud web. El valor predeterminado es 30 segundos.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>30</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByValue)" position="1" aliases="none">
+        <maml:name>InputObject</maml:name>
+        <maml:description>
+          <maml:para>`Test-EvergreenApp` acepta objetos de aplicación de `Get-EvergreenApp` y requiere una propiedad URI no vacía. Los objetos no válidos generan una advertencia y un resultado false; el procesamiento continúa con los objetos siguientes.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSObject</command:parameterValue>
+        <dev:type>
+          <maml:name>PSObject</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Proxy</maml:name>
+        <maml:description>
+          <maml:para>Especifica un servidor proxy para la solicitud, en lugar de conectarse directamente al recurso de Internet. Introduce el URI de un servidor proxy de red. Nota: la compatibilidad con servidores proxy es experimental.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ProxyCredential</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cuenta de usuario con permiso para usar el servidor proxy indicado por el parámetro Proxy. De forma predeterminada, se usa el usuario actual.</maml:para>
+          <maml:para>Escribe un nombre de usuario, como User01 o Domain01\User01, User@Domain.Com, o introduce un objeto `PSCredential`, como el generado por el cmdlet `Get-Credential`.</maml:para>
+          <maml:para>Este parámetro solo es válido si también se usa el parámetro Proxy en el comando. Nota: la compatibilidad con servidores proxy es experimental y no se ha probado exhaustivamente.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">PSCredential</command:parameterValue>
+        <dev:type>
+          <maml:name>PSCredential</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>[System.Management.Automation.PSCredential]::Empty</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>NoProgress</maml:name>
+        <maml:description>
+          <maml:para>El progreso se suprime de forma predeterminada. Si se usa `-Verbose`, se muestra el progreso, salvo que también se especifique `-NoProgress`.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>UserAgent</maml:name>
+        <maml:description>
+          <maml:para>Especifica una cadena de agente de usuario para la solicitud web.</maml:para>
+          <maml:para>El agente de usuario predeterminado es similar al siguiente, con ligeras variaciones según el sistema operativo y la plataforma.</maml:para>
+          <maml:para>Mozilla/5.0 (Macintosh; Darwin 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103; en-AU) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.500.0 Safari/534.6</maml:para>
+          <maml:para>Para probar un sitio web con la cadena de agente de usuario estándar que utilizan la mayoría de los exploradores de Internet, usa las propiedades de la clase PSUserAgent, como Chrome, FireFox, InternetExplorer, Opera y Safari.</maml:para>
+          <maml:para>Por ejemplo, el siguiente comando usa la cadena de agente de usuario de Internet Explorer: Save-EvergreenApp -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::InternetExplorer)</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ConnectionTimeoutSeconds</maml:name>
+        <maml:description>
+          <maml:para>Especifica el número máximo de segundos de espera para cada solicitud web. El valor predeterminado es 30 segundos.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>30</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Test-EvergreenApp acepta la salida de Get-EvergreenApp.</maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Proporciona objetos que contienen un resultado booleano, un código de estado HTTP cuando está disponible y el URI.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Get-EvergreenApp -Name "MicrosoftOneDrive" | Test-EvergreenApp</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Valida las propiedades URI de cada objeto devuelto por `Get-EvergreenApp -Name "MicrosoftOneDrive"` y devuelve un resultado, el código de estado cuando está disponible y el URI.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Save-EvergreenApp/</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Probar instaladores</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/test/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Update-Evergreen</command:name>
+      <command:verb>Update</command:verb>
+      <command:noun>Evergreen</command:noun>
+      <maml:description>
+        <maml:para>Descarga y sincroniza las funciones y los manifiestos de Evergreen Apps desde el repositorio de GitHub eucpilots/evergreen-apps.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Permite separar el módulo principal de Evergreen del código y los manifiestos específicos de las aplicaciones. Descarga las versiones más recientes de /Apps y /Manifests desde un repositorio de GitHub especificado a una ubicación en la que el usuario tenga permiso de escritura (no se requieren permisos de administrador). De forma predeterminada, la caché local se descarga en %LocalAppData%\Evergreen en Windows y en ~/.evergreen en macOS y Linux.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Update-Evergreen</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para></maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Release</maml:name>
+          <maml:description>
+            <maml:para></maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Force</maml:name>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Release</maml:name>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
+    <command:returnValues />
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>Sitio: https://eucpilots.com/evergreen</maml:para>
+        <maml:para>Autor: Aaron Parker</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>Update-Evergreen</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Descarga y sincroniza las funciones y los manifiestos de Evergreen Apps desde el repositorio de GitHub eucpilots/evergreen-apps. Si es necesario actualizar, se actualiza la caché local. Si no es necesario, no se realiza ninguna actualización.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Update-Evergreen -Force</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Fuerza la descarga y sincronización completas de las funciones y los manifiestos de Evergreen Apps desde el repositorio de GitHub eucpilots/evergreen-apps, independientemente del estado de la caché local.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Update-Evergreen -Release "v25.09.27.16" -Force</dev:code>
+        <dev:remarks>
+          <maml:para>Descripción: Descarga y sincroniza la versión v25.09.27.16 de las funciones y los manifiestos de Evergreen Apps desde el repositorio de GitHub eucpilots/evergreen-apps.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Online Version:</maml:linkText>
+        <maml:uri>https://eucpilots.com/evergreen/help/en-US/Update-Evergreen/</maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
+  </command:command>
+</helpItems>
