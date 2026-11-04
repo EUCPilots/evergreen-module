@@ -1,3 +1,6 @@
+[CmdletBinding()]
+param()
+
 Write-Host "Importing Evergreen module..."
 Import-Module ./Evergreen/Evergreen.psd1 -Force
 

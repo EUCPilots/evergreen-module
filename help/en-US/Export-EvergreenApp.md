@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Exports application details gathered by `Get-EvergreenApp` to an external JSON file. This function reads any existing JSON for that application, adds the new version content, sorts for unique versions, then outputs the new content back to the target JSON file.
+Exports application details gathered by `Get-EvergreenApp` to an external JSON file. Existing JSON is merged with the new version data, duplicate versions are removed, and pipeline input is collected and written once per invocation.
 
 ## SYNTAX
 
@@ -46,7 +46,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 1
+Position: 0
 Default value: None
 Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
@@ -62,7 +62,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: Named
+Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
@@ -79,7 +79,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -95,7 +95,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

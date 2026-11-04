@@ -14,7 +14,7 @@ Returns an array of applications, endpoints and ports required by Evergreen to s
 ## SYNTAX
 
 ```
-Get-EvergreenEndpointFromApi [-Name] <String> [-Confirm] [<CommonParameters>]
+Get-EvergreenEndpointFromApi [[-Name] <String[]>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -79,12 +79,12 @@ The application name to return details for.
 The list of supported applications can be found with `Find-EvergreenApp`.
 
 ```yaml
-Type: String
+Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: ApplicationName
 
-Required: True
-Position: 1
+Required: False
+Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False

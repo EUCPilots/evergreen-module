@@ -22,42 +22,71 @@ function Export-EvergreenApp {
         [System.IO.FileInfo] $Path
     )
 
+    begin {
+        $InputItems = [System.Collections.Generic.List[System.Object]]::new()
+    }
+
     process {
-        if (Test-Path -Path $Path) {
-            # Add the new details to the existing file content
-            $params = @{
-                Path        = $Path
-                ErrorAction = "Stop"
-                Verbose     = $VerbosePreference
+        foreach ($Item in $InputObject) {
+            $InputItems.Add($Item)
+        }
+    }
+
+    end {
+        if ($InputItems.Count -eq 0) {
+            throw [System.ArgumentException]::new("At least one application version must be provided.", "InputObject")
+        }
+
+        $TargetPath = $Path.FullName
+        $AllItems = [System.Collections.Generic.List[System.Object]]::new()
+        foreach ($Item in $InputItems) {
+            $AllItems.Add($Item)
+        }
+
+        if (Test-Path -LiteralPath $TargetPath -PathType "Leaf") {
+            Write-Verbose -Message "$($MyInvocation.MyCommand): Reading existing application versions from '$TargetPath'."
+            $Content = Get-Content -LiteralPath $TargetPath -Raw -ErrorAction "Stop" -Verbose:$VerbosePreference |
+                ConvertFrom-Json -ErrorAction "Stop"
+            foreach ($Item in @($Content)) {
+                if ($null -ne $Item) {
+                    $AllItems.Add($Item)
+                }
             }
-            $Content = Get-Content @params | ConvertFrom-Json -ErrorAction "Stop"
-            $InputObject += $Content
         }
 
         # Normalise URLs that can change on each request
-        foreach ($AppLibInfo in $InputObject) {
+        foreach ($AppLibInfo in $AllItems) {
             if (([System.Uri]$AppLibInfo.URI).Host -like "*.dl.sourceforge.net") {
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Normalise Sourceforge download mirror URL"
                 $AppLibInfo.URI = $AppLibInfo.URI -replace ([System.Uri]$AppLibInfo.URI).Host, "nchc.dl.sourceforge.net"
             }
         }
 
-        # Sort the content and keep unique versions
-        Write-Verbose -Message "$($MyInvocation.MyCommand): Input object count: $($InputObject.Count)"
-        $Properties = $InputObject | Get-Member | `
+        # Keep unique records and sort valid versions numerically before nonstandard version strings.
+        Write-Verbose -Message "$($MyInvocation.MyCommand): Input object count: $($AllItems.Count)"
+        $Properties = $AllItems | Get-Member |
             Where-Object { $_.MemberType -eq "NoteProperty" } | Select-Object -ExpandProperty "Name" -Unique | `
             Sort-Object -Descending
-        $OutputObject = $InputObject | Select-Object -Unique -Property $Properties
+        $UniqueItems = @($AllItems | Select-Object -Unique -Property $Properties)
+        $ItemsWithSortData = for ($Index = 0; $Index -lt $UniqueItems.Count; $Index++) {
+            Get-VersionItemSortData -Item $UniqueItems[$Index] -Index $Index
+        }
+        $SortedItems = @(
+            $ItemsWithSortData | Sort-Object -Property `
+                @{ Expression = { $_.HasParsedVersion }; Descending = $true }, `
+                @{ Expression = { $_.ParsedVersion }; Descending = $false }, `
+                @{ Expression = { $_.VersionText }; Descending = $false }, `
+                @{ Expression = { $_.Index }; Descending = $false }
+        )
+        $OutputObject = @($SortedItems | Select-Object -ExpandProperty "Item")
         Write-Verbose -Message "$($MyInvocation.MyCommand): Output object count: $($OutputObject.Count)"
 
-        # Export the data to file
-        $OutputObject | Sort-Object -Property @{ Expression = { [System.Version] $_.Version }; Descending = $false } -ErrorAction "SilentlyContinue" | `
-            ConvertTo-Json -ErrorAction "Stop" | `
-            Out-File -FilePath $Path -Encoding "Utf8" -NoNewline -Verbose:$VerbosePreference
-
-        if ($PSCmdlet.ShouldProcess($Path, "Output to pipeline")) {
+        $Json = ConvertTo-Json -InputObject $OutputObject -Depth 100 -ErrorAction "Stop"
+        if ($PSCmdlet.ShouldProcess($TargetPath, "Write application versions")) {
+            $Json | Out-File -FilePath $TargetPath -Encoding "Utf8" -NoNewline `
+                -ErrorAction "Stop" -Verbose:$VerbosePreference
             $Output = [PSCustomObject] @{
-                Path = Resolve-Path -Path $Path
+                Path = Resolve-Path -LiteralPath $TargetPath -ErrorAction "Stop"
             }
             Write-Output -InputObject $Output
         }

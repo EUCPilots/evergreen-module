@@ -13,33 +13,31 @@ function Get-EvergreenAppFromApi {
             ValueFromPipelineByPropertyName,
             HelpMessage = "Specify an application name. Use Find-EvergreenApp to list supported applications.")]
         [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+            if ([System.Management.Automation.WildcardPattern]::ContainsWildcardCharacters($_) -or $_ -match '[\\/]' -or [System.IO.Path]::GetFileName($_) -cne $_ -or $_ -in @(".", "..")) {
+                throw "Name must be an application name, not a path or wildcard pattern."
+            }
+            if ($_ -match '[<>:"|\x00-\x1F]') {
+                throw "Name contains characters that are not valid in an application name."
+            }
+            $true
+        })]
         [Alias("ApplicationName")]
         [System.String] $Name = "Microsoft365Apps"
     )
 
     process {
+        $params = @{
+            Uri         = "$($script:resourceStrings.Uri.Api)/app/$([System.Uri]::EscapeDataString($Name))"
+            ErrorAction = "Stop"
+        }
         try {
-            $params = @{
-                Uri         = "https://evergreen-api.stealthpuppy.com/app/$Name"
-                UserAgent   = (Get-EvergreenUserAgent)
-                ErrorAction = "Stop"
-            }
-            $Output = Invoke-EvergreenRestMethod @params
-
-            # Sort the output
-            $FilterPath = [System.IO.Path]::Combine((Get-EvergreenAppsPath), "Filters", "$Name.json")
-                if (Test-Path -Path $FilterPath -PathType "Leaf") {
-                    Write-Verbose -Message "Applying output filter from path: $FilterPath"
-                    $Output | ForEach-Object {
-                        Get-FilteredData -InputObject $_ -FilterPath $FilterPath
-                    }
-                }
-                else {
-                    $Output
-                }
+            # Query the API and standardise the output via the app's filter, if one exists
+            Invoke-EvergreenRestMethod @params | Invoke-OutputFilter -Name $Name
         }
         catch {
-            throw $_
+            # Re-throw the original error record to preserve its origin (InvocationInfo and stack trace)
+            $PSCmdlet.ThrowTerminatingError($_)
         }
     }
 }

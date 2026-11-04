@@ -41,12 +41,12 @@ The application name to return details for. The list of supported applications c
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ApplicationName
 
 Required: True
-Position: 1
+Position: 0
 Default value: None
-Accept pipeline input: False
+Accept pipeline input: True (ByValue, ByPropertyName)
 Accept wildcard characters: False
 ```
 

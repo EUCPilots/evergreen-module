@@ -82,11 +82,22 @@ elseif (Test-Path -Path $script:VersionFile -PathType "Leaf") {
     if ($null -eq $RemoteVersion) {
         Write-Warning -Message "Could not retrieve release version information. Please check your internet connection or the repository URL."
     }
+    elseif ($RemoteVersion -eq "RateLimited") {
+        Write-Message -Message "GitHub API is rate limited. Unable to check whether the Evergreen apps cache is up to date." -MessageType "Warning"
+    }
     elseif ($null -eq $LocalVersion) {
         Write-Message -Message "Could not retrieve local version information. Please run 'Update-Evergreen -Force'."
     }
-    elseif ([System.Version]$RemoteVersion -gt [System.Version]$LocalVersion) {
-        Write-Message -Message "Evergreen app functions are out of date. Please run 'Update-Evergreen'." -MessageType "Warning"
+    else {
+        $RemoteVersionObject = $null; $LocalVersionObject = $null
+        if ([System.Version]::TryParse($RemoteVersion, [ref]$RemoteVersionObject) -and [System.Version]::TryParse($LocalVersion, [ref]$LocalVersionObject)) {
+            if ($RemoteVersionObject -gt $LocalVersionObject) {
+                Write-Message -Message "Evergreen app functions are out of date. Please run 'Update-Evergreen'." -MessageType "Warning"
+            }
+        }
+        else {
+            Write-Message -Message "Unable to compare local cache version '$LocalVersion' with release version '$RemoteVersion'." -MessageType "Warning"
+        }
     }
 }
 else {

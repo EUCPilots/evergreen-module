@@ -75,4 +75,18 @@ Describe -Tag "Get" -Name "Get-EvergreenAppFromApi fail tests" {
             { Get-EvergreenAppFromApi -Name "NonExistentApplication" } | Should -Throw
         }
     }
+
+    Context "Validate Get-EvergreenAppFromApi rejects invalid application names" {
+        It "Should throw with a path traversal name" {
+            { Get-EvergreenAppFromApi -Name "../MicrosoftEdge" } | Should -Throw
+        }
+
+        It "Should throw with a wildcard name" {
+            { Get-EvergreenAppFromApi -Name "Microsoft*" } | Should -Throw
+        }
+
+        It "Should throw with a name containing invalid characters" {
+            { Get-EvergreenAppFromApi -Name "Microsoft<Edge>" } | Should -Throw
+        }
+    }
 }

@@ -112,6 +112,30 @@ Describe -Tag "Get" -Name "Get-EvergreenAppFromLibrary" {
         It "Should produce error for non-existent application" {
             { Get-EvergreenAppFromLibrary -Inventory $script:MockLibrary -Name "NonExistentApp" -ErrorAction Stop } | Should -Throw
         }
+
+        It "Should accept an empty Inventory property and report a missing application" {
+            $EmptyInventory = [PSCustomObject]@{ Inventory = @() }
+            { Get-EvergreenAppFromLibrary -Inventory $EmptyInventory -Name "Missing" -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage "*Cannot find an application*"
+        }
+
+        It "Should sort numeric and nonstandard versions consistently" {
+            $Inventory = [PSCustomObject]@{
+                Inventory = @(
+                    [PSCustomObject]@{
+                        ApplicationName = "MixedVersions"
+                        Versions = @(
+                            [PSCustomObject]@{ Version = "2.0.0-rc.1" }
+                            [PSCustomObject]@{ Version = "1.0.0" }
+                            [PSCustomObject]@{ Version = "3.0.0" }
+                        )
+                    }
+                )
+            }
+
+            $Result = @(Get-EvergreenAppFromLibrary -Inventory $Inventory -Name "MixedVersions")
+            ($Result.Version -join ",") | Should -Be "3.0.0,1.0.0,2.0.0-rc.1"
+        }
     }
 
     Context "Validate Get-EvergreenAppFromLibrary alias" {

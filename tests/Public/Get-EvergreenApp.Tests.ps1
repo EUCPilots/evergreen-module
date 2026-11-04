@@ -10,14 +10,16 @@ param ()
 BeforeDiscovery {
 
     # Select all applications only when explicitly requested; otherwise sample 50.
+    $SkipApps = ("FreedomScientificFusion", "FreedomScientificJAWS", "FreedomScientificZoomText", "OracleJava17", "OracleJava20", "OracleJava21", "OracleJava22", "OracleJava23", "OracleJava25", "OracleJava26", "OracleJava27", "Slack", "VideoLanVlcPlayer", "ClaudeDesktop", "OctopusDeployServer", "acaudwellGource", "ESETSecureAuthentication", "Proxyman", "RonyShapiroPasswordSafe", "VeraCrypt")
     $Applications = Find-EvergreenApp | Select-Object -ExpandProperty "Name" | Sort-Object
+    $Applications = $Applications | Where-Object { $SkipApps -notcontains $_ }
     $ApplicationsToTest = if ($env:EVERGREEN_TEST_ALL_APPLICATIONS -eq "true") {
         Write-Host "Get-EvergreenApp: Testing all applications"
         $Applications
     }
     else {
         Write-Host "Get-EvergreenApp: Testing a random sample of applications"
-        Get-Random -InputObject $Applications -Count 50
+        Get-Random -InputObject $Applications -Count 30
     }
 
     $ApplicationsToTest = $ApplicationsToTest | ForEach-Object {

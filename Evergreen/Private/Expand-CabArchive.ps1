@@ -126,6 +126,11 @@ function Expand-CabArchive {
                     continue
                 }
                 $ItemName = [System.String]$CabItem.Name
+                # Shell display names can hide extensions; Path retains the CAB entry's filename.
+                $ItemPath = [System.String]$CabItem.Path
+                if ($ItemPath.StartsWith("$Path\", [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $ItemName = $ItemPath.Substring($Path.Length + 1)
+                }
                 if ([System.String]::IsNullOrWhiteSpace($ItemName)) {
                     continue
                 }
@@ -219,8 +224,9 @@ function Expand-CabArchive {
                     if ($LASTEXITCODE -ne 0) {
                         throw "expand.exe could not list CAB contents (exit code $LASTEXITCODE)."
                     }
+                    $ListingPattern = "^$([System.Text.RegularExpressions.Regex]::Escape($Path)):\s+(.+?)\s*$"
                     foreach ($ListingLine in $CabListing) {
-                        if ($ListingLine -match '^\s{3,}(.+?)\s*$') {
+                        if ($ListingLine -match $ListingPattern) {
                             $RelativePath = & $NormalizeRelativePath $Matches[1]
                             $ExpectedFiles += [PSCustomObject]@{ RelativePath = $RelativePath }
                         }
@@ -233,7 +239,7 @@ function Expand-CabArchive {
                 $null = [System.IO.Directory]::CreateDirectory($FallbackStage)
                 Write-Verbose -Message "$($MyInvocation.MyCommand): Expanding CAB file '$Path' with expand.exe to staging directory '$FallbackStage'."
                 $LASTEXITCODE = 0
-                & $ExpandExe $Path $FallbackStage | Out-Null
+                & $ExpandExe $Path "-F:*" "-R" $FallbackStage | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     throw "expand.exe exited with code $LASTEXITCODE."
                 }

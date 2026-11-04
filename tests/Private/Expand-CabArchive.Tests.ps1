@@ -22,7 +22,7 @@ Describe -Tag "Private" -Name "Expand-CabArchive" {
             if ($NeedsComStub) {
                 InModuleScope -ModuleName "Evergreen" {
                     function script:New-Object {
-                        param ([System.String] $ComObject)
+                        param ([System.String] $ComObject, [System.String] $TypeName)
                         throw "COM creation must be mocked in these tests."
                     }
                 }
@@ -52,17 +52,27 @@ param (
     [Parameter(Position = 0)]
     [System.String] $CabPath,
     [Parameter(Position = 1)]
+    [System.String] $FileSelection,
+    [Parameter(Position = 2)]
+    [System.String] $RenameOption,
+    [Parameter(Position = 3)]
     [System.String] $Destination,
     [System.Management.Automation.SwitchParameter] $D
 )
 if ($D) {
-    Write-Output "   expanded.txt"
+    Write-Output "$CabPath`: expanded.txt"
     exit 0
+}
+if ($FileSelection -ne "-F:*" -or $RenameOption -ne "-R") {
+    throw "CAB extraction must explicitly select all files and preserve their original names."
 }
 Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Value "expanded"
 '@
 
                 Mock Test-IsWindows { $true }
+                Mock Join-Path {
+                    & (Get-Command -Name "Microsoft.PowerShell.Management\Join-Path" -CommandType Cmdlet) -Path $Path -ChildPath $ChildPath
+                }
                 Mock Join-Path { $script:ExpandStub } -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
 
                 $script:SourceCab = [PSCustomObject]@{ Entries = $null }
@@ -75,7 +85,8 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                     param ($Items, $Options)
                     $this.Copied = $true
                     foreach ($Item in $Items) {
-                        Set-Content -LiteralPath (Join-Path -Path $this.Path -ChildPath $Item.Name) -Value "shell"
+                        $FileName = if ($Item.Path) { Split-Path -Path $Item.Path -Leaf } else { $Item.Name }
+                        Set-Content -LiteralPath (Join-Path -Path $this.Path -ChildPath $FileName) -Value "shell"
                     }
                 }
                 $script:Shell = [PSCustomObject]@{
@@ -90,6 +101,9 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                         $this.Destination.Path = $FolderPath
                         $this.Destination
                     }
+                }
+                Mock New-Object {
+                    & (Get-Command -Name "Microsoft.PowerShell.Utility\New-Object" -CommandType Cmdlet) -TypeName $TypeName
                 }
                 Mock New-Object { $script:Shell } -ParameterFilter { $ComObject -eq "Shell.Application" }
             }
@@ -131,6 +145,21 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
 
                 $Items | Should -Be (Join-Path -Path $script:CabDestination -ChildPath "shell.txt")
                 $script:DestinationFolder.Copied | Should -BeTrue
+                Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
+            }
+        }
+
+        It "Should preserve the filename when Shell hides its extension" {
+            InModuleScope -ModuleName "Evergreen" {
+                $script:SourceCab.Entries = @([PSCustomObject]@{
+                        Name = "PADUpdate"
+                        Path = "$script:CabPath\PADUpdate.json"
+                    })
+
+                $Items = Expand-CabArchive -Path $script:CabPath -DestinationPath $script:CabDestination
+
+                Split-Path -Path $Items -Leaf | Should -Be "PADUpdate.json"
+                Test-Path -LiteralPath $Items -PathType "Leaf" | Should -BeTrue
                 Should -Invoke Join-Path -Times 0 -Exactly -ParameterFilter { $ChildPath -eq "System32\expand.exe" }
             }
         }
@@ -214,6 +243,9 @@ Set-Content -Path (Join-Path -Path $Destination -ChildPath "expanded.txt") -Valu
                 $FirstDestination = Join-Path -Path $script:CabDestination -ChildPath "first.txt"
                 $script:SecondDestination = Join-Path -Path $script:CabDestination -ChildPath "second.txt"
                 Set-Content -LiteralPath $FirstDestination -Value "original"
+                Mock Move-Item {
+                    & (Get-Command -Name "Microsoft.PowerShell.Management\Move-Item" -CommandType Cmdlet) -LiteralPath $LiteralPath -Destination $Destination -Force -ErrorAction "Stop"
+                }
                 Mock Move-Item { throw "Simulated promotion failure" } -ParameterFilter {
                     $Destination -eq $script:SecondDestination
                 }
@@ -233,11 +265,15 @@ param (
     [Parameter(Position = 0)]
     [System.String] $CabPath,
     [Parameter(Position = 1)]
+    [System.String] $FileSelection,
+    [Parameter(Position = 2)]
+    [System.String] $RenameOption,
+    [Parameter(Position = 3)]
     [System.String] $Destination,
     [System.Management.Automation.SwitchParameter] $D
 )
 if ($D) {
-    Write-Output "   missing.txt"
+    Write-Output "$CabPath`: missing.txt"
     exit 0
 }
 '@
@@ -256,11 +292,15 @@ param (
     [Parameter(Position = 0)]
     [System.String] $CabPath,
     [Parameter(Position = 1)]
+    [System.String] $FileSelection,
+    [Parameter(Position = 2)]
+    [System.String] $RenameOption,
+    [Parameter(Position = 3)]
     [System.String] $Destination,
     [System.Management.Automation.SwitchParameter] $D
 )
 if ($D) {
-    Write-Output "   missing.txt"
+    Write-Output "$CabPath`: missing.txt"
     exit 0
 }
 '@
@@ -282,6 +322,10 @@ param (
     [Parameter(Position = 0)]
     [System.String] $CabPath,
     [Parameter(Position = 1)]
+    [System.String] $FileSelection,
+    [Parameter(Position = 2)]
+    [System.String] $RenameOption,
+    [Parameter(Position = 3)]
     [System.String] $Destination,
     [System.Management.Automation.SwitchParameter] $D
 )
@@ -291,6 +335,111 @@ param (
                     Should -Throw "*verifiable CAB file list*"
 
                 Test-Path -LiteralPath $NewDestination | Should -BeFalse
+            }
+        }
+    }
+
+    Context "Validate native Windows CAB extraction" {
+        It "Should extract every original filename with forced fallback: <ForceFallback>" -Skip:([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) -TestCases @(
+            @{ ForceFallback = $false }
+            @{ ForceFallback = $true }
+        ) {
+            param ($ForceFallback)
+
+            $FixtureRoot = Join-Path -Path $TestDrive -ChildPath "native-$ForceFallback"
+            $null = New-Item -Path $FixtureRoot -ItemType "Directory"
+            $UpdatePath = Join-Path -Path $FixtureRoot -ChildPath "PADUpdate.json"
+            $SecondPath = Join-Path -Path $FixtureRoot -ChildPath "second.txt"
+            Set-Content -LiteralPath $UpdatePath -Value '{"version":"1.0.0"}'
+            Set-Content -LiteralPath $SecondPath -Value "second"
+            $DirectivePath = Join-Path -Path $FixtureRoot -ChildPath "fixture.ddf"
+            Set-Content -LiteralPath $DirectivePath -Value @(
+                ".OPTION EXPLICIT"
+                ".Set CabinetNameTemplate=fixture.cab"
+                ".Set DiskDirectoryTemplate=`"$FixtureRoot`""
+                ".Set RptFileName=`"$FixtureRoot\fixture.rpt`""
+                ".Set InfFileName=`"$FixtureRoot\fixture.inf`""
+                ".Set Cabinet=on"
+                ".Set Compress=on"
+                "`"$UpdatePath`" PADUpdate.json"
+                "`"$SecondPath`" second.txt"
+            )
+            $MakeCab = Join-Path -Path $env:SystemRoot -ChildPath "System32\makecab.exe"
+            & $MakeCab -F $DirectivePath | Out-Null
+            $LASTEXITCODE | Should -Be 0
+            $NativeCab = Join-Path -Path $FixtureRoot -ChildPath "fixture.cab"
+            Test-Path -LiteralPath $NativeCab -PathType "Leaf" | Should -BeTrue
+
+            InModuleScope -ModuleName "Evergreen" -Parameters @{
+                NativeCab = $NativeCab
+                Destination = (Join-Path -Path $FixtureRoot -ChildPath "extracted")
+                ForceFallback = $ForceFallback
+            } {
+                param ($NativeCab, $Destination, $ForceFallback)
+
+                if ($ForceFallback) {
+                    Mock New-Object {
+                        & (Get-Command -Name "Microsoft.PowerShell.Utility\New-Object" -CommandType Cmdlet) -TypeName $TypeName
+                    }
+                    Mock New-Object { throw "COM unavailable" } -ParameterFilter { $ComObject -eq "Shell.Application" }
+                }
+                $Items = @(Expand-CabArchive -Path $NativeCab -DestinationPath $Destination)
+
+                $Items.Count | Should -Be 2
+                $Items | Should -Contain (Join-Path -Path $Destination -ChildPath "PADUpdate.json")
+                $Items | Should -Contain (Join-Path -Path $Destination -ChildPath "second.txt")
+                Get-Content -LiteralPath (Join-Path -Path $Destination -ChildPath "PADUpdate.json") -Raw |
+                    ConvertFrom-Json | Select-Object -ExpandProperty version | Should -Be "1.0.0"
+                (Get-Content -LiteralPath (Join-Path -Path $Destination -ChildPath "second.txt") -Raw).Trim() |
+                    Should -Be "second"
+            }
+        }
+    }
+
+    Context "Validate Microsoft's Power Automate Desktop update CAB" {
+        BeforeAll {
+            if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+                $MicrosoftCab = Join-Path -Path $TestDrive -ChildPath "PADUpdate.json.cab"
+                $PreviousSecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol
+                try {
+                    [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+                    Invoke-WebRequest -Uri "https://download.microsoft.com/download/d724d131-4140-4e9f-b2e7-873bad68d65a/PADUpdate.json.cab" `
+                        -OutFile $MicrosoftCab -UseBasicParsing -ErrorAction "Stop"
+                }
+                finally {
+                    [System.Net.ServicePointManager]::SecurityProtocol = $PreviousSecurityProtocol
+                }
+            }
+        }
+
+        It "Should extract PADUpdate.json from Microsoft's CAB with forced fallback: <ForceFallback>" -Skip:([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) -TestCases @(
+            @{ ForceFallback = $false }
+            @{ ForceFallback = $true }
+        ) {
+            param ($ForceFallback)
+
+            InModuleScope -ModuleName "Evergreen" -Parameters @{
+                CabPath = $MicrosoftCab
+                Destination = (Join-Path -Path $TestDrive -ChildPath "microsoft-$ForceFallback")
+                ForceFallback = $ForceFallback
+            } {
+                param ($CabPath, $Destination, $ForceFallback)
+
+                if ($ForceFallback) {
+                    Mock New-Object {
+                        & (Get-Command -Name "Microsoft.PowerShell.Utility\New-Object" -CommandType Cmdlet) -TypeName $TypeName
+                    }
+                    Mock New-Object { throw "COM unavailable" } -ParameterFilter { $ComObject -eq "Shell.Application" }
+                }
+                $Items = @(Expand-CabArchive -Path $CabPath -DestinationPath $Destination)
+                $UpdatePath = Join-Path -Path $Destination -ChildPath "PADUpdate.json"
+
+                $Items.Count | Should -Be 1
+                $Items | Should -Contain $UpdatePath
+                Test-Path -LiteralPath $UpdatePath -PathType "Leaf" | Should -BeTrue
+                $Update = Get-Content -LiteralPath $UpdatePath -Raw -ErrorAction "Stop" | ConvertFrom-Json -ErrorAction "Stop"
+                $Update.latestVersion.version | Should -Match '^\d+(\.\d+)+$'
+                $Update.latestVersion.releaseDate | Should -Not -BeNullOrEmpty
             }
         }
     }

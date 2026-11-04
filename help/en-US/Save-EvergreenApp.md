@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Downloads target URIs passed to this function from `Get-EvergreenApp` into a directory structure.
+Downloads application installers and updaters specified by `Get-EvergreenApp`.
 
 ## SYNTAX
 
@@ -18,7 +18,8 @@ Downloads target URIs passed to this function from `Get-EvergreenApp` into a dir
 ```powershell
 Save-EvergreenApp [-InputObject] <PSObject> [[-Path] <FileInfo>] [-Proxy <String>]
  [-ProxyCredential <PSCredential>] [-UserAgent <String>] [-Force] [-NoProgress] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+ [-VerifyChecksum] [-RetryCount <Int32>] [-RetryDelaySeconds <Int32>] [-MaximumRetryDelaySeconds <Int32>]
+ [-ConnectionTimeoutSeconds <Int32>] [-OperationTimeoutSeconds <Int32>] [<CommonParameters>]
 ```
 
 ### CustomPath
@@ -26,18 +27,19 @@ Save-EvergreenApp [-InputObject] <PSObject> [[-Path] <FileInfo>] [-Proxy <String
 ```powershell
 Save-EvergreenApp [-InputObject] <PSObject> [[-CustomPath] <FileInfo>] [-Proxy <String>]
  [-ProxyCredential <PSCredential>] [-UserAgent <String>] [-Force] [-NoProgress] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+ [-VerifyChecksum] [-RetryCount <Int32>] [-RetryDelaySeconds <Int32>] [-MaximumRetryDelaySeconds <Int32>]
+ [-ConnectionTimeoutSeconds <Int32>] [-OperationTimeoutSeconds <Int32>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Saves target URLs passed to this function from `Get-EvergreenApp` output to into a directory structure below -Path using the properties from the object passed to the function.
+Downloads installer URLs from `Get-EvergreenApp` output. By default, files are saved in a directory structure based on the available application properties below `-Path`; `-CustomPath` saves all files directly in the specified directory. Missing destination directories are created as needed. Existing files are skipped unless `-Force` is specified.
 
 `Get-EvergreenApp` will return an object that may include application properties including (in the following order) - Product, Track, Channel, Release, Ring, Version, Language, and (processor) Architecture. Only properties that exist on the target object will be used.
 
-This simplifies saving the target application installers or updaters into a consistent directory structure without having to build the target directory structure yourself or deal with other functions to download the file.
+Downloads are retried for transient network failures and retryable HTTP responses. Use the retry and timeout parameters to adjust download behavior. `-VerifyChecksum` validates supported checksums supplied by the input object.
 
-To override the default behaviour that creates the directory structure based on the properties of the object passed to the function, use the `-CustomPath` parameter to specify an exact path to save files into. Note that this method download the first file and then will skip files from an object passed from `Get-EvergreenApp` that includes files with the same name.
+The directory structure uses available properties such as Product, Track, Channel, Release, Ring, Version, Language, and Architecture.
 
 ## EXAMPLES
 
@@ -63,7 +65,7 @@ Downloads all of the URIs returned by `Get-EvergreenApp -Name "AdobeAcrobat"` to
 
 ### -InputObject
 
-`Save-EvergreenApp` accepts the PSObject from `Get-EvergreenApp`. `Save-EvergreenApp` will test for the existence of at least these properties - Version and URI.
+`Save-EvergreenApp` accepts objects from `Get-EvergreenApp` and requires a non-empty URI property. `-Path` mode also requires a Version property.
 
 ```yaml
 Type: PSObject
@@ -71,7 +73,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 1
+Position: 0
 Default value: None
 Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
@@ -87,8 +89,8 @@ Parameter Sets: Path
 Aliases:
 
 Required: False
-Position: 2
-Default value: (Resolve-Path -Path $PWD)
+Position: 1
+Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
@@ -100,10 +102,10 @@ Specify a single directory path where all application installers will be saved i
 ```yaml
 Type: FileInfo
 Parameter Sets: CustomPath
-Aliases:
+Aliases: LiteralPath
 
 Required: False
-Position: 2
+Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
@@ -119,7 +121,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 2
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -139,7 +141,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 3
 Default value: [System.Management.Automation.PSCredential]::Empty
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -173,7 +175,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -189,7 +191,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -205,7 +207,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -229,7 +231,103 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: (Get-EvergreenUserAgent)
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -VerifyChecksum
+
+Validates any SHA1, SHA256, and SHA512 checksum properties present on each input object against the downloaded or existing file. Files with mismatched checksums are not returned.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RetryCount
+
+Maximum number of retries after the initial download attempt. Retries are limited to transient network failures and retryable HTTP responses.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 3
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RetryDelaySeconds
+
+Initial delay before retrying. The delay increases exponentially and is limited by `MaximumRetryDelaySeconds`. A `Retry-After` response header is honored up to the same limit.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 2
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -MaximumRetryDelaySeconds
+
+Maximum delay between retry attempts, including delays requested by the server.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 300
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ConnectionTimeoutSeconds
+
+Connection timeout passed to `Invoke-WebRequest`. PowerShell 7.4 and later use `ConnectionTimeoutSeconds`; earlier versions use the legacy `TimeoutSec` parameter.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 30
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OperationTimeoutSeconds
+
+Timeout between data reads during a download. This parameter is passed to `Invoke-WebRequest` only in PowerShell 7.4 and later. Earlier versions issue a warning when this parameter is explicitly set.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 300
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

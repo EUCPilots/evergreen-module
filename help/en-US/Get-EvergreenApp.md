@@ -14,13 +14,13 @@ Returns the latest version and download URL/s for an application supported by th
 ## SYNTAX
 
 ```
-Get-EvergreenApp [-Name] <String> [[-AppParams] <Hashtable>] [-Proxy <String>]
- [-ProxyCredential <PSCredential>] [-SkipCertificateCheck] [-WhatIf] [-Confirm] [<CommonParameters>]
+Get-EvergreenApp [[-Name] <String>] [-AppParams <Hashtable>] [-Proxy <String>]
+ [-ProxyCredential <PSCredential>] [-SkipCertificateCheck] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Queries the internal application functions and manifests included in the module to find the latest version and download link/s for the specified application.
+Loads the application function and manifest from the Evergreen apps cache and uses vendor sources to find the latest version and download URLs. Use `Update-Evergreen` to download or update the apps cache.
 
 The output from this function can be passed to Where-Object to filter for a specific download based on properties including processor architecture, file type or other properties.
 
@@ -120,11 +120,11 @@ The list of supported applications can be found with `Find-EvergreenApp`.
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ApplicationName
 
-Required: True
-Position: 1
-Default value: None
+Required: False
+Position: 0
+Default value: "Microsoft365Apps"
 Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
@@ -140,23 +140,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 2
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Confirm
-
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
+Position: 1
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -172,7 +156,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 2
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -192,24 +176,8 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -WhatIf
-
-Shows what would happen if the cmdlet runs. The cmdlet is not run.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
+Position: 3
+Default value: [System.Management.Automation.PSCredential]::Empty
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -227,7 +195,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

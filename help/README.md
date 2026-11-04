@@ -1,14 +1,28 @@
-﻿# platyPS Help
+# Evergreen Help
 
-platyPS help markdown can be found here: [/docs/help](/docs/help).
+The platyPS Markdown help sources are organized by locale under `help/`. The
+module's generated external help files are stored in the matching locale
+directory under `Evergreen/`.
 
-To generate the external help use `New-ExternalHelp`:
+| Locale | Language |
+| --- | --- |
+| `en-US` | English |
+| `es-ES` | Spanish |
+| `fr-FR` | French |
+| `de-DE` | German |
+| `ja-JP` | Japanese |
+
+After editing the help sources, generate external help for every locale:
 
 ```powershell
-Update-MarkdownHelp -Path "/Users/aaron/projects/_EUCPilots/evergreen/docs/help/en-US"
-New-ExternalHelp -Path "help/en-US" -OutputPath "Evergreen/en-US" -Encoding ([System.Text.Encoding]::UTF8) -Force
+$Locales = @('en-US', 'es-ES', 'fr-FR', 'de-DE', 'ja-JP')
+foreach ($Locale in $Locales) {
+    New-ExternalHelp -Path "help/$Locale" -OutputPath "Evergreen/$Locale" `
+        -Encoding ([System.Text.Encoding]::UTF8) -Force
+}
 ```
 
-```powershell
-Update-MarkdownHelpModule -Path "docs/help/en-US"
-```
+To update English Markdown help from the module's command metadata, use
+`Update-MarkdownHelpModule -Path "help/en-US"`. Review and translate any
+resulting changes in the other locale directories before regenerating external
+help.
