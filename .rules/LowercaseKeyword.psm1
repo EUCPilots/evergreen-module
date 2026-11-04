@@ -6,7 +6,7 @@ function Measure-LowercaseKeyword {
         PowerShell keywords and constants should be in lowercase.
 
     .DESCRIPTION
-        PowerShell keywords (function, if, foreach, etc.) and constants ($true, $false, $null) 
+        PowerShell keywords (function, if, foreach, etc.) and constants ($true, $false, $null)
         should use lowercase for consistency and best practices.
 
     .EXAMPLE
@@ -28,11 +28,11 @@ function Measure-LowercaseKeyword {
 
     process {
         $Results = @()
-        
+
         # Define keywords and constants we want to check
-        $Keywords = @('function', 'foreach', 'if', 'else', 'elseif', 'return', 'switch', 'param', 
-                     'begin', 'process', 'end', 'in', 'do', 'while', 'until', 'for', 'trap', 
-                     'throw', 'catch', 'try', 'finally', 'data', 'dynamicparam', 'break', 
+        $Keywords = @('function', 'foreach', 'if', 'else', 'elseif', 'return', 'switch', 'param',
+                     'begin', 'process', 'end', 'in', 'do', 'while', 'until', 'for', 'trap',
+                     'throw', 'catch', 'try', 'finally', 'data', 'dynamicparam', 'break',
                      'continue', 'exit', 'class', 'enum', 'using')
         $Constants = @('$true', '$false', '$null')
 
@@ -41,8 +41,8 @@ function Measure-LowercaseKeyword {
             $Tokens = @()
             $ParseErrors = @()
             [void][System.Management.Automation.Language.Parser]::ParseInput(
-                $ScriptBlockAst.ToString(), 
-                [ref]$Tokens, 
+                $ScriptBlockAst.ToString(),
+                [ref]$Tokens,
                 [ref]$ParseErrors
             )
 
@@ -56,10 +56,10 @@ function Measure-LowercaseKeyword {
             foreach ($Token in $Tokens) {
                 $TokenText = $Token.Text
                 $LowerTokenText = $TokenText.ToLower()
-                
+
                 # Create a unique key for this token position
                 $TokenKey = "$($Token.Extent.StartLineNumber):$($Token.Extent.StartColumnNumber):$TokenText"
-                
+
                 # Skip if we've already processed this exact token at this position
                 if ($ProcessedTokens.ContainsKey($TokenKey)) {
                     continue

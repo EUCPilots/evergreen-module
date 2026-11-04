@@ -142,10 +142,10 @@ jobs:
                   git tag -a $tagName -m "Release version $($Module.Version.ToString())"
                   if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag." }
               }
-              
+
               # Push the tag with verbose output
               git push origin "refs/tags/$tagName" --verbose
-              
+
               if ($LASTEXITCODE -eq 0) {
                   Write-Host "Tag $tagName is available on origin" -ForegroundColor Green
                   "tested_commit=$Commit" >> $env:GITHUB_OUTPUT

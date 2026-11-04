@@ -12,7 +12,7 @@
 RootModule = 'Evergreen.psm1'
 
 # Version number of this module.
-ModuleVersion = '2611.2868.0'
+ModuleVersion = '2611.2871.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,13 +69,13 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'ConvertTo-DotNetVersionClass', 'Export-EvergreenApp', 
-               'Export-EvergreenManifest', 'Find-EvergreenApp', 'Get-EvergreenApp', 
-               'Get-EvergreenAppFromApi', 'Get-EvergreenAppFromLibrary', 
-               'Get-EvergreenAppsPath', 'Get-EvergreenAppsVersion', 
-               'Get-EvergreenEndpointFromApi', 'Get-EvergreenLibrary', 
-               'New-EvergreenLibrary', 'Remove-EvergreenLibraryAppVersion', 
-               'Save-EvergreenApp', 'Start-EvergreenLibraryUpdate', 
+FunctionsToExport = 'ConvertTo-DotNetVersionClass', 'Export-EvergreenApp',
+               'Export-EvergreenManifest', 'Find-EvergreenApp', 'Get-EvergreenApp',
+               'Get-EvergreenAppFromApi', 'Get-EvergreenAppFromLibrary',
+               'Get-EvergreenAppsPath', 'Get-EvergreenAppsVersion',
+               'Get-EvergreenEndpointFromApi', 'Get-EvergreenLibrary',
+               'New-EvergreenLibrary', 'Remove-EvergreenLibraryAppVersion',
+               'Save-EvergreenApp', 'Start-EvergreenLibraryUpdate',
                'Test-EvergreenApp', 'Update-Evergreen'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -85,8 +85,8 @@ CmdletsToExport = @()
 # VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'sea', 'gea', 'fea', 'tea', 'iea', 'Invoke-EvergreenLibraryUpdate', 
-               'Get-EvergreenLibraryApp', 'Invoke-EvergreenApp', 
+AliasesToExport = 'sea', 'gea', 'fea', 'tea', 'iea', 'Invoke-EvergreenLibraryUpdate',
+               'Get-EvergreenLibraryApp', 'Invoke-EvergreenApp',
                'Get-EvergreenEndpoint'
 
 # DSC resources to export from this module
@@ -119,7 +119,7 @@ PrivateData = @{
         IconUri = 'https://raw.githubusercontent.com/eucpilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = '2611.2868.0
+        ReleaseNotes = '2611.2871.0
 > [!WARNING]
 > The module now requires Windows PowerShell 5.1 or PowerShell 7.4 or later on Windows, macOS, or Linux; PowerShell 4.0 or PowerShell 6/7.0-7.3 are no longer supported.
 

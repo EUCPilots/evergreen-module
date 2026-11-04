@@ -17,8 +17,8 @@ ConvertTo-DotNetVersionClass [-Version] <String> [-ProgressAction <ActionPrefere
 ```
 
 ## DESCRIPTION
-Die Funktion ConvertTo-DotNetVersionClass übernimmt eine Versionszeichenfolge als Eingabe und konvertiert sie in eine .NET-Version-Klasse. 
-Sie normalisiert die Segmente der Versionszeichenfolge und stellt sicher, dass sie genau vier Segmente enthält, indem überzählige Segmente addiert 
+Die Funktion ConvertTo-DotNetVersionClass übernimmt eine Versionszeichenfolge als Eingabe und konvertiert sie in eine .NET-Version-Klasse.
+Sie normalisiert die Segmente der Versionszeichenfolge und stellt sicher, dass sie genau vier Segmente enthält, indem überzählige Segmente addiert
 oder fehlende Segmente mit Nullen aufgefüllt werden.
 
 Wenn die Konvertierung in eine .NET-Version-Klasse fehlschlägt, gibt die Funktion die normalisierte Versionszeichenfolge als Zeichenfolge zurück.

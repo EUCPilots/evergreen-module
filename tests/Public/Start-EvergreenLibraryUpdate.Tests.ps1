@@ -112,7 +112,7 @@ Describe -Tag "Start" -Name "Start-EvergreenLibraryUpdate" {
             else {
                 $TestPath = "/tmp/LibraryUpdateTest"
             }
-            
+
             { Start-EvergreenLibraryUpdate -Path $TestPath -AppName "" } | Should -Throw
         }
     }

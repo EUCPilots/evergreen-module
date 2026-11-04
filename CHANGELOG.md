@@ -1,6 +1,6 @@
 # Change log
 
-## 2611.2868.0
+## 2611.2871.0
 
 > [!WARNING]
 > The module now requires Windows PowerShell 5.1 or PowerShell 7.4 or later on Windows, macOS, or Linux; PowerShell 4.0 or PowerShell 6/7.0-7.3 are no longer supported.
@@ -155,7 +155,7 @@ This version strengthens download and library reliability, improves validation a
 * Introduces 16 new Pester test files covering both public and private functions, significantly improving test coverage.
 * Also fixes Update-Evergreen.Tests.ps1 to use the correct version file name (.evergreen_version) in assertions. Includes a summary markdown documenting the new and fixed tests, test coverage, and recommendations for future improvements.
 * Updated the test suite to select 20 random applications from the Evergreen API response instead of testing all applications. This change improves test performance and reduces execution time.
-* Wrapped all private function test calls in InModuleScope -ModuleName "Evergreen" to ensure proper access to non-exported module functions. Updated 10 private test files accordingly. 
+* Wrapped all private function test calls in InModuleScope -ModuleName "Evergreen" to ensure proper access to non-exported module functions. Updated 10 private test files accordingly.
 * Also updated Get-EvergreenApp.Tests.ps1 to test a random subset of 50 applications instead of all, and added a summary markdown documenting the fixes.
 * Refactored several test files for improved accuracy and clarity: updated type checks and parameter names, removed redundant or obsolete tests, and deleted Invoke-Download test file.
 Adjusted symbol and message type tests for stricter validation and updated property checks in public API tests.
@@ -295,7 +295,7 @@ BREAKING CHANGES
 * Removes `Filename` property from `MicrosoftWvdRemoteDesktop` because property is no longer required
 * Updates `FreedomScientificFusion`, `FreedomScientificJAWS`, `FreedomScientificZoomText` to add `Architecture` property
 * Updates `OmnissaHorizonClient` [#678](https://github.com/aaronparker/evergreen/issues/678)
-* Updates `PaintDotNet` to return `stable` and `beta` channels [#783](https://github.com/aaronparker/evergreen/issues/783) 
+* Updates `PaintDotNet` to return `stable` and `beta` channels [#783](https://github.com/aaronparker/evergreen/issues/783)
 * Updates default user agent in `TableauDesktop`, `TableauPrep`, `TableauReader` [#801](https://github.com/aaronparker/evergreen/issues/801)
 * Updates default user agent for the module
 * Removes `RedHatOpenJDK11` because no data is returned from the API for this version
@@ -1547,5 +1547,6 @@ BREAKING CHANGES
 * Initial functions are:
 
 `Export-EvergreenResourceStrings`, `Get-AdobeAcrobatReaderDC`, `Get-CitrixAppLayeringFeed`, `Get-CitrixApplicationDeliveryManagementFeed`, `Get-CitrixEndpointManagementFeed`, `Get-CitrixGatewayFeed`, `Get-CitrixHypervisorFeed`, `Get-CitrixLicensingFeed`, `Get-CitrixReceiverFeed`, `Get-CitrixSdwanFeed`, `Get-CitrixVirtualAppsDesktopsFeed`, `Get-CitrixWorkspaceApp`, `Get-CitrixWorkspaceAppFeed`, `Get-CitrixXenServerTools`, `Get-ControlUpAgent`, `Get-FileZilla`, `Get-GoogleChrome`, `Get-Greenshot`, `Get-LibreOffice`, `Get-MicrosoftPowerShellCore`, `Get-MicrosoftSsms`, `Get-MicrosoftVisualStudioCode`, `Get-MozillaFirefox`, `Get-NotepadPlusPlus`, `Get-OracleVirtualBox`, `Get-PaintDotNet`, `Get-VideoLanVlcPlayer`, `Get-VMwareTools`, `Get-Zoom`
+
 
 

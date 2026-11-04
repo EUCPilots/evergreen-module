@@ -7,7 +7,7 @@ class LogFile {
         $this.Parent = $Parent
         $this.FullName = $FullName
     }
-    
+
     # Parameterless constructor uses defaults
     LogFile() {
         $this.FullName = "$($this.Parent)\EvergreenBuild-$(Get-Date -Format "yyyy-MM-dd").log"

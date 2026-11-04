@@ -2,13 +2,13 @@ function Get-AzulZulu {
     <#
         .SYNOPSIS
             Retrieves Azul Zulu JDK/JRE release information.
-        
+
         .DESCRIPTION
             Queries the Azul API to get the latest Azul Zulu OpenJDK releases.
-        
+
         .PARAMETER res
             Resource object containing API configuration.
-        
+
         .EXAMPLE
             Get-AzulZulu -res $ResourceObject
     #>

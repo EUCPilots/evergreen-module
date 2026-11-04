@@ -1,6 +1,6 @@
 function Get-EvergreenAppsVersion {
     <#
-        .EXTERNALHELP Evergreen-help.xml     
+        .EXTERNALHELP Evergreen-help.xml
     #>
     [CmdletBinding(SupportsShouldProcess = $false)]
     param()
