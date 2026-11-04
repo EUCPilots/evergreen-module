@@ -14,6 +14,81 @@ BeforeAll {
 }
 
 Describe -Tag "Start" -Name "Start-EvergreenLibraryUpdate" {
+    Context "Validate filtered updates and library changes" {
+        BeforeEach {
+            $UpdatePath = Join-Path $TestDrive ([Guid]::NewGuid().ToString("N"))
+            $null = New-Item -Path (Join-Path $UpdatePath "FixtureApp") -ItemType Directory -Force
+            [PSCustomObject]@{
+                Applications = @(
+                    [PSCustomObject]@{
+                        Name = "FixtureApp"
+                        EvergreenApp = "FixtureApp"
+                        Filter = '$_.Architecture -eq "x64"'
+                    }
+                )
+            } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $UpdatePath "EvergreenLibrary.json")
+            Mock Get-EvergreenApp -ModuleName Evergreen {
+                [PSCustomObject]@{ Version = "2.0.0"; Architecture = "x64"; FileName = "custom.exe"; URI = "https://example.test/download" }
+                [PSCustomObject]@{ Version = "2.0.0"; Architecture = "x86"; FileName = "other.exe"; URI = "https://example.test/other" }
+            }
+            Mock Save-EvergreenApp -ModuleName Evergreen {
+                $Directory = Join-Path $Path "2.0.0/x64"
+                $null = New-Item -Path $Directory -ItemType Directory -Force
+                $FilePath = Join-Path $Directory "custom.exe"
+                Set-Content -LiteralPath $FilePath -Value "fixture"
+                Get-Item -LiteralPath $FilePath
+            }
+        }
+
+        It "Filters versions, forwards proxy options and reports newly saved custom filenames" {
+            $Credential = [PSCredential]::new("proxy-user", [System.Security.SecureString]::new())
+            $Result = Start-EvergreenLibraryUpdate -Path $UpdatePath -Proxy "http://proxy.test:8080" -ProxyCredential $Credential -Confirm:$false
+
+            $Result.Status | Should -Be "NEW"
+            $Result.Installer | Should -Be (Join-Path $UpdatePath "FixtureApp/2.0.0/x64/custom.exe")
+            $Manifest = Get-Content (Join-Path $UpdatePath "FixtureApp/FixtureApp.json") -Raw | ConvertFrom-Json
+            @($Manifest).Count | Should -Be 1
+            $Manifest.Architecture | Should -Be "x64"
+            $Manifest.Path | Should -Be $Result.Installer
+            Should -Invoke Get-EvergreenApp -ModuleName Evergreen -Times 1 -Exactly -ParameterFilter {
+                $Name -eq "FixtureApp" -and $Proxy -eq "http://proxy.test:8080" -and $ProxyCredential.UserName -eq "proxy-user"
+            }
+            Should -Invoke Save-EvergreenApp -ModuleName Evergreen -Times 1 -Exactly -ParameterFilter {
+                $InputObject.Architecture -eq "x64" -and $Proxy -eq "http://proxy.test:8080" -and $ProxyCredential.UserName -eq "proxy-user"
+            }
+        }
+
+        It "Warns on an invalid filter without downloading or exporting versions" {
+            '{"Applications":[{"Name":"FixtureApp","EvergreenApp":"FixtureApp","Filter":"{"}]}' |
+                Set-Content (Join-Path $UpdatePath "EvergreenLibrary.json")
+
+            $Result = Start-EvergreenLibraryUpdate -Path $UpdatePath -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            ($Warnings -join "`n") | Should -Match "Failed applying filter"
+            ($Warnings -join "`n") | Should -Match "No media found"
+            Should -Invoke Get-EvergreenApp -ModuleName Evergreen -Times 0 -Exactly
+            Test-Path (Join-Path $UpdatePath "FixtureApp/FixtureApp.json") | Should -BeFalse
+        }
+
+        It "Does not save installers or export versions under WhatIf" {
+            Start-EvergreenLibraryUpdate -Path $UpdatePath -WhatIf -WarningAction SilentlyContinue
+
+            Should -Invoke Save-EvergreenApp -ModuleName Evergreen -Times 0 -Exactly
+            Test-Path (Join-Path $UpdatePath "FixtureApp/FixtureApp.json") | Should -BeFalse
+        }
+
+        It "Rejects a missing library directory" {
+            { Start-EvergreenLibraryUpdate -Path (Join-Path $UpdatePath "Missing") -Confirm:$false } |
+                Should -Throw "*does not exist or is not a directory*"
+        }
+
+        It "Rejects a missing library manifest" {
+            Remove-Item (Join-Path $UpdatePath "EvergreenLibrary.json")
+            { Start-EvergreenLibraryUpdate -Path $UpdatePath -Confirm:$false } | Should -Throw "*Cannot find EvergreenLibrary.json*"
+        }
+    }
+
     Context "Validate Start-EvergreenLibraryUpdate parameter validation" {
         It "Should throw if ProxyCredential is provided without Proxy" {
             $Creds = [System.Management.Automation.PSCredential]::new(

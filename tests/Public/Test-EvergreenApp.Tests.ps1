@@ -71,6 +71,39 @@ InModuleScope -ModuleName "Evergreen" {
             }
         }
 
+        It "Passes proxy credentials and a custom user agent while allowing verbose progress" {
+            $Credential = [PSCredential]::new("proxy-user", [System.Security.SecureString]::new())
+            Mock Invoke-WebRequest { [PSCustomObject]@{ StatusCode = 200 } }
+
+            $Result = Test-EvergreenApp -InputObject $testApp -Proxy "http://proxy.test:8080" -ProxyCredential $Credential -UserAgent "FixtureAgent" -Verbose
+
+            $Result.Result | Should -BeTrue
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                $Proxy -eq "http://proxy.test:8080" -and $ProxyCredential.UserName -eq "proxy-user" -and $UserAgent -eq "FixtureAgent"
+            }
+        }
+
+        It "Rejects proxy credentials without a proxy without sending a request" {
+            Mock Invoke-WebRequest {}
+            { Test-EvergreenApp -InputObject $testApp -ProxyCredential ([PSCredential]::Empty) -NoProgress } |
+                Should -Throw "*ProxyCredential requires Proxy*"
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It "Handles nonnumeric HTTP statuses from failed HEAD and GET requests" {
+            Mock Invoke-WebRequest {
+                $Exception = [System.Exception]::new("Invalid status")
+                $Exception | Add-Member -MemberType NoteProperty -Name Response -Value ([PSCustomObject]@{ StatusCode = "invalid" })
+                throw $Exception
+            }
+
+            $Result = Test-EvergreenApp -InputObject $testApp -NoProgress
+
+            $Result.Result | Should -BeFalse
+            $Result.StatusCode | Should -BeNullOrEmpty
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly
+        }
+
         It "Falls back to a ranged GET when HEAD fails" {
             Mock Invoke-WebRequest {
                 param ($Method)

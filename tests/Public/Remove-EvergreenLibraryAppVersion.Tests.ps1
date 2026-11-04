@@ -234,6 +234,7 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
         }
 
         It "Should not prune apps not selected by Name" {
+            $null = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Keep 1 -Name "ContosoApp" -Confirm:$false
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-1.0.0.exe") | Should -Be $true
             Test-Path -Path (Join-Path -Path $script:LibPath -ChildPath "FabrikamApp/Fabrikam-2.0.0.exe") | Should -Be $true
         }
@@ -306,6 +307,66 @@ Describe -Tag "Remove" -Name "Remove-EvergreenLibraryAppVersion" {
 
             $messages | Should -Match "Selected 0 of 2 applications"
             $results.Count | Should -Be 0
+        }
+
+        It "Should reject a missing library directory" {
+            { Remove-EvergreenLibraryAppVersion -Path (Join-Path $script:LibPath "Missing") -Confirm:$false } |
+                Should -Throw "*does not exist or is not a directory*"
+        }
+
+        It "Should reject a missing library manifest" {
+            Remove-Item (Join-Path $script:LibPath "EvergreenLibrary.json")
+            { Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Confirm:$false } | Should -Throw "*Cannot find EvergreenLibrary.json*"
+        }
+
+        It "Should warn and skip unsafe library application names" -TestCases @(
+            @{ AppName = "../Outside" }
+            @{ AppName = "." }
+        ) {
+            param ($AppName)
+            [PSCustomObject]@{ Applications = @([PSCustomObject]@{ Name = $AppName }) } |
+                ConvertTo-Json -Depth 5 | Set-Content (Join-Path $script:LibPath "EvergreenLibrary.json")
+
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match "Skipping"
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
+        }
+
+        It "Should warn and skip a <Failure> application manifest" -TestCases @(
+            @{ Failure = "missing" }
+            @{ Failure = "malformed" }
+        ) {
+            param ($Failure)
+            $ManifestPath = Join-Path $script:LibPath "ContosoApp/ContosoApp.json"
+            if ($Failure -eq "missing") {
+                Remove-Item $ManifestPath
+            }
+            else {
+                "{invalid" | Set-Content $ManifestPath
+            }
+
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name ContosoApp -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match $(if ($Failure -eq "missing") { "App manifest missing" } else { "Failed reading" })
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
+        }
+
+        It "Should preserve installers when the app directory is a reparse point" {
+            Mock Get-Item -ModuleName Evergreen {
+                [PSCustomObject]@{ Attributes = [System.IO.FileAttributes]::ReparsePoint }
+            } -ParameterFilter { $LiteralPath -like "*/ContosoApp" -or $LiteralPath -like "*\ContosoApp" }
+
+            $ManifestPath = Join-Path $script:LibPath "ContosoApp/ContosoApp.json"
+            $Before = Get-Content $ManifestPath -Raw
+            $Result = Remove-EvergreenLibraryAppVersion -Path $script:LibPath -Name ContosoApp -Confirm:$false -WarningVariable Warnings -WarningAction SilentlyContinue
+
+            $Result | Should -BeNullOrEmpty
+            $Warnings | Should -Match "reparse point"
+            (Get-Content $ManifestPath -Raw) | Should -Be $Before
+            Test-Path (Join-Path $script:LibPath "ContosoApp/Contoso-1.0.0.exe") | Should -BeTrue
         }
     }
 
