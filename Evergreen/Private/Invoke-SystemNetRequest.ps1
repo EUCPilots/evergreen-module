@@ -16,7 +16,7 @@ function Invoke-SystemNetRequest {
             Timeout for obtaining a response, in seconds. Defaults to 100 seconds.
 
         .PARAMETER ReadWriteTimeoutSec
-            Timeout for individual synchronous stream reads, in seconds. Defaults to
+            Timeout for individual response stream reads, in seconds. Defaults to
             300 seconds. This is not a limit on the total response download time.
 
         .PARAMETER UseDefaultCredentials
@@ -51,6 +51,7 @@ function Invoke-SystemNetRequest {
     $webResponse = $null
     $httpWebRequest = $null
     $responseStream = $null
+    $bufferStream = $null
     $streamReader = $null
     $RequestCompleted = $false
     $SafeUri = "<invalid URI>"
@@ -98,7 +99,19 @@ function Invoke-SystemNetRequest {
         if ($webResponse.ContentType -match '(?i)(?:^|;)\s*charset\s*=') {
             $Encoding = [System.Text.Encoding]::GetEncoding($webResponse.CharacterSet.Trim([char[]]@('"', "'")))
         }
-        $streamReader = New-Object -TypeName "System.IO.StreamReader" -ArgumentList $responseStream, $Encoding, $true
+        # .NET Core 3.1 does not enforce HttpWebRequest.ReadWriteTimeout.
+        $bufferStream = [System.IO.MemoryStream]::new()
+        $Buffer = [byte[]]::new(8192)
+        do {
+            $ReadTask = $responseStream.ReadAsync($Buffer, 0, $Buffer.Length)
+            if (-not $ReadTask.Wait($ReadWriteTimeoutSec * 1000)) {
+                throw [System.Net.WebException]::new("The response stream read timed out.", [System.Net.WebExceptionStatus]::Timeout)
+            }
+            $BytesRead = $ReadTask.GetAwaiter().GetResult()
+            $bufferStream.Write($Buffer, 0, $BytesRead)
+        } while ($BytesRead -gt 0)
+        $bufferStream.Position = 0
+        $streamReader = New-Object -TypeName "System.IO.StreamReader" -ArgumentList $bufferStream, $Encoding, $true
         $result = $streamReader.ReadToEnd()
         $RequestCompleted = $true
         Write-Output -InputObject $result
@@ -123,13 +136,24 @@ function Invoke-SystemNetRequest {
             if ($null -ne $streamReader) {
                 $streamReader.Dispose()
             }
-            elseif ($null -ne $responseStream) {
-                $responseStream.Dispose()
-            }
         }
         finally {
-            if ($null -ne $webResponse) {
-                $webResponse.Dispose()
+            try {
+                if ($null -ne $bufferStream) {
+                    $bufferStream.Dispose()
+                }
+            }
+            finally {
+                try {
+                    if ($null -ne $responseStream) {
+                        $responseStream.Dispose()
+                    }
+                }
+                finally {
+                    if ($null -ne $webResponse) {
+                        $webResponse.Dispose()
+                    }
+                }
             }
         }
     }

@@ -25,7 +25,14 @@ BeforeAll {
         param ($Listener, $Requests)
 
         while ($Listener.IsListening) {
-            $Context = $Listener.GetContext()
+            $PendingContext = $Listener.GetContextAsync()
+            while ($Listener.IsListening -and -not $PendingContext.IsCompleted) {
+                Start-Sleep -Milliseconds 10
+            }
+            if (-not $Listener.IsListening) {
+                break
+            }
+            $Context = $PendingContext.GetAwaiter().GetResult()
             $Response = $Context.Response
             $Path = $Context.Request.Url.AbsolutePath
             $Requests.Enqueue($Path)
@@ -66,6 +73,9 @@ BeforeAll {
             elseif ($Path -eq "/empty") {
                 $Body = [byte[]]@()
             }
+            elseif ($Path -eq "/large-body") {
+                $Body = [System.Text.Encoding]::UTF8.GetBytes("response text" * 2000)
+            }
             $Response.ContentLength64 = $Body.Length
             try {
                 if ($Path -eq "/slow-headers") {
@@ -76,6 +86,13 @@ BeforeAll {
                     $Response.OutputStream.Flush()
                     Start-Sleep -Seconds 2
                     $Response.OutputStream.Write($Body, 1, $Body.Length - 1)
+                }
+                elseif ($Path -eq "/progressive-body") {
+                    for ($Index = 0; $Index -lt $Body.Length; $Index++) {
+                        $Response.OutputStream.Write($Body, $Index, 1)
+                        $Response.OutputStream.Flush()
+                        Start-Sleep -Milliseconds 150
+                    }
                 }
                 elseif ($Body.Length -gt 0) {
                     $Response.OutputStream.Write($Body, 0, $Body.Length)
@@ -281,7 +298,26 @@ Describe -Name "Invoke-SystemNetRequest" {
             }
         }
 
-        It "Disposes the reader and stream when ReadToEnd fails: <FailRead>" -TestCases @(
+        It "Applies the read timeout per read rather than to the whole response" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ BaseUri = $BaseUri } {
+                Mock Test-ProxyEnv { $false }
+                $Timer = [System.Diagnostics.Stopwatch]::StartNew()
+                Invoke-SystemNetRequest -Uri "$BaseUri/progressive-body" -UserAgent "" -ReadWriteTimeoutSec 1 |
+                    Should -BeExactly "response text"
+                $Timer.Stop()
+                $Timer.ElapsedMilliseconds | Should -BeGreaterThan 1000
+            }
+        }
+
+        It "Reads responses larger than the read buffer without truncation" {
+            InModuleScope -ModuleName "Evergreen" -Parameters @{ BaseUri = $BaseUri } {
+                Mock Test-ProxyEnv { $false }
+                Invoke-SystemNetRequest -Uri "$BaseUri/large-body" -UserAgent "" |
+                    Should -BeExactly ("response text" * 2000)
+            }
+        }
+
+        It "Disposes the reader and buffered body when ReadToEnd fails: <FailRead>" -TestCases @(
             @{ FailRead = $false }
             @{ FailRead = $true }
         ) {
@@ -316,7 +352,7 @@ Describe -Name "Invoke-SystemNetRequest" {
             }
         }
 
-        It "Disposes the stream if reader construction fails" {
+        It "Disposes the buffered body if reader construction fails" {
             InModuleScope -ModuleName "Evergreen" -Parameters @{ BaseUri = $BaseUri } {
                 Mock Test-ProxyEnv { $false }
                 $State = @{ Stream = $null }
