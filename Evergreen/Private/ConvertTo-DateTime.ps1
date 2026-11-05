@@ -50,6 +50,7 @@ function ConvertTo-DateTime {
             "d/M/yyyy"
             "dd/MM/yyyy hh:mm tt"
             "dd/MM/yyyy hh:mm:ss tt"
+            "dd/MM/yyyy HH:mm"
             "dd/MM/yyyy HH:mm:ss"
         )
         $Output = [System.DateTime]::MinValue
