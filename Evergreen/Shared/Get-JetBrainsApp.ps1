@@ -79,7 +79,7 @@ function Get-JetBrainsApp {
                     Version      = $Release.version
                     Build        = $Release.build
                     Edition      = $Edition.Key
-                    Date         = ConvertTo-DateTime -DateTime $Release.date -Pattern $Update.DatePattern
+                    Date         = ConvertTo-DateTime -DateTime $Release.date
                     Sha256       = $Sha256
                     Size         = $WindowsDownload.size
                     Architecture = Get-Architecture -String $WindowsDownload.link

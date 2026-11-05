@@ -152,7 +152,7 @@ function Get-GitLabRepoRelease {
 
                 [PSCustomObject] @{
                     Version       = $Version
-                    Date          = ConvertTo-DateTime -DateTime $dateValue -Pattern "MM/dd/yyyy HH:mm:ss"
+                    Date          = ConvertTo-DateTime -DateTime $dateValue
                     Architecture  = Get-Architecture -String $leafName
                     InstallerType = Get-InstallerType -String $leafName
                     Type          = Get-FileType -File $leafName
