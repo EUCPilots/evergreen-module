@@ -54,6 +54,10 @@ InModuleScope -ModuleName "Evergreen" {
             $Result[1].Version | Should -Be "10.2.0"
             $Result[1].Sha256 | Should -BeNull
             $Result[1].URI | Should -Be "https://example.test/jdk-arm64.tar.gz"
+            foreach ($Item in $Result) {
+                $Item.Date | Should -BeOfType [System.String]
+                $Item.Date | Should -Be "2025-06-01"
+            }
             Should -Invoke Invoke-EvergreenWebRequest -Times 2 -Exactly
         }
 

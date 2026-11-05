@@ -89,7 +89,11 @@ InModuleScope -ModuleName "Evergreen" {
                 if ($Schema -ne "GitLab") { $Expected += "Size" }
                 @($Result.PSObject.Properties.Name | Sort-Object) | Should -Be @($Expected | Sort-Object)
                 $Result.Version | Should -Be "1.2.3"
-                $Result.Date | Should -BeOfType ([datetime])
+                $SourceDate = if ($Schema -eq "GitLab") { $Response.released_at } else { $Response.created_at }
+                $ExpectedTimestamp = [System.DateTimeOffset]::Parse($SourceDate, [System.Globalization.CultureInfo]::InvariantCulture)
+                $ExpectedDate = $ExpectedTimestamp.ToLocalTime().ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+                $Result.Date | Should -BeOfType [System.String]
+                $Result.Date | Should -Be $ExpectedDate
                 $Result.Architecture | Should -Be "x64"
                 $Result.InstallerType | Should -Be "Default"
                 $Result.Type | Should -Be "msi"
