@@ -93,7 +93,7 @@ function Get-OracleJava {
         [PSCustomObject] @{
             Version      = $LatestVersion.version
             FullVersion  = $LatestVersion.fullversion
-            Date         = ConvertTo-DateTime -DateTime $LatestVersion.ga -Pattern $res.Get.Update.DateFormat
+            Date         = ConvertTo-DateTime -DateTime $LatestVersion.ga
             Sha256       = $Sha256
             Architecture = Get-Architecture -String $res.Get.Download.Uri[$Type.Key]
             Type         = Get-FileType -File $res.Get.Download.Uri[$Type.Key]

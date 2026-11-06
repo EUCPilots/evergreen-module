@@ -60,9 +60,12 @@ InModuleScope -ModuleName "Evergreen" {
 
             $Results.Count | Should -Be 2
             $Results[0].Version | Should -Be "17.0.1+1"
-            # $Results[0].Date | Should -Be "2025-01-01T00:00:00Z"
-            # $Results[1].Date | Should -Be "2025-01-03T00:00:00Z"
+            $ExpectedTimestamp = [System.DateTime]::new(2025, 1, 1, 0, 0, 0, [System.DateTimeKind]::Utc)
+            $ExpectedUpdatedAt = [System.DateTime]::new(2025, 1, 3, 0, 0, 0, [System.DateTimeKind]::Utc)
+            $Results[0].Date | Should -Be ($ExpectedTimestamp.ToLocalTime().ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture))
+            $Results[1].Date | Should -Be ($ExpectedUpdatedAt.ToLocalTime().ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture))
             foreach ($Result in $Results) {
+                $Result.Date | Should -BeOfType [System.String]
                 $Result.PSObject.Properties.Name | Should -Contain "Checksum"
                 $Result.PSObject.Properties.Name | Should -Contain "Size"
                 $Result.PSObject.Properties.Name | Should -Contain "Date"

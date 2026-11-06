@@ -42,7 +42,7 @@ InModuleScope -ModuleName "Evergreen" {
                     [System.String] $DateTime,
                     [System.String] $Pattern
                 )
-                return "07/12/2026 12:00:00"
+                return "2026-07-12"
             }
 
             Mock -CommandName Get-Platform -MockWith {
@@ -158,6 +158,8 @@ InModuleScope -ModuleName "Evergreen" {
                 }
                 $result = Get-GitLabRepoRelease -Uri "https://gitlab.com/api/v4/projects/123/releases"
                 $result.URI | Should -Be "https://example.com/fallback-x64.msi"
+                $result.Date | Should -BeOfType [System.String]
+                $result.Date | Should -Be "2026-07-12"
                 Should -Invoke ConvertTo-DateTime -Times 1 -Exactly -ParameterFilter {
                     $DateTime -eq "2026-07-01T10:00:00Z"
                 }
@@ -191,11 +193,15 @@ InModuleScope -ModuleName "Evergreen" {
                 $result = Get-GitLabRepoRelease @params | Select-Object -First 1
 
                 $result.Version | Should -Be "3.2.1"
-                $result.Date | Should -Not -BeNullOrEmpty
+                $result.Date | Should -BeOfType [System.String]
+                $result.Date | Should -Be "2026-07-12"
                 $result.Architecture | Should -Be "x64"
                 $result.InstallerType | Should -Be "MSI"
                 $result.Type | Should -Be "msi"
                 $result.URI | Should -Be "https://gitlab.example.com/downloads/tool-x64.msi"
+                Should -Invoke ConvertTo-DateTime -Times 1 -Exactly -ParameterFilter {
+                    $DateTime -eq "2026-07-02T09:00:00Z"
+                }
             }
         }
     }

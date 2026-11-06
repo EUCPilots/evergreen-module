@@ -5,6 +5,7 @@
 [OutputType()]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification = "This is OK for the test files.")]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "", Justification = "Outputs to log host.")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "", Justification = "This is OK for tests.")]
 param ()
 
 BeforeDiscovery {
@@ -52,7 +53,7 @@ Describe -Tag "Save", "Integration" -Name "Save-EvergreenApp" -ForEach $Installe
         # Test that the file downloaded into the path: "$Path/Stable/Enterprise/<version>/x64/MicrosoftEdgeEnterpriseX64.msi"
         It "Should save in the right path" {
             $File = [System.IO.Path]::Combine($Path, $installer.Channel, $installer.Release, $installer.Version, $installer.Architecture, $(Split-Path -Path $installer.URI -Leaf))
-            Test-Path -Path $File -PathType "Leaf" | Should -Be $True
+            Test-Path -Path $File -PathType "Leaf" | Should -Be $true
         }
 
         It "Save-EvergreenApp should not throw with CustomPath" {

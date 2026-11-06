@@ -45,8 +45,8 @@ Describe -Tag "Library" -Name "Test Evergreen Library functions" {
             $params = @{
                 Path        = "$env:GITHUB_WORKSPACE\tests\EvergreenLibrary.json"
                 Destination = "$Path\EvergreenLibrary\EvergreenLibrary.json"
-                Force       = $True
-                Confirm     = $False
+                Force       = $true
+                Confirm     = $false
             }
             Copy-Item @params
         }
@@ -61,8 +61,8 @@ Describe -Tag "Library" -Name "Test Evergreen Library functions" {
             $params = @{
                 Path        = "$env:GITHUB_WORKSPACE\tests\EvergreenLibrary.json"
                 Destination = "$Path\EvergreenLibrary\EvergreenLibrary.json"
-                Force       = $True
-                Confirm      = $False
+                Force       = $true
+                Confirm      = $false
             }
             Copy-Item @params
         }
@@ -106,8 +106,8 @@ Describe -Tag "Library" -Name "Test Evergreen Library functions" {
         BeforeAll {
             $params = @{
                 FilePath = "$Path\EvergreenLibrary\EvergreenLibrary.json"
-                Force    = $True
-                Confirm   = $False
+                Force    = $true
+                Confirm   = $false
             }
             "nonsense" | Out-File @params
         }

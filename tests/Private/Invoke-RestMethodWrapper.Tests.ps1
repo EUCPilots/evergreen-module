@@ -4,6 +4,7 @@
 #>
 [OutputType()]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification = "This is OK for the test files.")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "", Justification = "This is OK for tests.")]
 param ()
 
 BeforeDiscovery {
@@ -192,7 +193,7 @@ InModuleScope -ModuleName "Evergreen" {
                     ContentType          = "application/vnd.github.v3+json"
                     ErrorAction          = "SilentlyContinue"
                     Method               = "Default"
-                    SkipCertificateCheck = $True
+                    SkipCertificateCheck = $true
                     SslProtocol          = "Tls12"
                     UserAgent            = [Microsoft.PowerShell.Commands.PSUserAgent]::Safari
                     Uri                  = "https://api.github.com/rate_limit"

@@ -5,6 +5,7 @@
 [OutputType()]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification = "This is OK for the test files.")]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "", Justification = "Outputs to log host.")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "", Justification = "This is OK for tests.")]
 param ()
 
 BeforeDiscovery {
@@ -105,6 +106,31 @@ Describe -Tag "Get" -Name "Get-EvergreenApp works with supported application: <a
 
             foreach ($item in $Output) {
                 $item.URI | Should -BeOfType [System.String]
+            }
+        }
+
+        It "Output for <application> should return Date values as yyyy-MM-dd strings" {
+            if ($null -ne $RetrievalError -or $null -eq $Output -or @($Output).Count -eq 0) {
+                Set-ItResult -Skipped -Because "Get-EvergreenApp did not return output for '$application'."
+                return
+            }
+
+            $ItemsWithDates = @($Output | Where-Object { $null -ne $_.PSObject.Properties["Date"] })
+            if ($ItemsWithDates.Count -eq 0) {
+                Set-ItResult -Skipped -Because "Output for '$application' does not include the optional Date property."
+                return
+            }
+
+            foreach ($item in $ItemsWithDates) {
+                $item.Date | Should -BeOfType [System.String]
+                $ParsedDate = [System.DateTime]::MinValue
+                [System.DateTime]::TryParseExact(
+                    $item.Date,
+                    "yyyy-MM-dd",
+                    [System.Globalization.CultureInfo]::InvariantCulture,
+                    [System.Globalization.DateTimeStyles]::None,
+                    [ref] $ParsedDate
+                ) | Should -BeTrue -Because "Date '$($item.Date)' must be a valid date in yyyy-MM-dd format"
             }
         }
     }

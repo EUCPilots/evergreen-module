@@ -85,6 +85,10 @@ InModuleScope -ModuleName "Evergreen" {
             $Results[2].URI | Should -Be "https://download.example.com/pycharm-community-arm64.exe"
             $Results[3].URI | Should -Be "https://download.example.com/pycharm-community-arm64.zip"
             $Results[4].Sha256 | Should -BeNullOrEmpty
+            foreach ($Result in $Results) {
+                $Result.Date | Should -BeOfType [System.String]
+                $Result.Date | Should -Be "2025-04-01"
+            }
         }
 
         It "Replaces the edition placeholder literally" {

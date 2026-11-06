@@ -10,17 +10,18 @@ function ConvertTo-DateTime {
             back to the specified pattern using invariant culture if automatic parsing fails.
             Ambiguous dates are interpreted as month/day/year when automatically detected.
             Use -AutoDetect:$false to parse only with the specified pattern.
-            The returned DateTime object is formatted according to the culture of its consumer.
+            Returns the parsed date as an invariant yyyy-MM-dd string.
         .EXAMPLE
             ConvertTo-DateTime -DateTime "December 31, 2024 11:45 PM"
         .EXAMPLE
             ConvertTo-DateTime -DateTime "31/12/2024 23:45" -Pattern "dd/MM/yyyy HH:mm"
     #>
-    [OutputType([System.DateTime])]
+    [OutputType([System.String])]
     [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
+        [Alias("Date")]
         [System.String] $DateTime,
 
         [Parameter(Position = 1)]
@@ -40,6 +41,7 @@ function ConvertTo-DateTime {
             "MM/dd/yyyy HH:mm:ss"
             "M/d/yyyy h:mm tt"
             "M/d/yyyy h:mm:ss tt"
+            "M/d/yyyy hh:mm:ss tt"
             "MM-dd-yyyy"
             "yyyy-MM-dd"
             "yyyy-MM-dd HH:mm:ss"
@@ -50,6 +52,7 @@ function ConvertTo-DateTime {
             "d/M/yyyy"
             "dd/MM/yyyy hh:mm tt"
             "dd/MM/yyyy hh:mm:ss tt"
+            "dd/MM/yyyy HH:mm"
             "dd/MM/yyyy HH:mm:ss"
         )
         $Output = [System.DateTime]::MinValue
@@ -82,6 +85,7 @@ function ConvertTo-DateTime {
         }
     }
 
-    Write-Verbose -Message "$($MyInvocation.MyCommand): Returning DateTime: [$Output]."
-    Write-Output -InputObject $Output
+    $FormattedDate = $Output.ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+    Write-Verbose -Message "$($MyInvocation.MyCommand): Returning date: [$FormattedDate]."
+    Write-Output -InputObject $FormattedDate
 }

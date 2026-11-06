@@ -116,7 +116,7 @@ function Get-CodebergRepoRelease {
                         if ((Get-Platform -String $asset.browser_download_url) -eq "Windows") {
                             $PSObject = [PSCustomObject] @{
                                 Version       = $Version
-                                Date          = ConvertTo-DateTime -DateTime $item.created_at -Pattern "MM/dd/yyyy HH:mm:ss"
+                                Date          = ConvertTo-DateTime -DateTime $item.created_at
                                 Size          = $asset.size
                                 Architecture  = Get-Architecture -String $(Split-Path -Path $asset.browser_download_url -Leaf)
                                 InstallerType = Get-InstallerType -String $(Split-Path -Path $asset.browser_download_url -Leaf)
