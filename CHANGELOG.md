@@ -1,5 +1,17 @@
 # Change log
 
+## VERSION
+
+ Makes release Date values consistent across Evergreen apps by returning invariant `yyyy-MM-dd` strings instead of culture-dependent DateTime objects. This change is intended to make the `Date` property output more consistent across applications.
+
+> [!WARNING]
+> `ConvertTo-DateTime` now returns a string rather than a DateTime object. Users relying on the previous return type should account for this change.
+
+- Update `ConvertTo-DateTime` to return an invariant `yyyy-MM-dd` string, add the Date parameter alias, and support additional 12- and 24-hour time formats.
+- Standardize date conversion in `Get-CodebergRepoRelease`, `Get-GitLabRepoRelease`, `Get-JetBrainsApp`, and `Get-OracleJava` by using the shared auto-detection behavior.
+- Add coverage to verify date type and format in `Get-EvergreenApp` and shared-function tests, including Microsoft fwlink dates.
+- Update PSScriptAnalyzer compatibility profiles to PowerShell 7.4 and Ubuntu 22.04; make related test and boolean-literal cleanup.
+
 ## 2611.2871.0
 
 > [!WARNING]
