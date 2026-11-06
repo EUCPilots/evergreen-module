@@ -71,6 +71,7 @@ Describe -Name "ConvertTo-DateTime" {
             @{ InputDate = "12/31/2024 23:45:32"; Expected = [System.DateTime]::new(2024, 12, 31, 23, 45, 32) }
             @{ InputDate = "12/31/2024 11:45 PM"; Expected = [System.DateTime]::new(2024, 12, 31, 23, 45, 0) }
             @{ InputDate = "12/31/2024 11:45:32 PM"; Expected = [System.DateTime]::new(2024, 12, 31, 23, 45, 32) }
+            @{ InputDate = "6/10/2026 12:00:00 AM"; Expected = [System.DateTime]::new(2026, 6, 10, 0, 0, 0) }
             @{ InputDate = "12-31-2024"; Expected = [System.DateTime]::new(2024, 12, 31) }
             @{ InputDate = "2024-12-31 23:45:32"; Expected = [System.DateTime]::new(2024, 12, 31, 23, 45, 32) }
             @{ InputDate = "Tue, 31 Dec 2024 23:45:32 GMT"; Expected = [System.DateTime]::new(2024, 12, 31, 23, 45, 32, [System.DateTimeKind]::Utc).ToLocalTime() }

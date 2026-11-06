@@ -21,6 +21,7 @@ function ConvertTo-DateTime {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
+        [Alias("Date")]
         [System.String] $DateTime,
 
         [Parameter(Position = 1)]
@@ -40,6 +41,7 @@ function ConvertTo-DateTime {
             "MM/dd/yyyy HH:mm:ss"
             "M/d/yyyy h:mm tt"
             "M/d/yyyy h:mm:ss tt"
+            "M/d/yyyy hh:mm:ss tt"
             "MM-dd-yyyy"
             "yyyy-MM-dd"
             "yyyy-MM-dd HH:mm:ss"

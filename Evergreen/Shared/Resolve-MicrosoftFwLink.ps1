@@ -68,7 +68,7 @@ function Resolve-MicrosoftFwLink {
             # Output a version object
             [PSCustomObject]@{
                 Version      = $Version
-                Date         = ConvertTo-DateTime -Date $Date
+                Date         = $Date
                 Size         = $Size
                 Language     = "Unknown"
                 Architecture = Get-Architecture -String $ResolvedUrl.ResponseUri.AbsoluteUri
