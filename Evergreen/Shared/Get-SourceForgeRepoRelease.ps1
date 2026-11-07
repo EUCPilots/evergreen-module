@@ -120,10 +120,10 @@
         # Create the output object
         $PSObject = [PSCustomObject] @{
             Version      = $Version
-            Architecture = Get-Architecture -String $FileName
-            Type         = [System.IO.Path]::GetExtension($FileName).TrimStart(".")
             Size         = $item.content.filesize
             Md5          = $item.content.hash.'#text'
+            Architecture = Get-Architecture -String $FileName
+            Type         = [System.IO.Path]::GetExtension($FileName).TrimStart(".")
             FileName     = $FileName
             URI          = $Url
         }
