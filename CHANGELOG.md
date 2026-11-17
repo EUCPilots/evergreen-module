@@ -1,5 +1,12 @@
 # Change log
 
+## VERSION
+
+* Added the `Set-ObjectProperty` function to update a property on a PowerShell object when its value matches an expected value, with support for `-WhatIf` and `-Confirm` parameters.
+* In `Resolve-MicrosoftFwLink.ps1`, normalized the `Date` field by converting it to a DateTime object using `ConvertTo-DateTime`.
+* In `Get-InstallerType.ps1`, added a new installer type `hybridCRT` to the recognized types.
+* In `Get-SourceForgeRepoRelease.ps1`, reordered the creation of the output object to group related fields together for clarity.
+
 ## 2611.2874.0
 
  Makes release Date values consistent across Evergreen apps by returning invariant `yyyy-MM-dd` strings instead of culture-dependent DateTime objects. This change is intended to make the `Date` property output more consistent across applications.

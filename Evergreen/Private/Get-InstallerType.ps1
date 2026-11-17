@@ -23,6 +23,7 @@ function Get-InstallerType {
         classic      = "Classic"
         debug        = "Debug"
         grouppolicy  = "GroupPolicy"
+        hybridCRT    = "HybridCRT"
         legacy       = "Legacy"
         light        = "Light"
         minimalist   = "Minimal"

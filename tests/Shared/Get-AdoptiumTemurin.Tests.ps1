@@ -4,6 +4,7 @@
 #>
 [OutputType()]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification = "This is OK for the test files.")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseCompatibleCommands", "", Justification = "PowerShell 7.4 or above will be used")]
 param ()
 
 InModuleScope -ModuleName "Evergreen" {
