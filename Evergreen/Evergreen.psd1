@@ -12,7 +12,7 @@
 RootModule = 'Evergreen.psm1'
 
 # Version number of this module.
-ModuleVersion = '2611.2877.0'
+ModuleVersion = '2611.2877.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -119,7 +119,7 @@ PrivateData = @{
         IconUri = 'https://raw.githubusercontent.com/eucpilots/evergreen-module/refs/heads/main/img/evergreenbulb.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = '2611.2877.0
+        ReleaseNotes = '2611.2877.1
 * Added the `Set-ObjectProperty` function to update a property on a PowerShell object when its value matches an expected value, with support for `-WhatIf` and `-Confirm` parameters.
 * In `Resolve-MicrosoftFwLink.ps1`, normalized the `Date` field by converting it to a DateTime object using `ConvertTo-DateTime`.
 * In `Get-InstallerType.ps1`, added a new installer type `hybridCRT` to the recognized types.
