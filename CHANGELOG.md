@@ -1,6 +1,6 @@
 # Change log
 
-## VERSION
+## 2611.2877.0
 
 * Added the `Set-ObjectProperty` function to update a property on a PowerShell object when its value matches an expected value, with support for `-WhatIf` and `-Confirm` parameters.
 * In `Resolve-MicrosoftFwLink.ps1`, normalized the `Date` field by converting it to a DateTime object using `ConvertTo-DateTime`.
@@ -1566,6 +1566,7 @@ BREAKING CHANGES
 * Initial functions are:
 
 `Export-EvergreenResourceStrings`, `Get-AdobeAcrobatReaderDC`, `Get-CitrixAppLayeringFeed`, `Get-CitrixApplicationDeliveryManagementFeed`, `Get-CitrixEndpointManagementFeed`, `Get-CitrixGatewayFeed`, `Get-CitrixHypervisorFeed`, `Get-CitrixLicensingFeed`, `Get-CitrixReceiverFeed`, `Get-CitrixSdwanFeed`, `Get-CitrixVirtualAppsDesktopsFeed`, `Get-CitrixWorkspaceApp`, `Get-CitrixWorkspaceAppFeed`, `Get-CitrixXenServerTools`, `Get-ControlUpAgent`, `Get-FileZilla`, `Get-GoogleChrome`, `Get-Greenshot`, `Get-LibreOffice`, `Get-MicrosoftPowerShellCore`, `Get-MicrosoftSsms`, `Get-MicrosoftVisualStudioCode`, `Get-MozillaFirefox`, `Get-NotepadPlusPlus`, `Get-OracleVirtualBox`, `Get-PaintDotNet`, `Get-VideoLanVlcPlayer`, `Get-VMwareTools`, `Get-Zoom`
+
 
 
 
