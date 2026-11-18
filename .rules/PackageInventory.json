@@ -25,6 +25,7 @@
   "Private/Get-RepoResponse.ps1",
   "Private/Get-Symbol.ps1",
   "Private/Get-VersionItemSortData.ps1",
+  "Private/Set-ObjectProperty.ps1",
   "Private/Invoke-EvergreenRestMethod.ps1",
   "Private/Invoke-EvergreenWebRequest.ps1",
   "Private/Invoke-OutputFilter.ps1",
