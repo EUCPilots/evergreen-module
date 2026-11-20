@@ -46,13 +46,17 @@ function Resolve-MicrosoftFwLink {
             $ResolvedUrl = Resolve-SystemNetWebRequest @params
 
             # Find a version number in the final URL path, excluding query parameters.
-            $FileName = [System.IO.Path]::GetFileName($ResolvedUrl.ResponseUri.AbsolutePath)
-            $VersionMatch = [RegEx]::Match($FileName, "(?<![\d.])(\d+(?:\.\d+){1,4})(?!\.\d)")
-            if ($VersionMatch.Success) {
-                $Version = $VersionMatch.Groups[1].Value
+            # Check the file name first, then each parent path segment from the closest outwards.
+            $Version = "Unknown"
+            $Segments = @($ResolvedUrl.ResponseUri.AbsolutePath -split "/" | Where-Object { $_ })
+            for ($i = $Segments.Count - 1; $i -ge 0; $i--) {
+                $VersionMatch = [RegEx]::Match($Segments[$i], "(?<![\d.])(\d+(?:\.\d+){1,4})(?!\.\d)")
+                if ($VersionMatch.Success) {
+                    $Version = $VersionMatch.Groups[1].Value
+                    break
+                }
             }
-            else {
-                $Version = "Unknown"
+            if ($Version -eq "Unknown") {
                 Write-Warning -Message "$($MyInvocation.MyCommand): Failed to match version number from: $($ResolvedUrl.ResponseUri.AbsoluteUri)."
             }
 
