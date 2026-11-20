@@ -1,5 +1,9 @@
 # Change log
 
+## VERSION
+
+* Udpates version string matching in `Resolve-MicrosoftFwLink`
+
 ## 2611.2877.1
 
 * Added the `Set-ObjectProperty` function to update a property on a PowerShell object when its value matches an expected value, with support for `-WhatIf` and `-Confirm` parameters.
@@ -14,10 +18,10 @@
 > [!WARNING]
 > `ConvertTo-DateTime` now returns a string rather than a DateTime object. Users relying on the previous return type should account for this change.
 
-- Update `ConvertTo-DateTime` to return an invariant `yyyy-MM-dd` string, add the Date parameter alias, and support additional 12- and 24-hour time formats.
-- Standardize date conversion in `Get-CodebergRepoRelease`, `Get-GitLabRepoRelease`, `Get-JetBrainsApp`, and `Get-OracleJava` by using the shared auto-detection behavior.
-- Add coverage to verify date type and format in `Get-EvergreenApp` and shared-function tests, including Microsoft fwlink dates.
-- Update PSScriptAnalyzer compatibility profiles to PowerShell 7.4 and Ubuntu 22.04; make related test and boolean-literal cleanup.
+* Update `ConvertTo-DateTime` to return an invariant `yyyy-MM-dd` string, add the Date parameter alias, and support additional 12- and 24-hour time formats.
+* Standardize date conversion in `Get-CodebergRepoRelease`, `Get-GitLabRepoRelease`, `Get-JetBrainsApp`, and `Get-OracleJava` by using the shared auto-detection behavior.
+* Add coverage to verify date type and format in `Get-EvergreenApp` and shared-function tests, including Microsoft fwlink dates.
+* Update PSScriptAnalyzer compatibility profiles to PowerShell 7.4 and Ubuntu 22.04; make related test and boolean-literal cleanup.
 
 ## 2611.2871.0
 
@@ -26,16 +30,16 @@
 
 This version strengthens download and library reliability, improves validation and error reporting across public cmdlets, and refreshes help documentation.
 
-- **Supported runtimes:** Raise the minimum supported PowerShell 7 version to 7.4 while retaining Windows PowerShell 5.1 support. Update the CI runtime matrix, syntax checks, test setup, and support documentation.
-- **Downloads - `Save-EvergreenApp`:** Add optional `-VerifyChecksum` support for SHA-1, SHA-256, and SHA-512 hashes. Add bounded retries with exponential backoff and `Retry-After` handling, plus configurable connection and operation timeouts. Validate destination paths and filenames, support pipeline-bound paths, honor `-WhatIf` and custom user agents, publish only completed downloads, clean up partial files, and restore TLS settings.
-- **App lookup and API queries - `Get-EvergreenApp`, `Find-EvergreenApp`, `Get-EvergreenAppFromApi`, `Get-EvergreenEndpointFromApi`:** Validate app names and API inputs, encode names for requests, preserve API error details, and reuse output filtering for local and API results. Improve literal-name matching and not-found diagnostics; clean up proxy and certificate state on completion or terminating errors. `Get-EvergreenApp` diagnostics now include exception and location details while preserving the original error.
-- **Exports - `Export-EvergreenApp`, `Export-EvergreenManifest`:** Support pipeline input and improve validation and error reporting. `Export-EvergreenApp` batches pipeline records into a single write, respects `-WhatIf`, and preserves arrays, nested data, and nonstandard versions when merging and sorting.
-- **Library operations - `Start-EvergreenLibraryUpdate`, `Get-EvergreenLibrary`, `Get-EvergreenAppFromLibrary`, `Remove-EvergreenLibraryAppVersion`:** Improve mixed-version sorting and isolate per-app state. Export only entries with matching installer files; stage manifest updates before deleting files; and reject unsafe paths and reparse points. Clarify pruning behavior and correct installer-path handling for retained entries.
-- **Validation and compatibility - `Test-EvergreenApp`, `ConvertTo-DotNetVersionClass`, `Convert-Segment`, `Expand-CabArchive`:** Add HEAD-to-ranged-GET fallback, configurable timeouts, and HTTP status results to `Test-EvergreenApp`. Harden version conversion and make CAB extraction preserve original filenames and extensions. Support the insecure-redirect option on Windows PowerShell 5.1 while retaining compatibility checks for PowerShell Core.
-- **Module initialization and help:** Handle GitHub rate limits and invalid cache versions in `Evergreen.psm1`; update `Import.ps1`; and refresh cmdlet and module help, including German, Spanish, French, and Japanese documentation.
-- **Confirmation and preview - `Update-Evergreen`, `Remove-ProxyEnv`:** Add `-WhatIf` and `-Confirm` support. Guard the entire cache update before downloads or cache changes, and guard each proxy variable removal. Add regression coverage and document cache update confirmation behavior.
-- **Analyzer compliance and compatibility:** Resolve configured PSScriptAnalyzer findings with targeted compatibility suppressions for platform-guarded code, naming and keyword corrections, and encoding fixes. Preserve default automatic date detection without a default-enabled switch parameter, and use Unicode escapes in CAB path validation.
-- **Diagnostics - `Save-EvergreenApp`, `Update-Evergreen`:** Warn when retry-response status codes or `Retry-After` headers cannot be parsed, and route cache hash-validation failures through `Write-Message` with the appropriate message type.
+* **Supported runtimes:** Raise the minimum supported PowerShell 7 version to 7.4 while retaining Windows PowerShell 5.1 support. Update the CI runtime matrix, syntax checks, test setup, and support documentation.
+* **Downloads - `Save-EvergreenApp`:** Add optional `-VerifyChecksum` support for SHA-1, SHA-256, and SHA-512 hashes. Add bounded retries with exponential backoff and `Retry-After` handling, plus configurable connection and operation timeouts. Validate destination paths and filenames, support pipeline-bound paths, honor `-WhatIf` and custom user agents, publish only completed downloads, clean up partial files, and restore TLS settings.
+* **App lookup and API queries - `Get-EvergreenApp`, `Find-EvergreenApp`, `Get-EvergreenAppFromApi`, `Get-EvergreenEndpointFromApi`:** Validate app names and API inputs, encode names for requests, preserve API error details, and reuse output filtering for local and API results. Improve literal-name matching and not-found diagnostics; clean up proxy and certificate state on completion or terminating errors. `Get-EvergreenApp` diagnostics now include exception and location details while preserving the original error.
+* **Exports - `Export-EvergreenApp`, `Export-EvergreenManifest`:** Support pipeline input and improve validation and error reporting. `Export-EvergreenApp` batches pipeline records into a single write, respects `-WhatIf`, and preserves arrays, nested data, and nonstandard versions when merging and sorting.
+* **Library operations - `Start-EvergreenLibraryUpdate`, `Get-EvergreenLibrary`, `Get-EvergreenAppFromLibrary`, `Remove-EvergreenLibraryAppVersion`:** Improve mixed-version sorting and isolate per-app state. Export only entries with matching installer files; stage manifest updates before deleting files; and reject unsafe paths and reparse points. Clarify pruning behavior and correct installer-path handling for retained entries.
+* **Validation and compatibility - `Test-EvergreenApp`, `ConvertTo-DotNetVersionClass`, `Convert-Segment`, `Expand-CabArchive`:** Add HEAD-to-ranged-GET fallback, configurable timeouts, and HTTP status results to `Test-EvergreenApp`. Harden version conversion and make CAB extraction preserve original filenames and extensions. Support the insecure-redirect option on Windows PowerShell 5.1 while retaining compatibility checks for PowerShell Core.
+* **Module initialization and help:** Handle GitHub rate limits and invalid cache versions in `Evergreen.psm1`; update `Import.ps1`; and refresh cmdlet and module help, including German, Spanish, French, and Japanese documentation.
+* **Confirmation and preview - `Update-Evergreen`, `Remove-ProxyEnv`:** Add `-WhatIf` and `-Confirm` support. Guard the entire cache update before downloads or cache changes, and guard each proxy variable removal. Add regression coverage and document cache update confirmation behavior.
+* **Analyzer compliance and compatibility:** Resolve configured PSScriptAnalyzer findings with targeted compatibility suppressions for platform-guarded code, naming and keyword corrections, and encoding fixes. Preserve default automatic date detection without a default-enabled switch parameter, and use Unicode escapes in CAB path validation.
+* **Diagnostics - `Save-EvergreenApp`, `Update-Evergreen`:** Warn when retry-response status codes or `Retry-After` headers cannot be parsed, and route cache hash-validation failures through `Write-Message` with the appropriate message type.
 
 ## 2610.2862.0
 
@@ -46,51 +50,56 @@ This version strengthens download and library reliability, improves validation a
 > The module now requires PowerShell 5.1 or later; PowerShell 4.0 is no longer supported.
 
 ### New functionality
-- Add and export `Get-EvergreenAppsVersion` to report the version of the locally available Evergreen apps collection.
-- Add help content for the new cmdlet in both the module help XML and Markdown documentation.
-- Automatically detect GitHub release dates and adjust release synchronization to avoid relying on a scoped token.
+
+* Add and export `Get-EvergreenAppsVersion` to report the version of the locally available Evergreen apps collection.
+* Add help content for the new cmdlet in both the module help XML and Markdown documentation.
+* Automatically detect GitHub release dates and adjust release synchronization to avoid relying on a scoped token.
 
 ### Reliability and security
-- Improve HTTP request handling by validating HTTP/HTTPS URIs, supporting configurable timeouts, preserving proxy authentication, and making origin credentials opt-in.
-- Honor response character sets, improve redirect and certificate-check handling, redact sensitive URI details from diagnostics, and reliably clean up request and response resources.
-- Preserve the original request error when cleanup or response handling also fails.
-- Harden file downloads, DNS resolution, and GitHub rate-limit handling, with clearer error handling.
-- Make CAB extraction validate paths and fallback output, stage changes more safely, and roll back failed promotions. Make gzip extraction clean up safely on failure.
-- Honor explicit false certificate-check switches and restore process-wide certificate and TLS settings after requests. Guard unsupported redirect and TLS options, preserve connection reuse, and respect WhatIf before side effects. Return raw responses as UTF-8 text and always remove temporary files.
-- Validate HTTP(S) URIs, add configurable timeouts, and make origin credentials opt-in while preserving proxy authentication. Honor response charsets, redact sensitive URI details from diagnostics, and ensure resource cleanup without masking request errors. Replace the external-network test with local HTTP coverage for encoding, redirects, authentication, timeouts, and failure cleanup.
+
+* Improve HTTP request handling by validating HTTP/HTTPS URIs, supporting configurable timeouts, preserving proxy authentication, and making origin credentials opt-in.
+* Honor response character sets, improve redirect and certificate-check handling, redact sensitive URI details from diagnostics, and reliably clean up request and response resources.
+* Preserve the original request error when cleanup or response handling also fails.
+* Harden file downloads, DNS resolution, and GitHub rate-limit handling, with clearer error handling.
+* Make CAB extraction validate paths and fallback output, stage changes more safely, and roll back failed promotions. Make gzip extraction clean up safely on failure.
+* Honor explicit false certificate-check switches and restore process-wide certificate and TLS settings after requests. Guard unsupported redirect and TLS options, preserve connection reuse, and respect WhatIf before side effects. Return raw responses as UTF-8 text and always remove temporary files.
+* Validate HTTP(S) URIs, add configurable timeouts, and make origin credentials opt-in while preserving proxy authentication. Honor response charsets, redact sensitive URI details from diagnostics, and ensure resource cleanup without masking request errors. Replace the external-network test with local HTTP coverage for encoding, redirects, authentication, timeouts, and failure cleanup.
 
 ### Parsing and data conversion
-- Make date parsing culture-independent and enable automatic date parsing by default.
-- Reject malformed JWTs without returning partial results.
-- Parse INI content in memory and support pipeline input.
-- Preserve arrays in hashtable conversion and improve recursive and empty-array conversion behavior.
-- Clarify Base64-to-hex conversion behavior.
-- Add `Get-RepoReleaseVersion.ps1` for consistent version extraction and optional replacement, and `Get-RepoResponse.ps1` for validating API responses and required properties.
-- Harden GitHub, GitLab, Codeberg, GitHub tag, and SourceForge release handling. This includes clearer validation of responses, assets, URLs, and version data. GitLab handling also supports release and tag endpoint variants, with legacy “latest” URLs mapped to the permalink endpoint.
-- Improve SourceForge download URL construction using the selected mirror and release metadata.
-- Strengthen validation and metadata normalization for Adoptium Temurin, Amazon Corretto, Azul Zulu, BellSoft Liberica JDK, and Oracle Java.
-- Improve HashiCorp URL generation, expand JetBrains Windows download coverage across editions, and make Opera manifest and asset handling more defensive.
-- Make proxy environment cleanup idempotent and add GitLab response-property configuration in `Evergreen.json`.
-- Tighten Microsoft fwlink validation to require a valid HTTPS `go.microsoft.com/fwlink/` URL with a numeric `linkid`. Version parsing now uses the final URL path, while unavailable date and size metadata return null.
+
+* Make date parsing culture-independent and enable automatic date parsing by default.
+* Reject malformed JWTs without returning partial results.
+* Parse INI content in memory and support pipeline input.
+* Preserve arrays in hashtable conversion and improve recursive and empty-array conversion behavior.
+* Clarify Base64-to-hex conversion behavior.
+* Add `Get-RepoReleaseVersion.ps1` for consistent version extraction and optional replacement, and `Get-RepoResponse.ps1` for validating API responses and required properties.
+* Harden GitHub, GitLab, Codeberg, GitHub tag, and SourceForge release handling. This includes clearer validation of responses, assets, URLs, and version data. GitLab handling also supports release and tag endpoint variants, with legacy “latest” URLs mapped to the permalink endpoint.
+* Improve SourceForge download URL construction using the selected mirror and release metadata.
+* Strengthen validation and metadata normalization for Adoptium Temurin, Amazon Corretto, Azul Zulu, BellSoft Liberica JDK, and Oracle Java.
+* Improve HashiCorp URL generation, expand JetBrains Windows download coverage across editions, and make Opera manifest and asset handling more defensive.
+* Make proxy environment cleanup idempotent and add GitLab response-property configuration in `Evergreen.json`.
+* Tighten Microsoft fwlink validation to require a valid HTTPS `go.microsoft.com/fwlink/` URL with a numeric `linkid`. Version parsing now uses the final URL path, while unavailable date and size metadata return null.
 
 ### Platform, version, and resource handling
-- Make platform detection explicit and default unknown platforms to Windows.
-- Prevent false architecture-marker matches and improve installer-type matching, including `NoAdmin` detection.
-- Recognize `x64` followed by a numeric version in concatenated installer names such as `AcroRdrDCx642600222031_MUI.exe`.
-- Resolve module versions from the owning module, use `TryParse` when sorting library versions, and strengthen .NET version conversion.
-- Harden manifest and module-resource JSON loading, filter validation and property matching, and Evergreen path creation.
-- Improve URL and dot-file handling in file-type detection, and simplify Unicode symbol handling.
+* Make platform detection explicit and default unknown platforms to Windows.
+* Prevent false architecture-marker matches and improve installer-type matching, including `NoAdmin` detection.
+* Recognize `x64` followed by a numeric version in concatenated installer names such as `AcroRdrDCx642600222031_MUI.exe`.
+* Resolve module versions from the owning module, use `TryParse` when sorting library versions, and strengthen .NET version conversion.
+* Harden manifest and module-resource JSON loading, filter validation and property matching, and Evergreen path creation.
+* Improve URL and dot-file handling in file-type detection, and simplify Unicode symbol handling.
 
 ### Compatibility and diagnostics
-- Set the module’s minimum PowerShell version to 5.1 and use a typed version parameter in `Test-PSCore`.
-- Improve proxy credential state handling and make `Write-Message` honor `InformationAction`.
-- Allow the insecure-redirect opt-in on Windows PowerShell 5.1, which permits these redirects natively; retain the unsupported-option guard on older PowerShell Core versions.
-- Preserve CAB entry extensions hidden by Shell display names, parse native CAB listings, and explicitly extract all files with their original names using `expand.exe`.
+
+* Set the module’s minimum PowerShell version to 5.1 and use a typed version parameter in `Test-PSCore`.
+* Improve proxy credential state handling and make `Write-Message` honor `InformationAction`.
+* Allow the insecure-redirect opt-in on Windows PowerShell 5.1, which permits these redirects natively; retain the unsupported-option guard on older PowerShell Core versions.
+* Preserve CAB entry extensions hidden by Shell display names, parse native CAB listings, and explicitly extract all files with their original names using `expand.exe`.
 
 ### Tests and CI
-- Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
-- Update the validation workflow, including running `Update-Evergreen -Verbose`.
-- Fix the library retention count assertion for Windows PowerShell 5.1 JSON arrays and cover redirect-option compatibility, hidden CAB extensions, and extraction of Microsoft's published Power Automate Desktop update CAB.
+
+* Add or update regression coverage for parsing and conversion, extraction, platform and architecture detection, HTTP wrappers, DNS, downloads, proxy handling, path creation, rate limits, and message handling.
+* Update the validation workflow, including running `Update-Evergreen -Verbose`.
+* Fix the library retention count assertion for Windows PowerShell 5.1 JSON arrays and cover redirect-option compatibility, hidden CAB extensions, and extraction of Microsoft's published Power Automate Desktop update CAB.
 
 ## 2610.2859.0
 
