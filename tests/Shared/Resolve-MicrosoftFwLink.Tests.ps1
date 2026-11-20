@@ -33,6 +33,24 @@ InModuleScope -ModuleName "Evergreen" {
             $Result.URI | Should -Be "https://download.microsoft.com/files/Product-1.2.3.4-x64.msi?version=9.8.7"
         }
 
+        It "Extracts the version from a parent path segment when the file name has none" {
+            $script:TestMicrosoftFwLinkResponse.ResponseUri = [System.Uri]"https://res.cdn.office.net/nativehost/5mttl/installer/v2/1.2026.1026.100/Microsoft.OutlookForWindows_x64.msix?version=9.8.7"
+
+            $Warnings = @()
+            $Result = Resolve-MicrosoftFwLink -Uri "https://go.microsoft.com/fwlink/?linkid=2195278" -WarningVariable Warnings
+
+            $Result.Version | Should -Be "1.2026.1026.100"
+            $Warnings.Count | Should -Be 0
+        }
+
+        It "Prefers the version in the file name over a parent path segment" {
+            $script:TestMicrosoftFwLinkResponse.ResponseUri = [System.Uri]"https://download.microsoft.com/files/9.9.9/Product-1.2.3.4-x64.msi"
+
+            $Result = Resolve-MicrosoftFwLink -Uri "https://go.microsoft.com/fwlink/?linkid=2248728"
+
+            $Result.Version | Should -Be "1.2.3.4"
+        }
+
         It "Returns Unknown and warns when the final path has no version" {
             $script:TestMicrosoftFwLinkResponse.ResponseUri = [System.Uri]"https://download.microsoft.com/files/Product-x64.msi?version=9.8.7"
 
