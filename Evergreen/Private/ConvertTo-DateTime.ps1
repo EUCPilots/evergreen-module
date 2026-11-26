@@ -43,6 +43,7 @@ function ConvertTo-DateTime {
             "M/d/yyyy h:mm:ss tt"
             "M/d/yyyy hh:mm:ss tt"
             "MM-dd-yyyy"
+            "dd-MM-yyyy"
             "yyyy-MM-dd"
             "yyyy-MM-dd HH:mm:ss"
             "yyyy-MM-dd'T'HH:mm:ss"
